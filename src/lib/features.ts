@@ -17,9 +17,9 @@ export const FEATURES: Readonly<Record<FeatureKey, boolean>> = {
   releaseNotes: false,
 };
 
-/** No optional sidebar entries in the core edition (see the full product's
+/** No optional sidebar entries in this build (see the full product's
  *  features.ts for why the list lives here). */
 export const OPTIONAL_NAV = [] as const;
 
-/** The core edition speaks English until a device chooses otherwise. */
+/** This build speaks English until a device chooses otherwise. */
 export const DEFAULT_LANG: Lang = "en";

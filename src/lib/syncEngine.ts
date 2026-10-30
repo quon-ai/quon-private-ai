@@ -122,7 +122,7 @@ export function startSync(): void {
       deriveKey: derivePrefsKey,
       store: prefsSyncStore,
     }),
-    // Collections of the optional features (none in the core edition).
+    // Collections of the optional features (none in a build that leaves them out).
     ...extraEngines(),
   ];
   // Grants FIRST, personal engines after: the routing filters above consult the

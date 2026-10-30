@@ -27,5 +27,5 @@ export async function callQuonTool(
   _args: Record<string, unknown>,
   _ctx: QuonToolContext,
 ): Promise<string> {
-  throw new Error("Chat tools are not part of the core edition.");
+  throw new Error("Chat tools are not available in this build.");
 }
