@@ -17,7 +17,11 @@
 
 export type Lang = "de" | "en";
 
-export const DEFAULT_LANG: Lang = "de"; // Standardsprache Deutsch (per product decision)
+// The default is an EDITION decision and lives in the feature registry; this
+// module re-exports it so every reader keeps importing it from here.
+import { DEFAULT_LANG } from "./features";
+
+export { DEFAULT_LANG };
 
 const LS_KEY = "quon_lang_v1";
 const COOKIE = "quon_lang";

@@ -202,6 +202,9 @@ export interface HealthStatus {
   gliner_enabled?: boolean;
   /** GLiNER's model has actually been loaded (it loads lazily, on first scrub). */
   gliner_loaded?: boolean;
+  /** Registration needs an invite code on this instance (SIGNUP_INVITE_CODE is
+   *  set). The sign-up form shows its invite field only then. */
+  signup_invite_required?: boolean;
 }
 
 export interface EntityTypeInfo {

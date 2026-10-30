@@ -43,11 +43,12 @@ describe("langPref", () => {
     expect(langFromCookieHeader("")).toBeNull();
   });
 
-  it("defaults to German with no explicit choice, regardless of the browser locale", () => {
-    // Browser is English, but there's no cookie/localStorage → German is the default.
+  it("falls back to the edition's default with no explicit choice, regardless of the browser locale", () => {
+    // Browser is English, but there's no cookie/localStorage → the registry decides,
+    // not the locale ("de" in the hosted product, "en" in the core edition).
     vi.stubGlobal("navigator", { language: "en-US" });
-    expect(getLangPref()).toBe("de");
-    expect(DEFAULT_LANG).toBe("de");
+    expect(getLangPref()).toBe(DEFAULT_LANG);
+    expect(["de", "en"]).toContain(DEFAULT_LANG);
     expect(hasExplicitLangPref()).toBe(false);
   });
 

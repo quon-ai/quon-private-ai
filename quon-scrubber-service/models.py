@@ -96,6 +96,11 @@ class HealthResponse(BaseModel):
     pii_ready: bool = False
     gliner_enabled: bool = False
     gliner_loaded: bool = False
+    # True when SIGNUP_INVITE_CODE is set, i.e. /auth/register needs a code (the
+    # static one or an admin-issued single-use invite). Public on purpose: the
+    # sign-up form shows its invite field only then, and /auth/register reveals
+    # the same fact by refusing without one.
+    signup_invite_required: bool = False
 
 
 class EntityTypeInfo(BaseModel):

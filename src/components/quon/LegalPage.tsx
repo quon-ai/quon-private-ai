@@ -1,6 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { AlertTriangle, ArrowLeft } from "lucide-react";
 
+import { useT } from "@/lib/i18n/i18n";
 import { TERMS_EFFECTIVE_DATE, TERMS_IS_DRAFT, TERMS_VERSION } from "@/lib/legal";
 import { Logo } from "./Logo";
 
@@ -9,9 +10,9 @@ const GRADIENT =
 
 /** The three legal documents, so each page can cross-link to the other two. */
 const LEGAL_PAGES = [
-  { to: "/terms", label: "Nutzungsvereinbarung" },
-  { to: "/privacy", label: "Datenschutzerklärung" },
-  { to: "/imprint", label: "Impressum" },
+  { to: "/terms", labelKey: "common.legalTerms" },
+  { to: "/privacy", labelKey: "common.legalPrivacy" },
+  { to: "/imprint", labelKey: "common.legalImprint" },
 ] as const;
 
 type LegalPath = (typeof LEGAL_PAGES)[number]["to"];
@@ -20,6 +21,7 @@ type LegalPath = (typeof LEGAL_PAGES)[number]["to"];
  *  auth screen). Opens in a new tab so the user never loses their place in the
  *  app; the standalone legal pages also carry a "Zurück" link of their own. */
 export function LegalLinks({ className }: { className?: string }) {
+  const { t } = useT();
   return (
     <div
       className={`flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1 text-[11px] text-quon-muted ${className ?? ""}`}
@@ -28,7 +30,7 @@ export function LegalLinks({ className }: { className?: string }) {
         <span key={p.to} className="flex items-center gap-2.5">
           {i > 0 && <span aria-hidden>·</span>}
           <Link to={p.to} target="_blank" className="hover:text-quon-text">
-            {p.label}
+            {t(p.labelKey)}
           </Link>
         </span>
       ))}
@@ -77,6 +79,7 @@ export function LegalShell({
   current: LegalPath;
   children: React.ReactNode;
 }) {
+  const { t } = useT();
   return (
     <div className="min-h-screen px-4 py-10" style={{ background: GRADIENT }}>
       <div className="mx-auto w-full max-w-2xl rounded-2xl border border-quon-border bg-quon-bg/80 px-6 py-8 shadow-2xl sm:px-10">
@@ -104,7 +107,7 @@ export function LegalShell({
         <div className="mt-8 flex flex-wrap justify-center gap-x-4 gap-y-1 border-t border-quon-border pt-5 text-xs">
           {LEGAL_PAGES.filter((p) => p.to !== current).map((p) => (
             <Link key={p.to} to={p.to} className="text-quon-indigo hover:underline">
-              {p.label}
+              {t(p.labelKey)}
             </Link>
           ))}
         </div>

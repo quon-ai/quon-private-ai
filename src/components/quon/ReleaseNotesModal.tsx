@@ -3,6 +3,7 @@ import { AnimatePresence, motion } from "motion/react";
 import { Sparkles, X } from "lucide-react";
 
 import { useT } from "@/lib/i18n/i18n";
+import { FEATURES } from "@/lib/features";
 import { getUnseenRelease, markReleaseSeen, type Release } from "@/lib/releases";
 
 /**
@@ -15,7 +16,7 @@ export function ReleaseNotesModal() {
   const [release, setRelease] = useState<Release | null>(null);
 
   useEffect(() => {
-    setRelease(getUnseenRelease());
+    setRelease(FEATURES.releaseNotes ? getUnseenRelease() : null);
   }, []);
 
   function close() {

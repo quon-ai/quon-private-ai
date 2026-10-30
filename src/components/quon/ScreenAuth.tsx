@@ -45,6 +45,7 @@ import { BioCancelledError, platformAuthenticatorAvailable } from "@/lib/webauth
 import { LanguageSelect } from "./LanguageSelect";
 import { LegalLinks } from "./LegalPage";
 import { Logo } from "./Logo";
+import { checkHealth } from "@/lib/quonApi";
 
 type Mode = "login" | "register" | "forgot";
 
@@ -494,6 +495,20 @@ export function ScreenAuth() {
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [inviteCode, setInviteCode] = useState("");
+  // Only a closed instance (SIGNUP_INVITE_CODE set) has a code to ask for; an
+  // open one must not show a required field nobody can fill. /health says which.
+  const [inviteRequired, setInviteRequired] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    checkHealth()
+      .then((h) => {
+        if (!cancelled) setInviteRequired(Boolean(h.signup_invite_required));
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -686,15 +701,17 @@ export function ScreenAuth() {
             <span className="text-xs text-quon-muted">{t("common.language")}</span>
             <LanguageSelect />
           </div>
-          <Field
-            icon={KeyRound}
-            type="text"
-            autoComplete="off"
-            value={inviteCode}
-            onChange={(e) => setInviteCode(e.target.value)}
-            placeholder={t("auth.inviteCode")}
-            required
-          />
+          {inviteRequired && (
+            <Field
+              icon={KeyRound}
+              type="text"
+              autoComplete="off"
+              value={inviteCode}
+              onChange={(e) => setInviteCode(e.target.value)}
+              placeholder={t("auth.inviteCode")}
+              required
+            />
+          )}
           <Field
             icon={Mail}
             type="email"
@@ -733,7 +750,7 @@ export function ScreenAuth() {
                 target="_blank"
                 className="font-medium text-quon-indigo underline-offset-2 hover:underline"
               >
-                Nutzungsvereinbarung
+                {t("common.legalTerms")}
               </Link>
               {t("auth.termsPost")}
             </span>

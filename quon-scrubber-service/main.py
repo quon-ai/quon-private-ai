@@ -323,6 +323,7 @@ async def health_endpoint() -> HealthResponse:
         pii_ready=ner_ready and (gliner_loaded or not settings.gliner_enabled),
         gliner_enabled=settings.gliner_enabled,
         gliner_loaded=gliner_loaded,
+        signup_invite_required=bool(settings.signup_invite_code),
     )
 
 
