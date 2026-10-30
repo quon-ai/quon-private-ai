@@ -56,3 +56,19 @@ Some documents in `docs/` describe the full product and say so at the top.
 - The `Native` CI job is defined but skipped (it builds the desktop shell).
 - Configuration knobs for absent features remain in `config.py` and the
   compose file; they are ignored.
+- **Hosted-service plumbing is still in the code, undocumented on purpose.** Per-user
+  OpenRouter sub-keys (`openrouter_provisioning.py`, `entitlements.py`) are inert
+  without `OPENROUTER_PROVISIONING_KEY`; they are wired into sign-up, key resolution
+  and the admin screen, so cutting them cleanly needs a seam first. The public docs
+  describe the single shared key only.
+- **Dead weight that the manifest cannot remove line by line:** `trafilatura` in
+  `requirements.txt` (only `fetch_url.py` used it) and the `@capacitor/*` /
+  `@tauri-apps/*` packages in `package.json` (the shells are cut). Both widen what
+  the supply-chain gate scans for nothing; a `requirements-optional.txt` and a
+  dependency split are the fix.
+- **Strings for cut features remain in the i18n catalogs** (`nav.connectors`,
+  `agents.*`, the MCP settings) and the in-app "What's new" entries still mention
+  them in German. Harmless, untidy.
+- The `native` CI job targets `src-tauri/`, which is not here; it is skipped
+  (`RUST_CI` unset) rather than removed, because the workflow file is shared.
+

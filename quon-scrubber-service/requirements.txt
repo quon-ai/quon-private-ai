@@ -9,7 +9,8 @@ pydantic-settings>=2.14.2,<3.0
 # per-user OpenRouter sub-key at rest (multi-user auth / key management).
 pynacl>=1.6.2,<2.0
 
-# Deterministic string replacement (detection is done by the LLM, not Presidio).
+# Deterministic, position-based string replacement — Presidio's anonymizer is
+# used for replacement only; detection is the NER / GLiNER / regex layers above.
 presidio-anonymizer>=2.2.364,<3.0
 # Security floor for the `cryptography` that presidio-anonymizer pulls in
 # transitively: <48.0.1 is affected by GHSA-537c-gmf6-5ccf (flagged by the
@@ -28,8 +29,8 @@ presidio-analyzer>=2.2.364,<3.0
 # (local venv + Docker image). The capitalized-verb false positives are handled
 # by the POS filter (NER_PERSON_POS_FILTER), not the model size. `_lg` for German
 # is NOT recommended: it mislabels common "Dr. <Name>" phrases as MISC and drops
-# the real name. If a model is absent the service still runs and NER degrades
-# gracefully to regex + LLM.
+# the real name. If a model is absent the service still runs on the regex safety
+# net alone and reports fallback_mode=true.
 https://github.com/explosion/spacy-models/releases/download/de_core_news_md-3.8.0/de_core_news_md-3.8.0-py3-none-any.whl
 https://github.com/explosion/spacy-models/releases/download/en_core_web_md-3.8.0/en_core_web_md-3.8.0-py3-none-any.whl
 

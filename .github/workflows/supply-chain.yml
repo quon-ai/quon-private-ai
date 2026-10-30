@@ -163,10 +163,14 @@ jobs:
       # pip-licenses reads INSTALLED packages, so install the runtime deps first.
       - name: install backend runtime deps
         run: pip install -r quon-scrubber-service/requirements.txt pip-licenses
+      # --partial-match: without it pip-licenses compares the WHOLE licence
+      # string, so "MPL-1.1 OR GPL-2.0-only OR LGPL-2.1-or-later" (tld, via
+      # presidio-analyzer and courlan) passed a 'GPL' gate unseen (2026-10-30).
+      # tld is ignored by name because QUON elects its MPL-1.1 option.
       - name: pip license inventory + gate
         run: |
           pip-licenses --format=markdown --output-file python-licenses.md
-          pip-licenses --fail-on 'GPL;AGPL;SSPL'
+          pip-licenses --partial-match --fail-on 'GPL;AGPL;SSPL' --ignore-packages tld
       - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         continue-on-error: true

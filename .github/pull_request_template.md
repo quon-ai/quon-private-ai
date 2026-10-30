@@ -13,7 +13,8 @@ of opening a public PR (see SECURITY.md).
 ## Checklist
 
 - [ ] **Preflight is green** — `./deploy/preflight.sh` passes locally
-      (typecheck + lint + vitest + build, backend pytest, cross-browser e2e).
+      (typecheck + lint + vitest + build, backend pytest, corpus ratchet);
+      `npm run e2e` for anything that touches a screen or a flow.
 - [ ] **Tests added/updated** — regression test for logic fixes; unit/e2e
       coverage for new features; detection changes keep the corpus ratchet
       green (`QUON_RUN_CORPUS=1 python -m pytest tests/test_corpus.py -q`).

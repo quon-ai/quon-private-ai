@@ -105,5 +105,14 @@
   "overrides": {
     "adm-zip": "^0.6.0",
     "dompurify": "^3.4.11"
+  },
+  "description": "Privacy gateway for LLM chat: personal data is replaced with placeholders on your device before anything reaches the model provider. Zero-knowledge sync, self-hosted.",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/quon-ai/quon-private-ai.git"
+  },
+  "homepage": "https://github.com/quon-ai/quon-private-ai#readme",
+  "bugs": {
+    "url": "https://github.com/quon-ai/quon-private-ai/issues"
   }
 }

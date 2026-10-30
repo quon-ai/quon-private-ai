@@ -1,6 +1,7 @@
 """Deterministic safety-net / fallback detection.
 
-Runs alongside the LLM (safety net) and also serves as the Ollama-down fallback.
+Runs alongside the NER layer on every request (the safety net) and carries the
+whole request on its own when that layer is unavailable (``fallback_mode``).
 Covers the high-confidence, regex-friendly PII types:
   - EMAIL / PHONE / IBAN via Presidio's pattern recognizers
   - FINANCIAL_AMOUNT via a local currency regex (toggle: SAFETY_NET_AMOUNTS)

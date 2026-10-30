@@ -83,31 +83,31 @@ def _git_sha() -> str:
 def _run_metadata(fallback_count: int, n_cases: int) -> dict:
     """Describe the detection pipeline actually exercised by this run."""
     health = client.get("/health").json()
-    settings_resp = client.get("/settings").json()
-    backend = health.get("pii_backend", "cloud")
-    if backend == "cloud":
-        extractor = f"cloud:{settings_resp.get('pii_cloud_model', '?')}"
-    else:
-        extractor = f"local:{settings.ollama_model}"
     ner_part = (
         f"NER({settings.spacy_model_de}, {settings.spacy_model_en})"
         if health.get("ner_ready")
         else "NER off"
     )
+    if not health.get("gliner_enabled"):
+        gliner_part = "GLiNER off"
+    elif health.get("gliner_loaded"):
+        gliner_part = f"GLiNER({settings.gliner_model})"
+    else:
+        gliner_part = "GLiNER enabled but NOT loaded"
     if fallback_count == 0:
-        llm_status = f"active ({extractor})"
+        fallback_status = "none (every case ran the full pipeline)"
     elif fallback_count < n_cases:
-        llm_status = (
-            f"partial ({extractor}; {fallback_count}/{n_cases} cases fell back to NER+regex)"
+        fallback_status = (
+            f"{fallback_count}/{n_cases} cases ran on the safety net only (fallback_mode)"
         )
     else:
-        llm_status = f"inactive (all cases fell back to NER+regex; configured {extractor})"
+        fallback_status = "ALL cases ran on the safety net only (the NER layer never ran)"
     return {
         "date": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "pipeline": f"{ner_part} + {extractor}",
-        "extractor": extractor,
-        "llm_status": llm_status,
+        "pipeline": f"{ner_part} + {gliner_part} + safety net",
+        "fallback_status": fallback_status,
         "ner_ready": bool(health.get("ner_ready")),
+        "gliner_loaded": bool(health.get("gliner_loaded")),
         "git": _git_sha(),
     }
 
@@ -390,7 +390,7 @@ def _render_report(rows: list[dict], meta: dict) -> str:
         "# QUON Detection Quality Report\n\n"
         f"- Date: {meta['date']}\n"
         f"- Pipeline: {meta['pipeline']}\n"
-        f"- LLM enrichment: {meta['llm_status']}\n"
+        f"- Fallback: {meta['fallback_status']}\n"
         f"- NER ready: {str(meta['ner_ready']).lower()}\n"
         f"- Git commit: {meta['git']}\n"
         f"- Recall: {m['recall_pct']}% ({m['found']}/{m['must']})\n"

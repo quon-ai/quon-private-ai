@@ -13,11 +13,13 @@ You type ──▶ QUON scrubs PII locally ──▶ scrubbed text + placeholder
 You read ◀── placeholders re-hydrated locally ◀── answer (placeholders kept) ◀┘
 ```
 
-![Sending a prompt with personal data: QUON detects the name, e-mail, phone and address, shows exactly what will be sent as placeholders, and restores the real values in the answer](./docs/assets/pii-filter.gif)
+![Sending a prompt with personal data: QUON detects the name, e-mail, phone and address, shows exactly what will be sent as placeholders, and restores the real values in the answer](./docs/assets/pii-filter-en.gif)
+
+![Review mode: before sending, QUON lists every detected value — name, e-mail, phone, address — next to the placeholder the provider will receive](./docs/assets/pii-review-en.png)
 
 _Review mode: you see precisely what leaves the device. The provider receives
 `[PERSON_1]`, `[EMAIL_1]`, `[PHONE_1]` — the answer comes back with the real values
-restored locally. (UI shown in German; English is available.)_
+restored locally._
 
 QUON is built for people who must use AI on sensitive material — tax advisors,
 lawyers, doctors, anyone under GDPR — without handing names, emails, IBANs or
@@ -55,24 +57,36 @@ cp .env.example .env        # set QUON_DOMAIN, QUON_SERVER_SECRET, an OpenRouter
 docker compose up -d --build
 ```
 
-Then turn the third detector on (`GLINER_ENABLED=true` in `.env`) — it ships off
-so a first start does not download 1.5 GB before answering, but the reference
-deployment runs it on. Everything else, including backups and the environment
-reference, is in [docs/self-hosting.md](./docs/self-hosting.md).
+The shipped `.env.example` turns the third detector on (`GLINER_ENABLED=true`),
+so the first start downloads its ~1.5 GB model once before the scrubber reports
+ready. Everything else, including backups and the environment reference, is in
+[docs/self-hosting.md](./docs/self-hosting.md).
 
 ## Development
 
+Node 20+ and Python 3.11+.
+
 ```bash
-npm install && npm run dev                                   # frontend on :8080
+# backend on :8000 — the dev .env turns cookie security off; prod refuses to boot without it
 cd quon-scrubber-service && python -m venv .venv \
   && ./.venv/bin/pip install -r requirements-dev.txt \
-  && ./.venv/bin/uvicorn main:app --reload                   # backend on :8000
-npm run typecheck && npm run lint && npm test                # frontend checks
-cd quon-scrubber-service && ./.venv/bin/python -m pytest -q  # backend tests
+  && cp .env.example .env && sed -i.bak 's/^COOKIE_SECURE=.*/COOKIE_SECURE=false/' .env \
+  && ./.venv/bin/uvicorn main:app --reload
+# frontend on :8080 — /api is proxied to the backend so the session cookie stays same-site
+cd .. && npm install && cp .env.example .env \
+  && sed -i.bak 's#^VITE_QUON_API_URL=.*#VITE_QUON_API_URL=/api#' .env && npm run dev
 ```
 
-The end-to-end suite (`npm run e2e`, Chromium + WebKit) runs in CI; see
-[CONTRIBUTING.md](./CONTRIBUTING.md).
+Register an account in the app; without SMTP configured the verification link
+is printed in the backend log as `[DEV EMAIL]`. Checks:
+
+```bash
+npm run typecheck && npm run lint && npm test                # frontend
+cd quon-scrubber-service && ./.venv/bin/python -m pytest -q  # backend
+npm run e2e                                                  # Chromium + WebKit, ~7 min on a laptop
+```
+
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for the rest.
 
 ## Documentation
 

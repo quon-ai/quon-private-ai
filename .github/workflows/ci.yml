@@ -30,6 +30,11 @@ name: CI
 # out under `--override`. The Ethernet cable does NOT fix this — the upload is
 # bound by the internet uplink, not the LAN.
 
+# Every job gets a read-only token; the gate job widens its own block to read
+# the run it reports on. Nothing here writes to the repository.
+permissions:
+  contents: read
+
 on:
   # `push` deliberately scoped to main. An unscoped `push:` fires on EVERY
   # branch, so every dependabot PR ran CI TWICE — once for its branch push,
@@ -416,4 +421,6 @@ jobs:
       - name: Timings + budget ratchet
         env:
           GH_TOKEN: ${{ github.token }}
+          # empty on GitHub-hosted runners — ci-budgets.mjs picks the hosted E2E budget
+          CI_RUNNER: ${{ vars.CI_RUNNER }}
         run: node scripts/ci-duration-ratchet.mjs ${{ github.run_id }}

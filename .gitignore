@@ -93,3 +93,10 @@ quon-scrubber-service/tests/reports/local/
 # Generated per-session facts + scope marker (scripts/session-facts.sh)
 .claude/facts/
 .claude/.session
+# every .env variant except the committed examples
+.env.*
+!.env.example
+!.env.optional.example
+# key material never belongs in the tree
+*.pem
+*.key

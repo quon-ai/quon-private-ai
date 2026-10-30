@@ -72,3 +72,13 @@ updates:
           - "minor"
           - "patch"
           - "major"
+  # Base images (node, python, caddy) are floating tags; this is the only thing
+  # that ever proposes moving them.
+  - package-ecosystem: "docker"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+  - package-ecosystem: "docker"
+    directory: "/quon-scrubber-service"
+    schedule:
+      interval: "weekly"

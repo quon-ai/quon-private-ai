@@ -532,7 +532,7 @@ wasn't (so the model doesn't apply its own privacy heuristics to real text).
     global OpenRouter key, model catalog, disabled model ids. Editable live from the Settings UI without a restart.
   - **Durable per-user state** lives in SQLite (`DATABASE_PATH`). Prod must set
     `QUON_SERVER_SECRET` (sub-key sealing), `COOKIE_SECURE=true`, explicit
-    `CORS_ALLOW_ORIGINS`, SMTP, and — for hosted $5 keys — `OPENROUTER_PROVISIONING_KEY`.
+    `CORS_ALLOW_ORIGINS` and SMTP.
 
 See README §Configuration for the common knobs; `config.py` for the full set
 with rationale.

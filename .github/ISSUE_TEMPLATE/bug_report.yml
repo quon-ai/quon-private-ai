@@ -51,7 +51,7 @@ body:
       label: Where did this happen?
       options:
         - Self-hosted instance
-        - The public demo
+        - A hosted instance I was invited to
         - Local development setup
     validations:
       required: true

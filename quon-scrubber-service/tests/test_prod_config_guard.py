@@ -36,6 +36,18 @@ def test_prod_boot_rejects_wildcard_cors(monkeypatch, tmp_path):
         _boot()
 
 
+def test_prod_boot_rejects_empty_cors(monkeypatch, tmp_path):
+    """An EMPTY value resolves to ["*"] (config.cors_origins_list) and must be
+    refused exactly like the literal wildcard — the raw-string check missed it.
+    """
+    monkeypatch.setattr(settings, "database_path", str(tmp_path / "q.db"))
+    monkeypatch.setattr(settings, "cookie_secure", True)
+    monkeypatch.setattr(settings, "quon_server_secret", "s" * 32)
+    monkeypatch.setattr(settings, "cors_allow_origins", "")
+    with pytest.raises(RuntimeError, match="CORS_ALLOW_ORIGINS"):
+        _boot()
+
+
 def test_dev_boot_unaffected(monkeypatch, tmp_path):
     # cookie_secure off (dev/tests): boots without secret and with wildcard CORS.
     monkeypatch.setattr(settings, "database_path", str(tmp_path / "q.db"))

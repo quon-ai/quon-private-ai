@@ -23,11 +23,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
-# When run standalone (not via compose), reach Ollama on the host.
-# docker-compose.yml overrides this to the linked "ollama" service.
-ENV OLLAMA_URL=http://host.docker.internal:11434 \
-    OLLAMA_MODEL=qwen2.5:3b
-
 EXPOSE 8000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \

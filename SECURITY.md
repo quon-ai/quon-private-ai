@@ -66,5 +66,5 @@ Good-faith security research on your **own** self-hosted instance — conducted
 without degrading service for others, without accessing or exfiltrating other
 users' data, and reported privately as described above — is welcome, and we
 will not pursue legal action for it. When testing against an instance you do
-not operate (including the public demo), do not access data that is not yours;
+not operate (a hosted instance you were invited to), do not access data that is not yours;
 create your own test accounts.

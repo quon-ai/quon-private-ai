@@ -6,10 +6,13 @@ supply-chain checks in `.github/workflows/supply-chain.yml`.
 
 ## Policy
 
-QUON ships only under **permissive** licenses (MIT, ISC, BSD-2/3, Apache-2.0,
-0BSD, Unlicense, Python-2.0/PSF, Boost, and the weak-copyleft MPL-2.0). **Strong
-and network copyleft — GPL, AGPL, SSPL — is not allowed** in anything we
-distribute, and the CI license gate fails the build if it appears:
+This is the policy for **third-party dependencies** — QUON's own licence is
+the `LICENSE` file at the repository root and is not what this gate checks.
+Dependencies must be **permissive** (MIT, ISC, BSD-2/3, Apache-2.0, 0BSD,
+Unlicense, Python-2.0/PSF, Boost, or the weak-copyleft MPL-2.0). **Strong and
+network copyleft dependencies — GPL, AGPL, SSPL — are not allowed** in anything
+we distribute, so that every edition of QUON, whatever its own licence, stays
+redistributable; the CI license gate fails the build if one appears:
 
 - Frontend: `npm run licenses:check` (also runs in the `licenses` CI job).
 - Backend: `pip-licenses --fail-on 'GPL;AGPL;SSPL'` (in the `licenses` CI job).
@@ -57,8 +60,7 @@ attribution stays accurate — `npm run licenses:notices` for the frontend half.
 
 > This has drifted before: the 2026-08-14 regeneration picked up **`mermaid`** and
 > **`@tauri-apps/plugin-http`**, two production dependencies that had shipped
-> without attribution. Under a source-available licence the notices file is part
-> of what you distribute, so treat a dependency change without regeneration as an
+> without attribution. The notices file is part of what you distribute, so treat a dependency change without regeneration as an
 > incomplete change.
 
 ## SBOM (Bill of Materials)

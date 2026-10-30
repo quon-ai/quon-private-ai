@@ -3,6 +3,7 @@ import "./lib/error-capture";
 import { AsyncLocalStorage } from "node:async_hooks";
 
 import { cspExtraFromCookieHeader } from "./lib/cspExtra";
+import { FEATURES } from "./lib/features";
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 import { DEFAULT_LANG, langFromCookieHeader, type Lang } from "./lib/langPref";
@@ -73,14 +74,18 @@ function buildCsp(nonce: string, userExtra: string | null): string {
     // paddle-model-ecology…bcebos.com: photo-OCR model tars (lib/documents/ocr.ts).
     "connect-src 'self' https://huggingface.co https://cdn-lfs.huggingface.co" +
       " https://cdn-lfs-us-1.huggingface.co https://cdn.jsdelivr.net" +
-      " https://api.dropboxapi.com https://content.dropboxapi.com" + // Dropbox connector (browser-direct)
-      // OneDrive connector (browser-direct, Microsoft Graph). The download
-      // hosts are wildcards on purpose: `@microsoft.graph.downloadUrl` points
-      // at a per-request CDN host — *.files.1drv.com for personal accounts,
-      // <tenant>.sharepoint.com for work/school ones — so no fixed origin can
-      // cover it. login.microsoftonline.com is the PKCE token exchange.
-      " https://graph.microsoft.com https://login.microsoftonline.com" +
-      " https://*.files.1drv.com https://*.sharepoint.com" +
+      // The browser-direct connectors widen the egress allowlist; an edition
+      // without them (FEATURES.connectors=false) must not carry the hosts.
+      // Dropbox: the two API hosts. OneDrive (Microsoft Graph): the download
+      // hosts are wildcards on purpose — `@microsoft.graph.downloadUrl` points
+      // at a per-request CDN host, *.files.1drv.com for personal accounts and
+      // <tenant>.sharepoint.com for work/school ones, so no fixed origin can
+      // cover it; login.microsoftonline.com is the PKCE token exchange.
+      (FEATURES.connectors
+        ? " https://api.dropboxapi.com https://content.dropboxapi.com" +
+          " https://graph.microsoft.com https://login.microsoftonline.com" +
+          " https://*.files.1drv.com https://*.sharepoint.com"
+        : "") +
       ` https://paddle-model-ecology.bj.bcebos.com${extra ? " " + extra : ""}`,
     "worker-src 'self' blob:", // embedder + pdfjs workers
     "frame-ancestors 'none'",

@@ -43,7 +43,18 @@ export const JOBS = [
   // a tripwire for a 10x-class regression, not a performance target. If E2E
   // legitimately grows past this because the SUITE grew, add the tests and move
   // this with a new measurement quoted; do not nudge it to pass.
-  { match: /^E2E/, label: "E2E", budget: 55 * 60, timeout: 100 * 60 },
+  //
+  // HOSTED runners are a different machine class and get their own measured
+  // entry, not a loosened one: run 41108741619 (quon-private-ai, ubuntu-latest,
+  // 2 cores, 1 worker) measured 59m08s on 2026-10-30 with 200 passed · 14
+  // skipped. 80 min is the same ~38% headroom over that measurement. The Gate
+  // job exports CI_RUNNER (empty on hosted runners) so this file can tell.
+  {
+    match: /^E2E/,
+    label: "E2E",
+    budget: (process.env.CI_RUNNER ? 55 : 80) * 60,
+    timeout: 100 * 60,
+  },
   // measured 2026-08-16: 5m36s with a warm cargo cache.
   { match: /^Native/, label: "Native", budget: 12 * 60, timeout: 30 * 60 },
   // Listed so checkTimeoutDrift() below sees every timeout-minutes in ci.yml —

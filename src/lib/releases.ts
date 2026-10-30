@@ -104,7 +104,7 @@ export const RELEASES: Release[] = [
       {
         icon: ShieldCheck,
         title: "Sicherheit & Transparenz",
-        desc: "Sicherheits-Review, automatische Lieferketten-Prüfung (SBOM & Schwachstellen-Scans) und quelloffener Code unter BUSL-Lizenz.",
+        desc: "Sicherheits-Review, automatische Lieferketten-Prüfung (SBOM & Schwachstellen-Scans) und einsehbarer Quellcode.",
       },
       {
         icon: Gauge,

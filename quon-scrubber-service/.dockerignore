@@ -9,3 +9,9 @@ tests/REPORT.md
 .env.local
 .git
 .DS_Store
+runtime_settings.json
+*.db
+*.db-wal
+*.db-shm
+tests/
+.tld_cache/

@@ -91,12 +91,13 @@ Never commit or paste into PRs/issues:
 
 ## Extending QUON (connectors & detection)
 
-Want to contribute a new data-source connector or improve PII detection?
-Read **[docs/extending.md](docs/extending.md)** first — it covers the
-Connector interface + registry, the idempotent-ingest contract, the i18n
-requirements, the detection tiers (vocabulary → recognizer → new entity type
-via `entities.py`), and the invariants (zero-knowledge, fail-closed, no
-runtime plugin loading) every extension must preserve.
+Want to improve PII detection or add a data source? Read
+**[docs/extending.md](docs/extending.md)** first — the invariants
+(zero-knowledge, fail-closed, no runtime plugin loading) every extension must
+preserve, and the detection tiers (vocabulary → recognizer → new entity type
+via `entities.py`). Editions that ship connectors also carry
+`docs/extending-connectors.md`: the Connector interface + registry, the
+idempotent-ingest contract and the i18n requirements.
 
 ## Pull requests
 
@@ -110,11 +111,11 @@ runtime plugin loading) every extension must preserve.
 
 ## License of contributions
 
-QUON is source-available under the **Business Source License 1.1** (see the
-license file in the repository root). Contributions are accepted under the
+The licence QUON ships under is the one in the `LICENSE` file at the root of
+the repository you are contributing to. Contributions are accepted under the
 standard **inbound = outbound** rule: by submitting a pull request, you agree
-that your contribution is licensed to the project under the same license as
-the repository (including its scheduled change to Apache-2.0). There is no
+that your contribution is licensed to the project under that same licence,
+including any change of licence the file itself announces. There is no
 separate CLA.
 
 ## Code of conduct

@@ -115,9 +115,11 @@ async def lifespan(_app: FastAPI):
                 "Generate one (e.g. `openssl rand -base64 32`), set it in .env, "
                 "and keep it STABLE — rotating it invalidates sealed keys."
             )
-        if settings.cors_allow_origins.strip() == "*":
+        # Test the RESOLVED list, not the raw string: config maps an EMPTY value
+        # to ["*"] as well, and the raw check let that one through (2026-10-30).
+        if settings.cors_origins_list == ["*"]:
             raise RuntimeError(
-                "CORS_ALLOW_ORIGINS is '*' but cookies are Secure (production). "
+                "CORS_ALLOW_ORIGINS is '*' or empty but cookies are Secure (production). "
                 "Cookie auth requires explicit origins — set it to your exact "
                 "frontend origin, e.g. https://quon.example.com."
             )

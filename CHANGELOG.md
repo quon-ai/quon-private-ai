@@ -10,6 +10,16 @@ once it reaches 1.0.
 
 ## [Unreleased]
 
+### Added
+
+- **Core edition.** QUON can now be exported as a reduced, AGPL-3.0 edition
+  that contains the parts that are tested and settled — detection, the
+  filtered chat, accounts, encrypted sync, memory, documents, projects — and
+  leaves connectors, chat tools, agents, URL import, the briefing and the
+  native shells for later. Optional features register in three registries
+  (`optional_features.py`, `features.ts`, `syncExtras.ts`) instead of being
+  wired into screens, so the core needs no patches.
+
 ### Fixed
 
 - **GLiNER loads on a fresh install.** On a machine that had never run QUON

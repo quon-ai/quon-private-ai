@@ -164,7 +164,9 @@ export default defineConfig(async ({ command, mode }): Promise<UserConfig> => {
       // without CORS.
       proxy: {
         "/api": {
-          target: "http://localhost:8000",
+          // Overridable for a machine where :8000 is taken (QUON_DEV_API_TARGET);
+          // the default stays the documented dev port.
+          target: process.env.QUON_DEV_API_TARGET ?? "http://localhost:8000",
           changeOrigin: true,
           rewrite: (p) => p.replace(/^\/api/, ""),
         },

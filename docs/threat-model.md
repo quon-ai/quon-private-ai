@@ -118,7 +118,7 @@ Mitigating this fully requires out-of-band client distribution (signed
 packaged app, browser extension with pinned code) — not currently built.
 
 _Partial mitigations:_ self-hosting (you are the operator, so you trust the
-code you deploy — the intended posture for the source-available release);
+code you deploy — the intended posture for a self-hosted release);
 open source code that can be audited and diffed against what an instance
 serves.
 
