@@ -1,0 +1,44 @@
+name: Feature request
+description: Suggest an idea or improvement for QUON
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the suggestion! Note that QUON's core invariants are non-negotiable:
+        features must keep the zero-knowledge model (server never reads user content)
+        and fail-closed scrubbing intact. See
+        [ARCHITECTURE.md](../../ARCHITECTURE.md) and
+        [docs/threat-model.md](../../docs/threat-model.md).
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: Describe the use case or pain point, not just the solution.
+      placeholder: As a user handling ..., I need ...
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: What you would like to happen.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Other approaches or workarounds you have thought about.
+    validations:
+      required: false
+  - type: textarea
+    id: privacy
+    attributes:
+      label: Privacy considerations
+      description: |
+        Does this feature touch PII, encryption, sync, or what leaves the device?
+        If so, how would it preserve the zero-knowledge and fail-closed invariants?
+    validations:
+      required: false

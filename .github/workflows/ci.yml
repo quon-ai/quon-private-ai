@@ -1,0 +1,410 @@
+name: CI
+
+# WHERE THIS RUNS is a repository VARIABLE, not a commit: set `CI_RUNNER` to
+# `self-hosted` in Settings → Secrets and variables → Actions → Variables to
+# use the mini-PC runner, unset it to fall back to GitHub-hosted. That way a
+# runner that is down or busy is one click away from being bypassed, instead
+# of needing a commit while CI is red.
+#
+# ⚠️ NEVER set CI_RUNNER on a PUBLIC repository. A self-hosted runner plus a
+# public repo means anyone's pull request executes code on that machine.
+#
+# ⚠️ NO GitHub-cache round-trips on the self-hosted runner. `actions/cache` and
+# the `cache:` inputs of setup-node/setup-python talk to GitHub's cache service
+# over the internet — which is right for a hosted runner (fresh container every
+# time) and actively harmful here, because the mini PC KEEPS ~/.npm, ~/.cache/pip
+# and ~/.cache/ms-playwright between runs anyway. The round-trip buys nothing and
+# spends the one resource that box does not have: a 1.2 MB/s uplink.
+#
+# This was not a slowdown, it was total failure, and it read as flakiness:
+# GitHub reports a job killed by `timeout-minutes` as CANCELLED, so every run
+# since 2026-08-15 looked "superseded by a newer push". It wasn't. Measured
+# 2026-08-16 on run 31937226469:
+#   Backend  died at exactly 25m07s in the POST-job pip-cache SAVE, uploading
+#            13,598,592,160 B at 1.2 MB/s — 1.5% done, a ~3-hour transfer. The
+#            tests had already passed. The job was red because of a cache write.
+#   E2E      spent 29 min restoring caches before the FIRST test, leaving 16 of
+#            its 45 for a suite that needs ~19 on an idle machine (and this box
+#            is not idle — it is the production server).
+# Consequence: ci-gate.sh could never pass, and the last two deploys both went
+# out under `--override`. The Ethernet cable does NOT fix this — the upload is
+# bound by the internet uplink, not the LAN.
+
+on:
+  # `push` deliberately scoped to main. An unscoped `push:` fires on EVERY
+  # branch, so every dependabot PR ran CI TWICE — once for its branch push,
+  # once for the PR — doubling a 30-job queue on the single runner lane
+  # (observed 2026-08-13). A PR's own run covers the branch.
+  push:
+    # `claude/**` are per-session worktree branches (scripts/session-new.sh).
+    # Without them a pushed session branch produced NO run at all, so
+    # deploy/ci-gate.sh — which needs a green run for exactly that commit —
+    # could never pass for it. An ALLOW-LIST, deliberately: the 2026-08-13
+    # double-run came from an UNSCOPED `push:` matching dependabot/**, which
+    # this does not reintroduce. Each ref still gets its own self-cancelling
+    # lane via the concurrency group below.
+    branches: [main, 'claude/**']
+  pull_request:
+  # Re-run the gate on demand — after a runner outage, a cache bump, or to
+  # re-check a commit — without inventing a dummy commit to push.
+  workflow_dispatch:
+
+# One runner lane serves everything (see supply-chain.yml's header). Two rules
+# keep it from starving: a newer push to the same ref CANCELS the stale run,
+# and every job carries a hard timeout so a hang can never hold the lane for
+# GitHub's 6-hour default (measured cost 2026-08-12: a 19-job queue delayed
+# verification of a pushed commit by hours).
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    name: Frontend (typecheck · lint · test · build)
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      # An EMPTY `cache:` disables it — both setup actions gate on
+      # `if (cache && …)`. One expression instead of two duplicated step blocks.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: ${{ !vars.CI_RUNNER && 'npm' || '' }}
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm run test
+      - run: npm run build
+
+  backend:
+    name: Backend (pytest)
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 25
+    defaults:
+      run:
+        working-directory: quon-scrubber-service
+    steps:
+      - uses: actions/checkout@v7
+      # The runner IS the production box: /app/data/quon.db lives on this volume.
+      # The pip cache below had it at 83% before anyone looked, and that was
+      # found by accident. Warn early, fail before it can take the live service
+      # down. Runs first, so a full disk is reported even if the job then dies.
+      - name: Disk headroom on the runner
+        if: ${{ vars.CI_RUNNER }}
+        working-directory: ${{ github.workspace }}
+        run: |
+          free=$(df -BG --output=avail / | tail -1 | tr -dc '0-9')
+          echo "root volume free: ${free} G"
+          echo "- runner disk free: **${free} G**" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$free" -lt 8 ]; then
+            echo "::error::only ${free} G free on the box that also serves production"
+            exit 1
+          elif [ "$free" -lt 15 ]; then
+            echo "::warning::only ${free} G free on the box that also serves production"
+          fi
+      # Why the pip cache grows without bound, and why it is trimmed rather than
+      # purged: requirements.txt pins the two spaCy models by GitHub *release*
+      # URL, which 302-redirects to a SIGNED objects.githubusercontent.com URL
+      # that is different on every request. pip keys its http cache on the URL it
+      # finally fetched, so those ~90 MB NEVER hit the cache and are stored again
+      # on every install — measured 2026-08-16: 179 copies, 14 GB in
+      # ~/.cache/pip/http-v2, on a box that is 81% full and also holds quon.db.
+      # A SIZE cap, not an age cap. `-mtime +14` was tried first and deleted
+      # nothing: the 14 GB had accumulated in under two weeks, so every file was
+      # "recent". Newest-first up to 2 GB — roughly twice the 1.0 GB installed
+      # venv, so the whole real dependency set stays cached while the duplicates
+      # fall off the end. Runs FIRST, so it happens even when the job later fails.
+      - name: Bound the runner's pip cache
+        if: ${{ vars.CI_RUNNER }}
+        working-directory: ${{ github.workspace }}
+        run: |
+          d=~/.cache/pip/http-v2
+          [ -d "$d" ] || exit 0
+          before=$(du -sh "$d" | cut -f1)
+          find "$d" -type f -printf '%T@\t%s\t%p\n' \
+            | sort -rn \
+            | awk -F'\t' -v cap=$((2 * 1024 * 1024 * 1024)) '{ t += $2; if (t > cap) print $3 }' \
+            | xargs -r rm -f
+          echo "pip http cache: $before -> $(du -sh "$d" | cut -f1)"
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+          cache: ${{ !vars.CI_RUNNER && 'pip' || '' }}
+          cache-dependency-path: quon-scrubber-service/requirements-dev.txt
+      # requirements-dev.txt pulls in requirements.txt (incl. the pinned spaCy
+      # model wheels), so the NER tests run for real rather than skipping.
+      - run: pip install -r requirements-dev.txt
+      - run: python -m pytest -q -n auto --dist loadfile
+      # Detection ratchet: enforce the recall/precision floors that the plain
+      # pytest above SKIPS (the corpus is gated behind QUON_RUN_CORPUS). Config 1
+      # is NER + regex with the LLM off, so it needs no API key and is
+      # deterministic — a recall regression below the floor fails the build
+      # instead of shipping green.
+      - name: Detection ratchet (corpus recall/precision floors)
+        env:
+          QUON_RUN_CORPUS: "1"
+        run: python -m pytest tests/test_corpus.py -q
+
+  e2e:
+    name: E2E (Chromium + WebKit)
+    # NOT on `claude/**` session pushes. One runner serves everything, and with
+    # several parallel sessions a day this ~53-minute job was the lane: measured
+    # 2026-08-16/17, queue waits of 64 and 70 MINUTES for jobs behind it, and a
+    # deploy stamp for main that could not get scheduled for hours.
+    #
+    # Dependabot PRs deliberately KEEP E2E — a dependency bump is exactly where a
+    # cross-browser suite earns its cost. The saving comes from session branches,
+    # not from pull requests.
+    #
+    # ⚠️ Consequence: a `claude/**` branch has NO E2E evidence, so it can never
+    # be the source of a deploy. That was already the rule (deploys come from
+    # main); this makes routing around it impossible rather than merely
+    # discouraged. Run the suite for a session branch with `workflow_dispatch`,
+    # or open a PR.
+    if: >-
+      github.event_name == 'pull_request' ||
+      github.event_name == 'workflow_dispatch' ||
+      github.ref == 'refs/heads/main'
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
+    # 100, raised from 45 on 2026-08-16 — and then MEASURED on 2026-08-17:
+    # run 31969370349 finished in 53m02s (50.5 min of tests; 211 passed,
+    # 3 flaky, 4 skipped, 0 failures). The suite fits on this box.
+    #
+    # An earlier "~93 min", extrapolated linearly from "test 99 of 218 after
+    # 42m10s", was 75% HIGH and had been used to argue E2E could not run here at
+    # all. The back half of the suite is far faster than the front. Don't
+    # straight-line a test suite. The headroom above 53 stays because this box
+    # also serves production and its load varies.
+    timeout-minutes: 100
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: ${{ !vars.CI_RUNNER && 'npm' || '' }}
+      - run: npm ci
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+          cache: ${{ !vars.CI_RUNNER && 'pip' || '' }}
+          cache-dependency-path: quon-scrubber-service/requirements-dev.txt
+      # The Playwright webServer launches the real scrubber from its .venv
+      # (./.venv/bin/python), so build that venv here — with the spaCy model wheels
+      # so /scrub's NER runs for real, same as the backend job.
+      # Cached whole: the spaCy model wheels are the bulk of it and pip's wheel
+      # cache alone still re-unpacks them every run. ⚠️ A venv embeds absolute
+      # paths in its scripts, so this is only safe while the workspace path is
+      # stable; bump the key suffix if it ever misbehaves.
+      # Self-hosted: skipped, so `cache-hit` is empty and the venv is built below
+      # — which is FASTER here than restoring it, because the archive is GBs over
+      # the wire while a rebuild reads the runner's own warm pip cache.
+      - name: Cache scrubber venv
+        id: venv-cache
+        if: ${{ !vars.CI_RUNNER }}
+        uses: actions/cache@v4
+        with:
+          path: quon-scrubber-service/.venv
+          key: venv-v1-${{ runner.os }}-py3.11-${{ hashFiles('quon-scrubber-service/requirements-dev.txt', 'quon-scrubber-service/requirements.txt') }}
+      - name: Set up scrubber venv
+        if: steps.venv-cache.outputs.cache-hit != 'true'
+        working-directory: quon-scrubber-service
+        run: |
+          python -m venv .venv
+          ./.venv/bin/pip install -r requirements-dev.txt
+
+      # ~400 MB of browsers. Keyed on the lockfile so a Playwright bump
+      # invalidates it — a stale browser against a new driver fails obscurely.
+      # Self-hosted: ~/.cache/ms-playwright is outside the workspace, so it
+      # survives checkout's `git clean -ffdx` and the install below is a no-op.
+      - name: Cache Playwright browsers
+        if: ${{ !vars.CI_RUNNER }}
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
+      # --with-deps runs apt-get under sudo. That is right on a hosted runner
+      # and WRONG on the mini PC, which has no passwordless sudo — it would
+      # hang forever. There the OS deps are installed once by hand
+      # (`sudo npx playwright install-deps chromium webkit`), so the browsers
+      # install without touching apt.
+      - name: Install Playwright browsers (hosted — installs OS deps)
+        if: ${{ !vars.CI_RUNNER }}
+        run: npx playwright install --with-deps chromium webkit
+      - name: Install Playwright browsers (self-hosted — OS deps preinstalled)
+        if: ${{ vars.CI_RUNNER }}
+        run: npx playwright install chromium webkit
+
+      # The embedder mirror (~135 MB from HuggingFace). `pree2e` fetches it and
+      # is idempotent, so a hit makes it a no-op; a miss degrades to the old
+      # download, never to a broken run.
+      #
+      # The DELIBERATE exception to the no-cache-on-self-hosted rule above, for
+      # two reasons: this path is inside the workspace, so unlike ~/.cache it is
+      # wiped by checkout's `git clean -ffdx` and would be re-fetched every run;
+      # and it is 79 MB (~18 s), not gigabytes. Keeping it also takes a
+      # third-party host off the critical path of every gate run.
+      - name: Cache e2e model mirror
+        uses: actions/cache@v4
+        with:
+          path: tests/e2e/.models
+          key: e2e-models-${{ hashFiles('scripts/fetch-e2e-models.mjs') }}
+
+      - name: Run E2E (Chromium + WebKit)
+        # WORKER COUNT IS A DIAL, NOT A CONSTANT — and right now it is a live
+        # experiment, so it lives in a repo variable rather than in code.
+        #
+        # workers:2 landed 2026-08-19 and bought 25% wall clock on this runner
+        # (53m02s -> 39m54s). Since then E2E on main has gone 3 green / 2 red,
+        # and BOTH failures were the same two specs — attachment.spec.ts:14 and
+        # paperless.spec.ts:449. Neither is a broken test: attachment's 60s
+        # ceiling is MEASURED against a 27-28s healthy baseline, so failing it
+        # means the box took >2x its healthy time. Before two-wide the same
+        # suite ran 211 passed / 3 flaky / 0 failures.
+        #
+        # Two workers share ONE scrubber, and the scope file already records
+        # that the backend, not the browser, is this runner's ceiling. So the
+        # hypothesis is that two-wide traded 25% wall clock for a 40% failure
+        # rate — a bad trade, since a 40-minute suite nobody trusts is worth
+        # less than a 53-minute one that is believed.
+        #
+        # Set E2E_WORKERS=1 (default here) to test that. Flip the repo variable
+        # to 2 to revert without a commit. DELETE this dial once the answer is
+        # in and recorded — a permanent experiment is just an unexplained knob.
+        env:
+          QUON_E2E_WORKERS: ${{ vars.E2E_WORKERS || '1' }}
+        run: npm run e2e
+      # ON FAILURE ONLY, and never fatal.
+      #
+      # `!cancelled()` uploaded a full Playwright report after every GREEN run
+      # too. Nobody has ever opened the report of a passing suite, and 174 MB of
+      # them accumulated until 2026-08-16, when the E2E job went RED with
+      #   Failed to CreateArtifact: Artifact storage quota has been hit
+      # while step 12 — the actual suite — had reported SUCCESS (211 passed,
+      # 3 flaky, 4 skipped). A storage problem had manufactured a test verdict.
+      #
+      # continue-on-error, because that must never happen again in either
+      # direction: the report is a diagnostic aid, and a diagnostic aid that can
+      # fail the build it is meant to explain is worse than no report.
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        continue-on-error: true
+        with:
+          name: playwright-report
+          path: playwright-report/
+          retention-days: 7
+      # NOTE: the real-Safari smoke (`npm run smoke:safari`) needs macOS + Safari and a
+      # one-time `sudo safaridriver --enable`; run it locally before mini-PC deploys.
+
+  # --- native (Rust) --------------------------------------------------------
+  # The Tauri host carries IMAP credential handling, filesystem containment
+  # and the native embedder — code that had ZERO CI coverage until this job.
+  #
+  # ⚠️ Gated on vars.RUST_CI: compiling the crate on Linux needs system
+  # libraries (libwebkit2gtk-4.1-dev, libgtk-3-dev, libssl-dev, pkg-config,
+  # build-essential) that require a ONE-TIME sudo install on the self-hosted
+  # runner, plus rustup for the runner user. Until that has happened, an
+  # enabled job would be permanently red — and a gate that is red for known
+  # reasons trains people to ignore red. To flip it on:
+  #   ssh <user>@<self-hosted-runner>   # with sudo at the keyboard:
+  #   sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev libssl-dev pkg-config build-essential
+  #   curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+  #   gh variable set RUST_CI --body 1   # from any checkout
+  # The embed-parity test stays out of this lane on purpose (needs the model
+  # files; it is a release check, not a per-push one — see src-tauri/tests/).
+  native:
+    name: Native (cargo test · clippy)
+    if: vars.RUST_CI == '1'
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 30
+    # Put the build directory OUTSIDE the workspace on the self-hosted runner.
+    #
+    # This job was the last GitHub-cache round-trip left, and the Gate is what
+    # finally priced it: of 8m21s, the "Cache cargo" RESTORE was 7m58s — 95% of
+    # the job spent pulling a 1,464 MB archive over a 4.5 MB/s link. Half of that
+    # archive was `~/.cargo/registry`, which is 306 MB and had not been touched
+    # since Aug 14: it lives outside the workspace, so it was never deleted and
+    # never needed restoring. The other half was `src-tauri/target`, which needed
+    # restoring only because it sits INSIDE the workspace, where checkout's
+    # `git clean -ffdx` wipes it every run.
+    #
+    # So: move target/ next to the registry and the whole round-trip disappears.
+    # Same lesson as the 14 GB pip cache — on a runner that keeps its own disk,
+    # caching to GitHub buys nothing and spends the one scarce resource.
+    #
+    # Safe with one runner: cargo takes a lock on the target dir, and this box
+    # runs one job at a time. It is shared across branches by design — cargo
+    # fingerprints by content, so a branch switch rebuilds only what changed.
+    #
+    # Set via $GITHUB_ENV in a step, NOT as a job-level `env:` expression. The
+    # obvious `${{ vars.CI_RUNNER && '<path>' || '' }}` would hand a HOSTED
+    # runner `CARGO_TARGET_DIR=""`, and cargo's behaviour on an empty value is
+    # not something the fallback path should depend on. Setting it only where it
+    # applies removes the question.
+    steps:
+      - uses: actions/checkout@v7
+      # Also bounds the directory, for the same reason as the pip cache: an
+      # unbounded build tree on the box that serves production is a slow-motion
+      # outage. A whole-directory reset rather than a per-file prune — deleting
+      # files underneath cargo corrupts its fingerprint database, and one cold
+      # rebuild is cheap next to that.
+      - name: Persistent cargo target dir (self-hosted), bounded
+        if: ${{ vars.CI_RUNNER }}
+        run: |
+          d="$HOME/.cargo-target-quon"
+          echo "CARGO_TARGET_DIR=$d" >> "$GITHUB_ENV"
+          [ -d "$d" ] || { echo "target dir is new — this build is cold"; exit 0; }
+          gb=$(du -sBG "$d" | cut -f1 | tr -dc '0-9')
+          echo "cargo target dir: ${gb} G"
+          if [ "${gb:-0}" -gt 8 ]; then
+            echo "::warning::cargo target dir ${gb} G > 8 G cap — resetting; next build is cold"
+            rm -rf "$d"
+          fi
+      - name: Cache cargo
+        if: ${{ !vars.CI_RUNNER }}
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            src-tauri/target
+          key: cargo-${{ runner.os }}-${{ hashFiles('src-tauri/Cargo.lock') }}
+      - name: cargo test
+        working-directory: src-tauri
+        run: |
+          export PATH="$HOME/.cargo/bin:$PATH"
+          cargo test --locked
+      - name: cargo clippy (deny warnings)
+        working-directory: src-tauri
+        run: |
+          export PATH="$HOME/.cargo/bin:$PATH"
+          cargo clippy --locked -- -D warnings
+
+  # --- the gate: timings, budgets, and an honest verdict ---------------------
+  # A JOB, not a step, and that is load-bearing. The 2 min -> 25 min regression
+  # lived in the POST-job cache save, which runs after the last step has already
+  # reported success — no step-level timer can see it. The API's job duration
+  # can, because it spans setup and post-job as well.
+  #
+  # `if: always()` so it still reports when something failed or timed out, which
+  # is exactly when the timings matter. It re-states each job's result with
+  # "cancelled" disambiguated into TIMED OUT vs superseded, so a run page can no
+  # longer say "cancelled" and mean "dead for two days".
+  gate:
+    name: Gate (timings · budgets)
+    needs: [frontend, backend, e2e, native]
+    if: always()
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+      - name: Timings + budget ratchet
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node scripts/ci-duration-ratchet.mjs ${{ github.run_id }}

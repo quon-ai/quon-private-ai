@@ -1,0 +1,21 @@
+-r requirements.txt
+
+# --- Test / dev dependencies ----------------------------------------------
+pytest>=9.1.1,<10.0
+
+# Synthetic PII corpus generator for the scrubber quality suite (tests/synth.py).
+faker>=24,<40
+
+pytest-xdist>=3.6
+
+# PDF text extraction for the real-DOCUMENT eval (tests/realworld_docs_ingest.py).
+# Test-only: the production image never parses PDFs — under the zero-knowledge
+# model document text is extracted client-side, and the server sees only
+# ciphertext.
+pypdf>=5,<7
+
+# OCR for scanned PDFs in that same eval is OPTIONAL and macOS-only (Vision via
+# PyObjC + poppler's pdftoppm). Deliberately NOT pinned here: it must not become
+# a requirement for running the suite on Linux/CI. Without it the ingest reports
+# those files as SKIPPED rather than pretending they were empty.
+#   pip install pyobjc-framework-Vision pyobjc-framework-Quartz   # + brew install poppler

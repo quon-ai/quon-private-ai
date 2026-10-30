@@ -1,0 +1,15 @@
+node_modules
+dist
+.output
+.private
+.claude
+.git
+test-results
+playwright-report
+quon-scrubber-service
+deploy/mini-pc
+deploy/*.exp
+*.log
+.env
+.env.*
+!.env.example

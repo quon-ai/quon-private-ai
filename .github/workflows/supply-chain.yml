@@ -1,0 +1,216 @@
+name: Supply chain
+
+# Runs where CI_RUNNER says, same switch as ci.yml. These jobs were RED every
+# day for over a week — failing in ~4s with zero steps executed, the signature
+# of an exhausted GitHub Actions allowance, not of a real finding. So the
+# vulnerability scan, licence gate and SBOM silently did not run through a week
+# of dependency additions. Self-hosted minutes are free, which removes the
+# cause rather than papering over it.
+#
+# ⚠️ Same rule as ci.yml: NEVER set CI_RUNNER on a public repository.
+#
+# ⚠️ Also the same rule on caching: an empty `cache:` input disables it, because
+# a GitHub cache round-trip from the self-hosted runner costs a 1.2 MB/s uplink
+# to re-fetch directories that box already keeps. See ci.yml's header for the
+# measurement that made this non-negotiable.
+
+# SBOM + license + known-vulnerability compliance for both ecosystems (npm
+# frontend, pip backend). Runs on PRs and pushes to main, plus a weekly schedule
+# so newly-disclosed CVEs against unchanged code are still caught. The license
+# and vulnerability jobs GATE (fail the build); the SBOM is published as an
+# artifact each run (the machine-readable inventory an EU-CRA / procurement
+# review expects).
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: "0 6 * * 1" # Mondays 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Same one-lane discipline as ci.yml: a newer run supersedes, a hang cannot
+# hold the lane. The weekly scheduled run gets its own group so a Monday scan
+# is never cancelled by an unrelated push.
+concurrency:
+  group: supply-${{ github.event_name == 'schedule' && 'cron' || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # --- known vulnerabilities (blocking) ------------------------------------
+  vulnerabilities:
+    name: Vulnerabilities (npm audit · pip-audit)
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: ${{ !vars.CI_RUNNER && 'npm' || '' }}
+      - run: npm ci
+      # Production deps only, fail on high/critical (dev-tool advisories don't
+      # reach users). Downgrade to `moderate` once the baseline is clean if you
+      # want a tighter gate.
+      # Wrapper, not raw `npm audit`: advisories with NO fix in UNREACHABLE deps
+      # (see scripts/check-audit.mjs ALLOW list — written reason + expiry each)
+      # must not keep the gate permanently red. A gate that is red for known
+      # reasons trains people to ignore red; four real advisories sat unnoticed
+      # on main exactly that way until 2026-08-13.
+      - name: npm audit (production, with documented exceptions)
+        run: node scripts/check-audit.mjs
+      # Catches what `npm audit` structurally cannot: a compromised-maintainer
+      # or typosquat release pulled in before any advisory exists. Was
+      # `minimumReleaseAge` in bunfig.toml, which never ran (nothing here uses
+      # bun) — see the header of the script.
+      - name: Minimum release age (production deps)
+        run: node scripts/check-release-age.mjs
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+      # pip-audit reads the requirements file directly (no heavy install) and
+      # checks it against the OSV / PyPI advisory databases.
+      - name: pip-audit (backend requirements)
+        run: |
+          python -m pip install --upgrade pip pip-audit
+          # The two spaCy models are pinned to official explosion release
+          # wheels by URL. They are not PyPI distributions, so pip-audit says
+          # "Dependency not found on PyPI and could not be audited" and
+          # --strict makes that fatal — six red runs that were not
+          # vulnerabilities. Auditing them via PyPI is impossible by
+          # construction, so they are filtered here rather than by dropping
+          # --strict, which would also silence genuinely unauditable deps.
+          grep -v '^https://' quon-scrubber-service/requirements.txt > /tmp/req-pypi.txt
+          # cryptography 48.0.1 — three advisories, all UNREACHABLE from here,
+          # and the upgrade is blocked upstream. Assessed 2026-08-24:
+          #   PYSEC-2026-3552  PKCS#7 EnvelopedData Bleichenbacher oracle
+          #   PYSEC-2026-3553  X.509 path-building DoS (duplicate self-signed)
+          #   PYSEC-2026-3554  X.509 wildcard escapes permittedSubtrees
+          # All three are in X.509 verification / PKCS#7 decryption. QUON does
+          # not import cryptography at all; the only consumer is
+          # presidio-anonymizer, whose sole import is aes_cipher.py (symmetric
+          # AES padding + Cipher/algorithms/modes). No cert verification, no
+          # PKCS#7, so no reachable path.
+          # Fixes need >=49 (3553/3554) and >=50 (3552), but
+          # presidio-anonymizer 2.2.364 — the LATEST release — hard-caps
+          # cryptography <49.0.0, so this is not fixable by us today.
+          # DROP THESE IGNORES the moment presidio lifts the cap. They are
+          # per-ID on purpose: any NEW advisory still fails this job.
+          pip-audit -r /tmp/req-pypi.txt --strict \
+            --ignore-vuln PYSEC-2026-3552 \
+            --ignore-vuln PYSEC-2026-3553 \
+            --ignore-vuln PYSEC-2026-3554
+
+  # --- OSV-Scanner: unified OSV report across all lockfiles (blocking) ------
+  osv-scanner:
+    name: OSV-Scanner (all lockfiles)
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      # Official OSV-Scanner action — note the SUB-PATH. The repository ROOT
+      # carries an action.yml with name/description/branding but NO `runs:`
+      # section, so `google/osv-scanner-action@vX` resolves and then fails with
+      #   Top level 'runs:' section is required for .../action.yml
+      # which reads like a bad ref and is not one. Dependabot bumps the tag
+      # happily; it cannot know the path is wrong. Broken this way since the
+      # v2.3.8 bump, unnoticed because nothing watches this workflow.
+      #
+      # Second breakage from the SAME bump, found 2026-08-24: v2 REMOVED
+      # `--skip-git`, so the binary exited 127 with "flag provided but not
+      # defined" and the scanner never ran at all — six red runs that looked
+      # like findings and were an unparsed flag. Skipping the root git repo is
+      # the v2 DEFAULT (`--include-git-root` opts back in), so the fix is to
+      # delete the line, not to translate it.
+      - uses: google/osv-scanner-action/osv-scanner-action@v2.3.8
+        with:
+          scan-args: |-
+            --recursive
+            --config=osv-scanner.toml
+            ./
+
+  # --- license compliance (blocking on strong copyleft) --------------------
+  licenses:
+    name: Licenses (npm · pip)
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 20
+          cache: ${{ !vars.CI_RUNNER && 'npm' || '' }}
+      - run: npm ci
+      # Full report as an artifact + a hard gate on strong/network copyleft
+      # (GPL/AGPL/SSPL) reaching the shipped frontend. LGPL/MPL are reported but
+      # not failed (weak copyleft is fine for this use); review the artifact.
+      - name: npm license inventory
+        run: npx --yes license-checker --production --summary > npm-licenses.txt || true
+      # --excludePrivatePackages: the gate judges DEPENDENCIES. The root package
+      # is private:true, and in the core edition it is itself AGPL-3.0 — without
+      # this flag the gate would fail on the project's own licence.
+      - name: npm license gate (no GPL/AGPL/SSPL in production)
+        run: |
+          npx --yes license-checker --production --excludePrivatePackages --failOn \
+            'GPL-2.0;GPL-2.0-only;GPL-2.0-or-later;GPL-3.0;GPL-3.0-only;GPL-3.0-or-later;AGPL-3.0;AGPL-3.0-only;AGPL-3.0-or-later;SSPL-1.0'
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.11"
+          cache: ${{ !vars.CI_RUNNER && 'pip' || '' }}
+          cache-dependency-path: quon-scrubber-service/requirements.txt
+      # pip-licenses reads INSTALLED packages, so install the runtime deps first.
+      - name: install backend runtime deps
+        run: pip install -r quon-scrubber-service/requirements.txt pip-licenses
+      - name: pip license inventory + gate
+        run: |
+          pip-licenses --format=markdown --output-file python-licenses.md
+          pip-licenses --fail-on 'GPL;AGPL;SSPL'
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        with:
+          name: license-inventory
+          path: |
+            npm-licenses.txt
+            python-licenses.md
+          retention-days: 30
+
+  # --- SBOM artifact (CycloneDX, whole repo) -------------------------------
+  sbom:
+    name: SBOM (CycloneDX via Syft)
+    runs-on: ${{ vars.CI_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      # anchore/sbom-action wraps Syft; scans npm + pip from source and emits a
+      # CycloneDX document. Uploaded as a build artifact (and attached to the run).
+      # No `artifact-name:` — that input makes this action upload the SBOM
+      # ITSELF, and the explicit upload below then stored a SECOND copy under a
+      # different name. Two 5 MB artifacts, 90-day retention, of the same
+      # document. Writing the file only, and uploading it once, halves the
+      # footprint and leaves retention controllable in one place.
+      # `upload-artifact: false` is the input that actually stops it. Omitting
+      # `artifact-name:` does NOT — verified 2026-08-24: this action uploaded
+      # /tmp/sbom-action-*/quon-sbom.cyclonedx.json itself, hit the storage
+      # quota and failed the job BEFORE the guarded upload below ever ran. The
+      # continue-on-error underneath was protecting the wrong step.
+      - uses: anchore/sbom-action@v0
+        with:
+          path: .
+          format: cyclonedx-json
+          output-file: quon-sbom.cyclonedx.json
+          upload-artifact: false
+      # continue-on-error: on 2026-08-18 this job went red with "Artifact storage
+      # quota has been hit" while the scan itself had succeeded — a storage
+      # problem masquerading as a compliance failure, the same shape that turned
+      # a passing E2E suite red two days earlier. The scan verdict is the gate;
+      # the artifact is evidence, and missing evidence is a warning, not a fail.
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        with:
+          name: sbom-cyclonedx
+          path: quon-sbom.cyclonedx.json
+          retention-days: 90

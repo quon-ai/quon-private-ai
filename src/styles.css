@@ -1,0 +1,799 @@
+@import "tailwindcss" source(none);
+@import "tw-animate-css";
+@source "../src";
+/* Inter is loaded via a <link> in src/routes/__root.tsx — a remote @import
+   here breaks the lightningcss build (it tries to bundle the URL as a file). */
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --font-sans: "Inter", system-ui, sans-serif;
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-quon-bg: var(--quon-bg);
+  --color-quon-surface: var(--quon-surface);
+  --color-quon-surface-2: var(--quon-surface-2);
+  --color-quon-border: var(--quon-border);
+  --color-quon-text: var(--quon-text);
+  --color-quon-muted: var(--quon-muted);
+  --color-quon-indigo: var(--quon-indigo);
+  --color-quon-indigo-hover: var(--quon-indigo-hover);
+  --color-quon-green: var(--quon-green);
+  --color-quon-yellow: var(--quon-yellow);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+:root {
+  --radius: 0.75rem;
+
+  --quon-bg: oklch(0.13 0.015 270);
+  --quon-surface: oklch(0.18 0.018 270);
+  --quon-surface-2: oklch(0.22 0.02 270);
+  --quon-border: oklch(0.28 0.02 270);
+  --quon-text: oklch(0.97 0.005 270);
+  /* Lifted from 0.65 for better contrast (WCAG AA) on the dark surfaces. */
+  --quon-muted: oklch(0.72 0.02 270);
+  --quon-indigo: oklch(0.62 0.19 277);
+  --quon-indigo-hover: oklch(0.68 0.19 277);
+  --quon-green: oklch(0.72 0.18 155);
+  --quon-yellow: oklch(0.82 0.15 85);
+
+  --background: var(--quon-bg);
+  --foreground: var(--quon-text);
+  --card: var(--quon-surface);
+  --card-foreground: var(--quon-text);
+  --popover: var(--quon-surface-2);
+  --popover-foreground: var(--quon-text);
+  --primary: var(--quon-indigo);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: var(--quon-surface-2);
+  --secondary-foreground: var(--quon-text);
+  --muted: var(--quon-surface);
+  --muted-foreground: var(--quon-muted);
+  --accent: var(--quon-surface-2);
+  --accent-foreground: var(--quon-text);
+  --destructive: oklch(0.65 0.22 27);
+  --destructive-foreground: oklch(1 0 0);
+  --border: var(--quon-border);
+  --input: var(--quon-border);
+  --ring: var(--quon-indigo);
+
+  /* Sidebar surface — opaque so the mobile drawer (a Sheet that slides over the
+     page) is fully readable, not see-through. Distinct from --quon-bg for
+     visual hierarchy on desktop. */
+  --sidebar: var(--quon-surface);
+  --sidebar-foreground: var(--quon-text);
+  --sidebar-primary: var(--quon-indigo);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: var(--quon-surface-2);
+  --sidebar-accent-foreground: var(--quon-text);
+  --sidebar-border: var(--quon-border);
+  --sidebar-ring: var(--quon-indigo);
+}
+
+.dark {
+  --background: var(--quon-bg);
+  --foreground: var(--quon-text);
+}
+
+@layer base {
+  * {
+    border-color: var(--color-border);
+  }
+  html,
+  body {
+    background-color: var(--color-quon-bg);
+    color: var(--color-quon-text);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+  /* Keyboard-only focus ring on interactive elements (a11y). */
+  a:focus-visible,
+  button:focus-visible,
+  [role="button"]:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible,
+  [role="switch"]:focus-visible,
+  [tabindex]:focus-visible {
+    outline: 2px solid var(--quon-indigo);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+}
+
+@utility glow-green {
+  box-shadow:
+    0 0 0 3px color-mix(in oklab, var(--quon-green) 20%, transparent),
+    0 0 12px color-mix(in oklab, var(--quon-green) 60%, transparent);
+}
+@utility glow-indigo {
+  box-shadow: 0 0 24px color-mix(in oklab, var(--quon-indigo) 40%, transparent);
+}
+
+/* Shimmer sweep for the chat "waiting" label (loading indicator): a soft highlight
+   travels across the muted text so a pending bubble reads as actively working, not
+   stalled. Text stays real (screen-reader accessible); only the fill animates. */
+@keyframes quon-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+.quon-shimmer {
+  background: linear-gradient(
+    100deg,
+    var(--quon-muted) 36%,
+    var(--quon-text) 50%,
+    var(--quon-muted) 64%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: quon-shimmer 1.9s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .quon-shimmer {
+    animation: none;
+    background: none;
+    -webkit-text-fill-color: var(--quon-muted);
+    color: var(--quon-muted);
+  }
+}
+
+/* iOS Safari auto-zooms when a focused input's font is < 16px and does NOT zoom
+   back out — which left the app "zoomed in" (and content cut off) after login on
+   iPhone. Keep form controls at 16px on small screens to suppress that. Rule is
+   intentionally unlayered so it beats Tailwind's layered `text-sm` utility, while
+   preserving pinch-zoom (unlike maximum-scale=1). */
+@media (max-width: 640px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+/* Slim, subtle scrollbars. The OS-default chunky bar (esp. the bright one macOS
+   shows on hover) looks harsh on the dark UI — most visibly on the chat sidebar.
+   Firefox uses scrollbar-width/color; WebKit/Blink use the ::-webkit pseudo. The
+   transparent border + content-box clip make the thumb read as a thin rounded pill
+   with breathing room. Pointer-only (coarse touch devices hide the bar anyway). */
+@media (pointer: fine) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--quon-border) transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  *::-webkit-scrollbar-thumb {
+    background-color: var(--quon-border);
+    background-clip: content-box;
+    border: 3px solid transparent;
+    border-radius: 9999px;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: var(--quon-muted);
+  }
+  *::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+}
+
+/* Document viewer "Original" mode for DOCX: mammoth's converted HTML is injected
+   as-is (after the docxHtml.ts allowlist), so it carries no classes — style the
+   bare tags, scoped under .quon-docx. Deliberately paper-like (dark text on the
+   white sheet the component renders) rather than the app's dark theme. */
+.quon-docx h1,
+.quon-docx h2,
+.quon-docx h3,
+.quon-docx h4,
+.quon-docx h5,
+.quon-docx h6 {
+  margin: 1em 0 0.4em;
+  font-weight: 600;
+  line-height: 1.25;
+}
+.quon-docx h1 {
+  font-size: 1.5em;
+}
+.quon-docx h2 {
+  font-size: 1.25em;
+}
+.quon-docx h3 {
+  font-size: 1.1em;
+}
+.quon-docx :first-child {
+  margin-top: 0;
+}
+.quon-docx p {
+  margin: 0.5em 0;
+}
+.quon-docx ul,
+.quon-docx ol {
+  margin: 0.5em 0;
+  padding-left: 1.4em;
+}
+.quon-docx ul {
+  list-style: disc;
+}
+.quon-docx ol {
+  list-style: decimal;
+}
+.quon-docx a {
+  color: oklch(0.45 0.18 275);
+  text-decoration: underline;
+}
+.quon-docx table {
+  margin: 0.75em 0;
+  border-collapse: collapse;
+  width: 100%;
+}
+.quon-docx th,
+.quon-docx td {
+  border: 1px solid oklch(0.85 0 0);
+  padding: 0.3em 0.5em;
+  text-align: left;
+  vertical-align: top;
+}
+.quon-docx th {
+  font-weight: 600;
+  background: oklch(0.96 0 0);
+}
+.quon-docx img {
+  max-width: 100%;
+  height: auto;
+}
+.quon-docx blockquote {
+  margin: 0.75em 0;
+  padding-left: 0.75em;
+  border-left: 3px solid oklch(0.85 0 0);
+  color: oklch(0.45 0 0);
+}
+.quon-docx pre {
+  margin: 0.5em 0;
+  padding: 0.5em;
+  overflow-x: auto;
+  background: oklch(0.96 0 0);
+  border-radius: 6px;
+}
+
+/* Detection-preview marks (feedback #55): what the filter WOULD redact, painted
+   in place. One deliberate look everywhere — text view, DOCX/HTML/Markdown
+   originals — so "marked = caught" reads the same in every rendering. The PDF
+   overlay mimics it with translucent rects (DocumentViewer). */
+mark[data-quon-hit],
+.quon-detect-mark {
+  background: rgb(253 224 71 / 0.45); /* yellow-300/45 — visible on dark AND paper-white */
+  color: inherit;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgb(250 204 21 / 0.5);
+  padding: 0 1px;
+}
+
+/* Hand-redacted ("Immer schwärzen") terms get their OWN color, indigo instead
+   of yellow — the filter caught the rest, the user caught this. Conflating the
+   two would misreport who found what. Overrides the rule above by cascade
+   order (equal-specificity attribute selectors) for text-node marks; the
+   `.quon-detect-mark-manual` class variant covers the PDF overlay, which draws
+   plain positioned <div> rects rather than <mark> elements. */
+mark[data-quon-hit="MANUAL"],
+.quon-detect-mark-manual {
+  background: color-mix(in oklab, var(--quon-indigo) 35%, transparent);
+  box-shadow: 0 0 0 1px color-mix(in oklab, var(--quon-indigo) 55%, transparent);
+}
+
+/* PDF Original view: a real, selectable pdf.js TextLayer mounted on top of
+   each rasterized page (DocumentViewer's PdfPage), so "Immer schwärzen"
+   works there exactly like it does in the Text view. QUON never imports
+   pdf.js's own web/pdf_viewer.css (it drags in the whole viewer chrome —
+   find bar, annotation editor, etc.) — this is the minimal subset the
+   TextLayer class itself actually needs: it sets --font-height/--scale-x/
+   --rotate per span and a --min-font-size on the container in JS (see
+   text_layer.js), and expects the CSS below to consume them. Positioning
+   (left/top per span, as %) is inline, set by pdf.js itself — untouched here.
+   Box sizing (width/height) is pinned in JS (PdfPage.mountTextLayer) rather
+   than left to pdf.js's setLayerDimensions, which sizes via a CSS round()
+   expression tied to custom properties pdf_viewer.css defines and we don't. */
+.quon-pdf-text-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  overflow: hidden;
+  line-height: 1;
+  text-align: initial;
+  transform-origin: 0 0;
+  --scale-factor: 1; /* set per page by mountTextLayer() */
+}
+.quon-pdf-text-layer span,
+.quon-pdf-text-layer br {
+  position: absolute;
+  white-space: pre;
+  color: transparent;
+  cursor: text;
+  transform-origin: 0% 0%;
+}
+.quon-pdf-text-layer > span,
+.quon-pdf-text-layer .markedContent span {
+  --font-height: 0;
+  --scale-x: 1;
+  --rotate: 0deg;
+  font-size: calc(var(--scale-factor) * var(--font-height));
+  transform: rotate(var(--rotate)) scaleX(var(--scale-x));
+}
+.quon-pdf-text-layer .markedContent {
+  display: contents;
+}
+.quon-pdf-text-layer ::selection {
+  background: rgb(129 140 248 / 0.4); /* indigo-400/40 — visible on the white page */
+}
+
+/* /trust — the animated data-flow diagram (the "Ameisenstraße"). Kept as scoped
+   CSS rather than utilities, for the same reason quon-shimmer is: the
+   marching-ants tracks, the travelling packet chips and the hero lift are
+   animation geometry Tailwind can't express cleanly. All colour derives from the
+   --quon-* tokens (tints via color-mix, so they track the theme); motion respects
+   prefers-reduced-motion by falling back to a static snapshot of the trail. */
+.qt-flow {
+  position: relative;
+  margin-top: 1.5rem;
+  overflow: hidden;
+  border: 1px solid var(--quon-border);
+  border-radius: 18px;
+  background: linear-gradient(180deg, var(--quon-surface), var(--quon-bg));
+  padding: 26px 20px 20px;
+}
+.qt-flow-cap {
+  position: absolute;
+  top: 12px;
+  left: 18px;
+  font-size: 10.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--quon-muted);
+  opacity: 0.7;
+}
+.qt-stations {
+  display: grid;
+  grid-template-columns: 1fr 1.15fr 1fr;
+  align-items: stretch;
+  margin-top: 20px;
+}
+.qt-node {
+  position: relative;
+  border: 1px solid var(--quon-border);
+  border-radius: 14px;
+  background: var(--quon-surface-2);
+  padding: 14px 13px;
+  text-align: center;
+}
+.qt-node-ico {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  margin: 0 auto 8px;
+  border-radius: 10px;
+  background: color-mix(in oklab, var(--quon-indigo) 16%, transparent);
+  color: var(--quon-indigo-hover);
+}
+.qt-node h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--quon-text);
+}
+.qt-node p {
+  margin: 4px 0 0;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--quon-muted);
+}
+.qt-node.qt-hero {
+  z-index: 3;
+  transform: translateY(-8px);
+  border-color: color-mix(in oklab, var(--quon-indigo) 55%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--quon-indigo) 26%, var(--quon-surface-2)),
+    var(--quon-surface-2)
+  );
+  box-shadow:
+    0 0 0 1px color-mix(in oklab, var(--quon-indigo) 30%, transparent),
+    0 14px 40px -18px color-mix(in oklab, var(--quon-indigo) 80%, transparent);
+}
+.qt-node.qt-hero h3 {
+  font-size: 14px;
+}
+.qt-node.qt-hero .qt-node-ico {
+  width: 42px;
+  height: 42px;
+  background: var(--quon-indigo);
+  color: #fff;
+  box-shadow: 0 0 22px color-mix(in oklab, var(--quon-indigo) 70%, transparent);
+  animation: qt-pulse 2.6s ease-in-out infinite;
+}
+@keyframes qt-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 14px color-mix(in oklab, var(--quon-indigo) 50%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 30px color-mix(in oklab, var(--quon-indigo) 95%, transparent);
+  }
+}
+.qt-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  margin-top: 9px;
+  padding: 3px 8px;
+  border: 1px solid color-mix(in oklab, var(--quon-green) 45%, transparent);
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--quon-green) 14%, transparent);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--quon-green);
+}
+.qt-model {
+  display: block;
+  margin-top: 8px;
+  font-size: 10.5px;
+  line-height: 1.45;
+  color: var(--quon-muted);
+}
+
+/* The ant trail: two dashed legs (device→filter, filter→provider) with packet
+   chips travelling along them, plus a slower return track underneath. */
+.qt-lane {
+  grid-column: 1 / -1;
+  position: relative;
+  height: 66px;
+  margin-top: 2px;
+}
+.qt-track {
+  position: absolute;
+  top: 50%;
+  height: 2px;
+  border-radius: 2px;
+  transform: translateY(-50%);
+  background: repeating-linear-gradient(90deg, currentColor 0 7px, transparent 7px 14px);
+  animation: qt-march 0.9s linear infinite;
+}
+@keyframes qt-march {
+  to {
+    background-position: 14px 0;
+  }
+}
+.qt-leg-a {
+  left: 16%;
+  right: 52%;
+  color: var(--quon-yellow);
+}
+.qt-leg-b {
+  left: 48%;
+  right: 16%;
+  color: var(--quon-green);
+}
+.qt-pkt {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border: 1px solid;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.qt-pkt.qt-real {
+  border-color: color-mix(in oklab, var(--quon-yellow) 50%, transparent);
+  background: color-mix(in oklab, var(--quon-yellow) 14%, transparent);
+  color: var(--quon-yellow);
+}
+.qt-pkt.qt-safe {
+  border-color: color-mix(in oklab, var(--quon-green) 50%, transparent);
+  background: color-mix(in oklab, var(--quon-green) 14%, transparent);
+  color: var(--quon-green);
+}
+.qt-pkt .qt-lk {
+  font-size: 9px;
+  opacity: 0.85;
+}
+.qt-ride-a {
+  animation: qt-ride-a 3.4s linear infinite;
+}
+.qt-ride-a.qt-b {
+  animation-delay: 1.7s;
+}
+@keyframes qt-ride-a {
+  0% {
+    left: 16%;
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  42% {
+    left: 44%;
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+  100% {
+    left: 44%;
+    opacity: 0;
+  }
+}
+.qt-ride-b {
+  animation: qt-ride-b 3.4s linear infinite;
+}
+.qt-ride-b.qt-b {
+  animation-delay: 1.7s;
+}
+@keyframes qt-ride-b {
+  0% {
+    left: 50%;
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  84% {
+    left: 82%;
+    opacity: 1;
+  }
+  92% {
+    opacity: 0;
+  }
+  100% {
+    left: 82%;
+    opacity: 0;
+  }
+}
+.qt-lane-label {
+  position: absolute;
+  top: calc(50% + 13px);
+  font-size: 9.5px;
+  color: var(--quon-muted);
+}
+.qt-lbl-a {
+  left: 22%;
+}
+.qt-lbl-b {
+  left: 57%;
+}
+.qt-return {
+  grid-column: 1 / -1;
+  position: relative;
+  height: 34px;
+  margin-top: 6px;
+}
+.qt-rtrack {
+  position: absolute;
+  left: 16%;
+  right: 16%;
+  top: 50%;
+  height: 2px;
+  transform: translateY(-50%);
+  color: var(--quon-green);
+  background: repeating-linear-gradient(90deg, currentColor 0 7px, transparent 7px 14px);
+  animation: qt-march-back 0.9s linear infinite;
+  opacity: 0.6;
+}
+@keyframes qt-march-back {
+  to {
+    background-position: -14px 0;
+  }
+}
+.qt-rlabel {
+  position: absolute;
+  left: 50%;
+  top: calc(50% - 20px);
+  transform: translateX(-50%);
+  font-size: 9.5px;
+  color: var(--quon-muted);
+}
+.qt-rarrow {
+  position: absolute;
+  left: 16%;
+  top: 50%;
+  transform: translate(-2px, -50%);
+  color: var(--quon-green);
+  font-size: 11px;
+}
+
+/* Two things to remember: zero-knowledge storage (green) vs. the one read (amber). */
+.qt-pledge {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 16px;
+}
+.qt-pl {
+  border: 1px solid;
+  border-radius: 14px;
+  padding: 15px 16px;
+}
+.qt-pl.qt-safe {
+  border-color: color-mix(in oklab, var(--quon-green) 45%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--quon-green) 10%, transparent),
+    transparent
+  );
+}
+.qt-pl.qt-honest {
+  border-color: color-mix(in oklab, var(--quon-yellow) 40%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--quon-yellow) 9%, transparent),
+    transparent
+  );
+}
+.qt-pl h4 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.qt-pl.qt-safe h4 {
+  color: var(--quon-green);
+}
+.qt-pl.qt-honest h4 {
+  color: var(--quon-yellow);
+}
+.qt-pl p {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--quon-muted);
+}
+
+/* Detail cards under the diagram; the middle one (the filter) is the KERN card. */
+.qt-cards {
+  display: grid;
+  grid-template-columns: 1fr 1.25fr 1fr;
+  gap: 12px;
+  margin-top: 12px;
+}
+.qt-card {
+  border: 1px solid var(--quon-border);
+  border-radius: 14px;
+  background: var(--quon-surface);
+  padding: 15px;
+}
+.qt-card.qt-key {
+  border-color: color-mix(in oklab, var(--quon-indigo) 40%, transparent);
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--quon-indigo) 12%, var(--quon-surface)),
+    var(--quon-surface)
+  );
+}
+.qt-card h4 {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0 0 7px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--quon-text);
+}
+.qt-kicker {
+  padding: 1px 5px;
+  border: 1px solid color-mix(in oklab, var(--quon-indigo) 40%, transparent);
+  border-radius: 5px;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--quon-indigo-hover);
+}
+.qt-card p {
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--quon-muted);
+}
+.qt-card p + p {
+  margin-top: 7px;
+}
+.qt-note {
+  margin-top: 8px;
+  font-size: 10.5px;
+  line-height: 1.5;
+  color: var(--quon-muted);
+  opacity: 0.9;
+}
+.qt-swap {
+  margin-top: 9px;
+  padding: 6px 8px;
+  border: 1px solid var(--quon-border);
+  border-radius: 7px;
+  background: var(--quon-surface-2);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 10.5px;
+  line-height: 1.7;
+}
+
+@media (max-width: 680px) {
+  .qt-stations {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .qt-node.qt-hero {
+    transform: none;
+  }
+  .qt-pledge,
+  .qt-cards {
+    grid-template-columns: 1fr;
+  }
+  .qt-lane,
+  .qt-return {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qt-track,
+  .qt-rtrack,
+  .qt-node.qt-hero .qt-node-ico {
+    animation: none;
+  }
+  .qt-pkt {
+    animation: none;
+    opacity: 1;
+  }
+  .qt-pkt.qt-b {
+    display: none;
+  }
+  .qt-ride-a {
+    left: 27%;
+  }
+  .qt-ride-b {
+    left: 60%;
+  }
+}

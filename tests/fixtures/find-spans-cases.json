@@ -1,0 +1,183 @@
+{
+  "_comment": "Cross-language parity fixture for the redaction span matcher. Generated from the BACKEND's scrubber.find_spans, which is the authority: the client must not promise a redaction the backend will not make. Asserted by src/lib/redactSpans.test.ts and tests/test_find_spans_parity.py. The 'umlaut'/'eszett' cases exist to DISCRIMINATE: they only pass if the client treats non-ASCII letters as word characters, as Python's re.UNICODE \\w and str.isalnum() do. With JavaScript's ASCII-only \\w they fail.",
+  "cases": [
+    {
+      "name": "plain word",
+      "text": "Anna Muster wohnt hier.",
+      "value": "Anna Muster",
+      "spans": [
+        [
+          0,
+          11
+        ]
+      ]
+    },
+    {
+      "name": "boundary: preceded by a letter",
+      "text": "AMüller schrieb.",
+      "value": "Müller",
+      "spans": []
+    },
+    {
+      "name": "boundary: suffix of a word",
+      "text": "Susanna kam.",
+      "value": "anna",
+      "spans": []
+    },
+    {
+      "name": "boundary: underscore follows",
+      "text": "marco_abenteuer",
+      "value": "Marco",
+      "spans": []
+    },
+    {
+      "name": "umlaut BEFORE the value blocks it",
+      "text": "öAnna kam",
+      "value": "Anna",
+      "spans": []
+    },
+    {
+      "name": "umlaut AFTER the value blocks it",
+      "text": "Annaö kam",
+      "value": "Anna",
+      "spans": []
+    },
+    {
+      "name": "eszett after the value blocks it",
+      "text": "Annaß kam",
+      "value": "Anna",
+      "spans": []
+    },
+    {
+      "name": "value starting with an umlaut",
+      "text": "xÖl im Regal",
+      "value": "Öl",
+      "spans": []
+    },
+    {
+      "name": "value ending with an umlaut",
+      "text": "Kölnx",
+      "value": "Köln",
+      "spans": []
+    },
+    {
+      "name": "case-insensitive",
+      "text": "kundennummer 48213 ist alt",
+      "value": "Kundennummer 48213",
+      "spans": [
+        [
+          0,
+          18
+        ]
+      ]
+    },
+    {
+      "name": "non-word start needs no boundary",
+      "text": "Tel+49 30 1234 privat",
+      "value": "+49 30 1234",
+      "spans": [
+        [
+          3,
+          14
+        ]
+      ]
+    },
+    {
+      "name": "email at a sentence end",
+      "text": "Schreib an a.b@example.com.",
+      "value": "a.b@example.com",
+      "spans": [
+        [
+          11,
+          26
+        ]
+      ]
+    },
+    {
+      "name": "wrapping quotes are stripped",
+      "text": "Anna Muster hier",
+      "value": "\"Anna Muster\"",
+      "spans": [
+        [
+          0,
+          11
+        ]
+      ]
+    },
+    {
+      "name": "whitespace is trimmed",
+      "text": "Anna Muster hier",
+      "value": "  Anna Muster  ",
+      "spans": [
+        [
+          0,
+          11
+        ]
+      ]
+    },
+    {
+      "name": "several occurrences",
+      "text": "Anna, dann Anna, dann Anna",
+      "value": "Anna",
+      "spans": [
+        [
+          0,
+          4
+        ],
+        [
+          11,
+          15
+        ],
+        [
+          22,
+          26
+        ]
+      ]
+    },
+    {
+      "name": "regex metacharacters are literal",
+      "text": "Betrag (netto) 100",
+      "value": "(netto)",
+      "spans": [
+        [
+          7,
+          14
+        ]
+      ]
+    },
+    {
+      "name": "empty value matches nothing",
+      "text": "irgendwas",
+      "value": "   ",
+      "spans": []
+    },
+    {
+      "name": "IBAN with spaces",
+      "text": "DE44 5001 0517 5407 3249 31 ok",
+      "value": "DE44 5001 0517 5407 3249 31",
+      "spans": [
+        [
+          0,
+          27
+        ]
+      ]
+    },
+    {
+      "name": "substring inside a longer word",
+      "text": "Vertragspartnerin",
+      "value": "partner",
+      "spans": []
+    },
+    {
+      "name": "umlaut value, real match",
+      "text": "Öl ist teuer",
+      "value": "Öl",
+      "spans": [
+        [
+          0,
+          2
+        ]
+      ]
+    }
+  ]
+}

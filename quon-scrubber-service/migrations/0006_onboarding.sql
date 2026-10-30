@@ -1,0 +1,13 @@
+-- 0006_onboarding.sql — first-login onboarding eligibility.
+--
+-- `onboarding_pending` marks an account that should see the guided first-login
+-- flow (ScreenChat's 3-step "try it" walkthrough) the next time it reaches
+-- chat. It is set to 1 only for brand-new signups (see auth.py:register) and
+-- flipped to 0 the moment the account is verified (auth.py:verify) — that is
+-- the one unambiguous, server-observable "this account just came alive" event,
+-- unlike the client-only locked->ready unlock transition which may happen on a
+-- different device than verification. DEFAULT 0 backfills every existing
+-- account to "not eligible", so accounts created before this shipped never see
+-- onboarding. Applied exactly once by the migration runner (schema_migrations),
+-- so a bare ADD COLUMN is safe.
+ALTER TABLE users ADD COLUMN onboarding_pending INTEGER NOT NULL DEFAULT 0;

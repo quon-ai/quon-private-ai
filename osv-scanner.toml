@@ -1,0 +1,36 @@
+# OSV-Scanner exceptions — same rules as scripts/check-audit.mjs: every entry
+# carries a written reason and an expiry (ignoreUntil), after which it must be
+# re-justified. Keep the two lists in sync when an advisory affects both gates.
+
+[[IgnoredVulns]]
+id = "GHSA-f88m-g3jw-g9cj"
+ignoreUntil = 2026-11-01T00:00:00Z
+reason = "sharp: libvips CVEs, no fix released. Optional Node-native dep of @huggingface/transformers, which QUON imports only in browser Web Workers — sharp never reaches the browser bundle and is absent from the server build. Unreachable at runtime."
+
+# --- Python is pip-audit's job, not OSV's -----------------------------------
+# OSV infers versions for PyPI packages from quon-scrubber-service/
+# requirements.txt, which is NOT a lockfile: transitive dependencies are not
+# declared there at all, so OSV substitutes the FLOOR of each constraint and
+# reports advisories against versions that are never installed. Measured
+# 2026-08-24, the first run in which this scanner actually executed:
+#
+#   package       OSV read   actually installed   fix needed
+#   torch         2.9.1      2.13.0               2.10.0 / 2.13.0  -> already fixed
+#   idna          3.9.0      3.18                 3.15             -> already fixed
+#   setuptools    9.1.0      84.0.0               <= 83.0.0        -> already fixed
+#   cryptography  48.0.1     48.0.1               >= 49            -> the only real one
+#
+# Nine of the ten PyPI findings were against phantom versions. pip-audit
+# resolves the same file properly and reported ONLY the cryptography three, so
+# the Python ecosystem is already covered by a gate that gets it right — and a
+# second gate that cries wolf is how a ratchet gets switched off.
+#
+# This is scoped to PyPI on purpose: Cargo.lock and package-lock.json ARE
+# lockfiles, OSV reads exact versions there, and those findings stand.
+# Revisit if requirements.txt is ever replaced by a real lockfile — then OSV
+# sees the truth and this override should be deleted, not renewed.
+[[PackageOverrides]]
+ecosystem = "PyPI"
+ignore = true
+effectiveUntil = 2026-11-01T00:00:00Z
+reason = "requirements.txt is not a lockfile: OSV reports floor versions for undeclared transitive deps (9 of 10 findings were against versions that are not installed). pip-audit owns Python and resolves it correctly."

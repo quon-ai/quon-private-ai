@@ -1,0 +1,74 @@
+# Dependabot: weekly dependency-update PRs + security alerts for every ecosystem
+# QUON ships (npm frontend, pip backend, and the GitHub Actions we pin). Security
+# updates are raised immediately regardless of the schedule.
+#
+# ⚠️ SCHEDULED FOR SATURDAY NIGHT, AND STAGGERED, ON PURPOSE. There is ONE
+# self-hosted runner and E2E takes ~40-55 min, so a dependabot PR raised on a
+# working day sits directly in front of a main deploy — measured queue waits of
+# 64 and 70 minutes for jobs behind one. Grouping (below) already cut the PR
+# COUNT after the 20-PR pile-up of 2026-08-12; this cuts the COLLISION.
+#
+# The ecosystems are two hours apart so their runs do not queue behind each
+# other either. Dependabot PRs deliberately keep E2E — a dependency bump is
+# exactly where a cross-browser suite earns its cost — so the fix is when they
+# run, never whether they are tested.
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "saturday"
+      time: "03:00"
+      timezone: "Europe/Berlin"
+    open-pull-requests-limit: 10
+    # ONE grouped PR for all minor/patch bumps (dev AND runtime), majors stay
+    # individual. The old policy — every runtime bump its own PR — produced 20
+    # open PRs whose workflows queued 19 jobs deep on the single runner lane
+    # (2026-08-12). Review effort belongs on majors; minors are reviewed by CI.
+    groups:
+      minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+    ignore:
+      # Not used by any source file. It is declared to PIN v3 for the TanStack
+      # router/start plugins, which depend on zod 3; a v4 bump would break them
+      # for no gain here. Revisit if QUON ever imports zod directly.
+      - dependency-name: "zod"
+        update-types: ["version-update:semver-major"]
+      # Types must match the runtime, and CI runs Node 20. A @types/node ahead
+      # of the runtime describes APIs that do not exist at run time.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: "pip"
+    directory: "/quon-scrubber-service"
+    schedule:
+      interval: "weekly"
+      day: "saturday"
+      time: "05:00"
+      timezone: "Europe/Berlin"
+    open-pull-requests-limit: 10
+    groups:
+      minor-and-patch:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "saturday"
+      time: "07:00"
+      timezone: "Europe/Berlin"
+    groups:
+      actions:
+        applies-to: version-updates
+        update-types:
+          - "minor"
+          - "patch"
+          - "major"

@@ -1,0 +1,135 @@
+# QUON — full-stack self-hosting compose: reverse proxy (Caddy, automatic
+# HTTPS) + frontend (SSR bundle) + scrubber backend.
+#
+# PII detection runs entirely inside the scrubber container (spaCy/Presidio +
+# GLiNER + a regex net). No detection model is called over the network, and
+# there is no Ollama service — the LLM extraction tier was removed 2026-08-23.
+#
+# Quick start (details in docs/self-hosting.md):
+#   cp .env.example .env        # fill in QUON_DOMAIN, QUON_SERVER_SECRET, keys
+#   docker compose up -d --build
+#
+# Routing: Caddy terminates TLS for ${QUON_DOMAIN} and serves the frontend,
+# with /api/* stripped and proxied to the scrubber. The frontend is built with
+# VITE_QUON_API_URL=/api (same-origin), so the production CSP works without
+# extra configuration and no per-domain rebuild is needed.
+#
+# The scrubber-only development compose lives in quon-scrubber-service/.
+
+services:
+  caddy:
+    image: caddy:2
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      QUON_DOMAIN: ${QUON_DOMAIN:?set QUON_DOMAIN in .env, e.g. quon.example.com}
+    volumes:
+      - ./deploy/Caddyfile.example:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - frontend
+      - scrubber
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      args:
+        VITE_QUON_API_URL: /api
+    image: quon-frontend:0.9.0
+    environment:
+      HOST: 0.0.0.0
+      PORT: 8080
+      # Extra origins appended to the page CSP's connect-src — e.g. a
+      # self-hosted Paperless the browser must reach directly
+      # (docs/self-hosting.md). Same rule as the scrubber block below: this
+      # compose enumerates every variable, so a key in .env alone NEVER reaches
+      # the container — without this line the setting is a silent no-op.
+      QUON_CSP_CONNECT_EXTRA: ${QUON_CSP_CONNECT_EXTRA:-}
+      # Emergency escape hatch: QUON_CSP=off disables the enforcing CSP.
+      QUON_CSP: ${QUON_CSP:-}
+    restart: unless-stopped
+
+  scrubber:
+    build: ./quon-scrubber-service
+    image: quon-scrubber:0.9.0
+    environment:
+      LOG_LEVEL: INFO
+      DATABASE_PATH: /app/data/quon.db
+      # Operator runtime settings (model catalog, keys) must live on the data
+      # volume — an in-image path would be reset on every rebuild.
+      RUNTIME_SETTINGS_PATH: /app/data/runtime_settings.json
+      APP_BASE_URL: https://${QUON_DOMAIN}
+      # One-click Dropbox connect for all users of this instance: register a
+      # Dropbox app once (see docs/self-hosting.md) and put its PUBLIC App key
+      # here. Empty = the connector shows "not enabled by the operator".
+      DROPBOX_APP_KEY: ${DROPBOX_APP_KEY:-}
+      MS_CLIENT_ID: ${MS_CLIENT_ID:-}
+      # Beta feedback → GitHub issues (optional; both unset = mirroring off).
+      # NOTE: this compose enumerates every variable — there is no env_file, so
+      # a key in .env alone NEVER reaches the container. Adding one here is not
+      # optional plumbing, it is the whole wiring.
+      GITHUB_TOKEN: ${GITHUB_TOKEN:-}
+      GITHUB_REPO: ${GITHUB_REPO:-}
+      COOKIE_SECURE: "true"
+      CORS_ALLOW_ORIGINS: https://${QUON_DOMAIN}
+      # --- Secrets: from .env, never hard-coded here ---
+      # Seals per-user provider keys at rest. REQUIRED in production — the
+      # backend refuses to start with COOKIE_SECURE=true and no secret. Must
+      # stay STABLE once users exist (rotating it invalidates sealed keys).
+      QUON_SERVER_SECRET: ${QUON_SERVER_SECRET:-}
+      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      OPENROUTER_PROVISIONING_KEY: ${OPENROUTER_PROVISIONING_KEY:-}
+      OPENROUTER_USER_LIMIT_USD: ${OPENROUTER_USER_LIMIT_USD:-5}
+      ADMIN_TOKEN: ${ADMIN_TOKEN:-}
+      SIGNUP_INVITE_CODE: ${SIGNUP_INVITE_CODE:-}
+      # --- SMTP (email verification). Empty SMTP_HOST → links only logged. ---
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-QUON <no-reply@localhost>}
+      # Beta-feedback inbox (POST /feedback). Empty → falls back to SMTP_FROM.
+      FEEDBACK_EMAIL: ${FEEDBACK_EMAIL:-}
+      SMTP_SSL: ${SMTP_SSL:-false}
+      SMTP_STARTTLS: ${SMTP_STARTTLS:-true}
+      # --- Optional knobs (docs/self-hosting.md → "Environment reference") ---
+      # Wired here because this file enumerates every variable: without a line,
+      # the key in .env is a silent no-op. Fallbacks below MATCH config.py, and
+      # an EMPTY value is not usable — pydantic rejects "" for bool/int fields,
+      # which is why each carries its real default rather than `:-`.
+      #
+      # Needed to point a BYOK CHAT provider at a PRIVATE address (a LAN LLM,
+      # LM Studio) — the SSRF guard blocks those by default. Detection never
+      # calls out at all, so this does not affect it.
+      ALLOW_PRIVATE_PROVIDER_URLS: ${ALLOW_PRIVATE_PROVIDER_URLS:-false}
+      # --- GLiNER: the third detector, in-process on CPU ---
+      # MUST be wired here. This file enumerates every variable, so
+      # GLINER_ENABLED=true in .env alone would never reach the container and
+      # you would run two detectors while believing you run three.
+      # Ships false so a first `up` does not pull 1.5 GB before answering; the
+      # reference deployment runs it true and so should you.
+      GLINER_ENABLED: ${GLINER_ENABLED:-false}
+      # Leave empty — int8 was measured and destroys the model (config.py).
+      GLINER_QUANTIZE: ${GLINER_QUANTIZE:-}
+      RATE_LIMIT_ENABLED: ${RATE_LIMIT_ENABLED:-true}
+      SESSION_TTL_HOURS: ${SESSION_TTL_HOURS:-720}
+      # Agents call a paid LLM on a schedule — this is the cost bound.
+      AGENT_MIN_INTERVAL_SECONDS: ${AGENT_MIN_INTERVAL_SECONDS:-72000}
+      # NOTE: the model catalog and provider KEYS are set in the Settings UI
+      # and persisted to runtime_settings.json on the data volume —
+      # deliberately NOT pinned here, so this file cannot go stale against them.
+      # Model cache on the PERSISTED volume. Without this the 1.5 GB GLiNER
+      # download is repeated on every `up --build`, and the first request after
+      # each deploy waits for it.
+      HF_HOME: /app/data/hf
+    volumes:
+      - quon-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  quon-data:
+  caddy-data:
+  caddy-config:

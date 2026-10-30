@@ -1,0 +1,53 @@
+name: Housekeeping
+
+# Keep CI's own leftovers bounded, so they can never again break CI.
+#
+# They already did, twice on 2026-08-16, and both times the symptom pointed
+# somewhere else entirely:
+#   - 14 GB of pip cache on the runner (also the production box, 83% full),
+#     which `cache: pip` then tried to upload at 1.2 MB/s until the Backend job
+#     died on its timeout — every run, for two days.
+#   - 174 MB of Playwright reports, uploaded after every GREEN run, until
+#     "Artifact storage quota has been hit" turned a passing E2E suite into a
+#     red job. A storage problem manufacturing a test verdict.
+#
+# Both were fixed at the source (no cache round-trips on the self-hosted runner;
+# the report uploads only on failure). This is the second line: caps that hold
+# even when a future change starts producing junk again. Bounded by COUNT, not
+# by age — the pip cache proved an age rule useless when 14 GB accrues in under
+# two weeks.
+#
+# runs-on: ubuntu-latest, hardcoded, like ci-heartbeat.yml. Housekeeping that
+# only runs when the machine being kept clean is healthy is not housekeeping.
+# It is API calls only — seconds of hosted time.
+
+on:
+  schedule:
+    - cron: "41 3 * * *" # daily, off the hour
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "List what would be deleted, delete nothing"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  actions: write # required to delete artifacts
+
+concurrency:
+  group: housekeeping
+  cancel-in-progress: true
+
+jobs:
+  artifacts:
+    name: Prune CI artifacts
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - name: Prune
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: node scripts/prune-artifacts.mjs

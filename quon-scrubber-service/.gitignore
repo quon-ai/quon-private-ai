@@ -1,0 +1,21 @@
+# NO trailing slash, deliberately. `.venv/` matches a DIRECTORY only, and
+# scripts/session-new.sh creates .venv in a session worktree as a SYMLINK to the
+# primary checkout's — which git sees as a file, so the pattern missed it and the
+# first `git add -A` in any session committed a macOS absolute path as a tracked
+# symlink. On the Linux CI runner checkout that became a dangling link and
+# `python -m venv .venv` died with "[Errno 17] File exists" (2026-08-16).
+.venv
+venv
+__pycache__/
+*.pyc
+.pytest_cache/
+.env
+.env.production
+.env.local
+runtime_settings.json
+quon.db
+quon.db-wal
+quon.db-shm
+
+# Regenerable TLD / public-suffix cache (downloaded at runtime)
+.tld_cache/

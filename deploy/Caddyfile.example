@@ -1,0 +1,35 @@
+# QUON reverse proxy — Caddy 2, automatic HTTPS (Let's Encrypt).
+#
+# Used as-is by the root docker-compose.yml (mounted to /etc/caddy/Caddyfile,
+# {$QUON_DOMAIN} comes from .env). For a host-native Caddy, replace the
+# service names (frontend/scrubber) with 127.0.0.1 ports.
+#
+# Routing model: ONE origin. The frontend is served at /, the backend at
+# /api/* (prefix stripped). Same-origin /api is what the frontend build and
+# the production CSP expect — no per-domain rebuild, no CSP overrides.
+
+{$QUON_DOMAIN} {
+	encode gzip
+
+	# Static security headers. The app itself sends the per-request
+	# nonce-based Content-Security-Policy on HTML responses — do not add a
+	# second CSP here.
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "geolocation=(), microphone=()"
+		-Server
+	}
+
+	handle_path /api/* {
+		reverse_proxy scrubber:8000 {
+			# Streaming (SSE chat relay): flush immediately.
+			flush_interval -1
+		}
+	}
+
+	handle {
+		reverse_proxy frontend:8080
+	}
+}

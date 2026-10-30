@@ -1,0 +1,95 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+.output
+.vinxi
+.tanstack/**
+.nitro
+*.local
+# Per-machine Claude Code permission grants: local paths, no value to anyone
+# else. `*.local` above does NOT match this (it ends in .local.json).
+.claude/settings.local.json
+
+# Wrangler / Cloudflare
+.wrangler/
+.dev.vars
+
+# Secrets / local env (never commit)
+.env
+.env.production
+.env.local
+
+# Deploy secrets (never commit)
+deploy/.ssh-quon-deploy
+deploy/.ssh-quon-deploy.pub
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Playwright E2E
+/test-results/
+/playwright-report/
+/playwright/.cache/
+/tests/e2e/.auth/
+
+# Non-deterministic LLM corpus run (sample-based; config-1 CORPUS_REPORT.md is the committed baseline)
+quon-scrubber-service/tests/CORPUS_REPORT_LLM.md
+
+# Self-hosted ONNX Runtime WASM (copied from node_modules by scripts/copy-ort.mjs
+# on predev/prebuild — regenerated, not source; the 12 MB .wasm shouldn't be in git)
+/public/ort/
+/public/version.json
+
+# Private/internal documents (never publish, never serve)
+.private/
+
+# Runtime data (device-local; operator state)
+quon.db
+*.db
+runtime_settings.json
+
+# Machine-generated eval run reports (HISTORY.md stays tracked as the ratchet
+# baseline; timestamped per-run files do not)
+quon-scrubber-service/tests/reports/2*.md
+.coverage
+
+# e2e embedding-model mirror (scripts/fetch-e2e-models.mjs)
+tests/e2e/.models/
+
+# Green-preflight stamp (deploy/preflight.sh writes it, .claude/hooks/bash-guard.sh
+# reads it). Machine-local. It MUST stay ignored: the stamp records a fingerprint
+# of the working tree, so a tracked marker would perturb the very thing it measures.
+.claude/.preflight-ok
+
+# Tauri (native shell) build output — the Rust target dir is huge and generated.
+/src-tauri/target/
+/src-tauri/gen/
+
+# Local (non-baseline) eval reports — see quon-scrubber-service/tests/report_paths.py
+quon-scrubber-service/tests/reports/local/
+
+# Per-session git worktrees (see scripts/session-*.sh). Was excluded only in
+# .git/info/exclude, which is machine-local — so on CI or another machine these
+# dirtied the tree and failed the clean-tree gate.
+/.claude/worktrees/
+
+# Generated per-session facts + scope marker (scripts/session-facts.sh)
+.claude/facts/
+.claude/.session

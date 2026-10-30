@@ -1,0 +1,67 @@
+name: Bug report
+description: Report a problem with QUON
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        > [!CAUTION]
+        > **Never paste `.env` contents, API keys, or personal data into an issue.**
+        > Redact chat content and any real names/emails/IBANs from screenshots and logs
+        > before posting. Use synthetic PII in reproduction steps.
+        >
+        > **Security vulnerabilities do not belong here** — report them privately via
+        > *Security → Report a vulnerability* (see [SECURITY.md](../../SECURITY.md)).
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the bug.
+      placeholder: When I ... , QUON ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect to happen?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Minimal steps, using synthetic data.
+      placeholder: |
+        1. Go to ...
+        2. Type ...
+        3. See error
+    validations:
+      required: true
+  - type: input
+    id: browser-os
+    attributes:
+      label: Browser and OS
+      placeholder: e.g. Safari 18 on iOS 18.2, Chrome 138 on Ubuntu 24.04
+    validations:
+      required: true
+  - type: dropdown
+    id: instance
+    attributes:
+      label: Where did this happen?
+      options:
+        - Self-hosted instance
+        - The public demo
+        - Local development setup
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or console output
+      description: |
+        Browser console errors, backend log excerpts, or network responses.
+        **Redact tokens, keys, emails, and any personal content first.**
+      render: shell
+    validations:
+      required: false
