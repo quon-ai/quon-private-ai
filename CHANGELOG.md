@@ -12,6 +12,12 @@ once it reaches 1.0.
 
 ### Fixed
 
+- **GLiNER loads on a fresh install.** On a machine that had never run QUON
+  before, the third detector failed to load (its tokenizer conversion needs
+  `protobuf`, which only ever arrived by accident) and detection silently ran
+  without it while the flag said it was on. The package is now a declared
+  requirement, and the tests that cover GLiNER skip — instead of failing —
+  on a box where it is genuinely unavailable.
 - **„Schau in diesen Ordner" works in one go** (desktop app). After picking
   the folder, the model was told to list its files but did not have that tool
   until the next message.
@@ -253,6 +259,14 @@ once it reaches 1.0.
 
 ### Security
 
+- **Dependency round of 2026-10-30.** Every advisory with a compatible fix was
+  taken: TanStack Start (reflected XSS in server-function responses, critical),
+  DOMPurify (five IN_PLACE / template bypasses, critical), seroval, xmldom,
+  adm-zip, js-yaml, brace-expansion, source-map-js, sharp (libvips), undici and
+  Vitest's mocker. An unused direct `zod` dependency was removed rather than
+  migrated. Two low/moderate findings without a compatible fix (KaTeX via
+  Mermaid, uuid via the Capacitor CLI) carry dated exceptions until the
+  Mermaid 12 and Capacitor 8.6 bumps are verified.
 - The minimum-release-age supply-chain guard now actually runs
   (`scripts/check-release-age.mjs` in CI). It previously lived in a bun config
   that nothing in this project ever executed.

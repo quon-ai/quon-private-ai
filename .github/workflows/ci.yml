@@ -134,6 +134,8 @@ jobs:
           cache-dependency-path: quon-scrubber-service/requirements-dev.txt
       # requirements-dev.txt pulls in requirements.txt (incl. the pinned spaCy
       # model wheels), so the NER tests run for real rather than skipping.
+      # CPU torch first — see the E2E job's venv step for why (CUDA wheel, no GPU).
+      - run: pip install --index-url https://download.pytorch.org/whl/cpu torch
       - run: pip install -r requirements-dev.txt
       - run: python -m pytest -q -n auto --dist loadfile
       # Detection ratchet: enforce the recall/precision floors that the plain
@@ -211,6 +213,13 @@ jobs:
         working-directory: quon-scrubber-service
         run: |
           python -m venv .venv
+          # CPU torch FIRST, exactly as the Dockerfile does. The default PyPI
+          # torch wheel on Linux is the CUDA build — ~5 GB with its nvidia-*
+          # libraries — on a box that has no GPU. On 2026-10-30 that filled a
+          # 14 GB hosted runner: the suite had finished, then the runner itself
+          # died writing its own log ("No space left on device"). With torch
+          # already satisfied, requirements.txt leaves it alone.
+          ./.venv/bin/pip install --index-url https://download.pytorch.org/whl/cpu torch
           ./.venv/bin/pip install -r requirements-dev.txt
 
       # ~400 MB of browsers. Keyed on the lockfile so a Playwright bump

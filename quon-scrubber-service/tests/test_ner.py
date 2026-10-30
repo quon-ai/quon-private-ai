@@ -25,6 +25,22 @@ def _require_ner():
         pytest.skip("spaCy NER models not installed")
 
 
+def _require_gliner():
+    """Skip when the GLiNER model is not loaded.
+
+    One guard for every GLiNER test, because the ad-hoc copies kept drifting:
+    _get_model() returns False (not None) after a failed load, and three tests
+    checked ``is None`` — so on a runner where the load failed they ran against
+    an empty detector and failed instead of skipping (2026-10-30, the hosted
+    runner; see test_gliner_is_loaded_is_false_when_the_load_failed for the
+    first time this class of bug shipped).
+    """
+    import gliner_detect
+
+    if not gliner_detect._get_model():
+        pytest.skip("GLiNER model/dependency unavailable")
+
+
 # --- detect_ner -----------------------------------------------------------
 def test_detect_ner_finds_person_de():
     _require_ner()
@@ -532,10 +548,7 @@ def test_gliner_person_claim_passes_the_kinship_denylist(monkeypatch):
     import pytest
 
     from config import settings as _settings
-    import gliner_detect
-
-    if not gliner_detect._get_model():
-        pytest.skip("GLiNER model/dependency unavailable")
+    _require_gliner()
 
     from scrubber import scrub
 
@@ -704,10 +717,7 @@ def test_gliner_person_claims_pass_the_full_keep_person_not_just_the_denylist(mo
     import pytest
 
     from config import settings as _settings
-    import gliner_detect
-
-    if gliner_detect._get_model() is None:
-        pytest.skip("GLiNER model/dependency unavailable")
+    _require_gliner()
 
     from scrubber import scrub
 
@@ -751,10 +761,7 @@ def test_gliner_person_survives_on_all_lowercase_text(monkeypatch):
     import pytest
 
     from config import settings as _settings
-    import gliner_detect
-
-    if gliner_detect._get_model() is None:
-        pytest.skip("GLiNER model/dependency unavailable")
+    _require_gliner()
 
     from scrubber import scrub
 
@@ -787,10 +794,7 @@ def test_an_address_claim_without_a_digit_is_the_name_of_an_address(monkeypatch)
     import pytest
 
     from config import settings as _settings
-    import gliner_detect
-
-    if gliner_detect._get_model() is None:
-        pytest.skip("GLiNER model/dependency unavailable")
+    _require_gliner()
 
     from scrubber import scrub
 
@@ -1122,6 +1126,7 @@ def test_crosscheck_drops_label_line_role_nouns_and_keeps_names(monkeypatch):
     from config import settings as _settings
     from scrubber import scrub
 
+    _require_gliner()
     monkeypatch.setattr(_settings, "gliner_enabled", True)
     monkeypatch.setattr(_settings, "gliner_person_crosscheck", True)
 
@@ -1300,10 +1305,7 @@ def test_gliner_veto_clears_tech_eponym_without_any_llm(monkeypatch):
     import pytest
 
     from config import settings as _settings
-    import gliner_detect
-
-    if not gliner_detect._get_model():
-        pytest.skip("GLiNER model/dependency unavailable")
+    _require_gliner()
 
     from scrubber import scrub
 
@@ -1419,11 +1421,9 @@ def test_kita_kind_prompt_is_not_redacted_end_to_end(monkeypatch):
     name next to the same words is still caught."""
     import pytest
 
-    import gliner_detect
     from config import settings as _settings
 
-    if gliner_detect._get_model() is None:
-        pytest.skip("GLiNER model/dependency unavailable")
+    _require_gliner()
 
     from scrubber import scrub
 

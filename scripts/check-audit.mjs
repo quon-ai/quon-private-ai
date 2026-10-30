@@ -18,19 +18,9 @@ import { execSync } from "node:child_process";
 
 /** GHSA id → { reason, expires (YYYY-MM-DD), addedBy } */
 const ALLOW = new Map([
-  [
-    // sharp: libvips CVEs (CVE-2026-33327/-33328/-35590/-35591), no fix released.
-    "GHSA-f88m-g3jw-g9cj",
-    {
-      reason:
-        "sharp is an optional Node-native dep of @huggingface/transformers, which QUON " +
-        "imports ONLY in browser Web Workers (embedder.worker.ts, whisper.worker.ts). " +
-        "sharp never reaches the browser bundle (native module) and is absent from the " +
-        "server build (verified: no 'sharp' in dist/server). Unreachable at runtime.",
-      expires: "2026-11-01",
-      addedBy: "2026-08-13 repo-hygiene round",
-    },
-  ],
+  // Empty since 2026-10-30: the sharp/libvips exception (GHSA-f88m-g3jw-g9cj,
+  // 2026-08-13) ended when sharp 0.35.5 shipped the fix. Entry shape:
+  //   ["GHSA-xxxx", { reason, expires: "YYYY-MM-DD", addedBy }]
 ]);
 
 let report;

@@ -2,11 +2,6 @@
 # carries a written reason and an expiry (ignoreUntil), after which it must be
 # re-justified. Keep the two lists in sync when an advisory affects both gates.
 
-[[IgnoredVulns]]
-id = "GHSA-f88m-g3jw-g9cj"
-ignoreUntil = 2026-11-01T00:00:00Z
-reason = "sharp: libvips CVEs, no fix released. Optional Node-native dep of @huggingface/transformers, which QUON imports only in browser Web Workers — sharp never reaches the browser bundle and is absent from the server build. Unreachable at runtime."
-
 # --- Python is pip-audit's job, not OSV's -----------------------------------
 # OSV infers versions for PyPI packages from quon-scrubber-service/
 # requirements.txt, which is NOT a lockfile: transitive dependencies are not
@@ -32,5 +27,18 @@ reason = "sharp: libvips CVEs, no fix released. Optional Node-native dep of @hug
 [[PackageOverrides]]
 ecosystem = "PyPI"
 ignore = true
-effectiveUntil = 2026-11-01T00:00:00Z
+effectiveUntil = 2027-02-01T00:00:00Z  # renewed 2026-10-30; still no lockfile
 reason = "requirements.txt is not a lockfile: OSV reports floor versions for undeclared transitive deps (9 of 10 findings were against versions that are not installed). pip-audit owns Python and resolves it correctly."
+
+# --- npm leftovers of the 2026-10-30 advisory round --------------------------
+# Everything with a non-major fix was bumped that day (TanStack Start XSS,
+# DOMPurify, seroval, xmldom, adm-zip, js-yaml, sharp, ...). These two have none:
+[[IgnoredVulns]]
+id = "GHSA-238p-pmpm-9mq7"
+ignoreUntil = 2026-12-31T00:00:00Z
+reason = "katex: prototype-pollution bypass of the `trust` option. QUON renders math through rehype-katex with trust OFF (the default) and never passes user-controlled options; the fixed katex comes only with mermaid 12 (major), which needs its own render check first."
+
+[[IgnoredVulns]]
+id = "GHSA-w5hq-g745-h8pq"
+ignoreUntil = 2026-12-31T00:00:00Z
+reason = "uuid v3/v5/v6 buffer bounds — reached only through xcode -> @capacitor/cli, the build-time CLI for the native shells. Never in the served bundle or the server build; fix arrives with the Capacitor 8.6 bump, which needs an Android rebuild to verify."
