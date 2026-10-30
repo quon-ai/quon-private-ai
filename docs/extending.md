@@ -1,4 +1,4 @@
-> **Core edition.** This document describes the full QUON product. The core edition leaves out some features (connectors, chat tools and MCP, agents, shared projects, native apps) — see [docs/CORE.md](./CORE.md) for the list and the criteria.
+> **Note.** This document also covers features that are not part of this repository yet — connectors, chat tools and MCP, agents, shared projects, the desktop and Android apps. They follow once they are ready.
 
 # Extending QUON
 

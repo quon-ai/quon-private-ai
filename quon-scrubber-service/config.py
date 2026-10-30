@@ -345,9 +345,16 @@ class Settings(BaseSettings):
     # document frees its quota. Override via ORIGINALS_QUOTA_BYTES.
     originals_quota_bytes: int = 200 * 1024 * 1024  # 200 MB
 
-    # --- SMTP (email verification) ---------------------------------------
-    # When smtp_host is empty, verification links are logged instead of sent
-    # (dev mode). In production these must be set for the verify flow to work.
+    # --- Email verification ------------------------------------------------
+    # "auto" (default): required when SMTP_HOST is set, otherwise an account is
+    # active the moment it is created — the home-server case, where nobody runs
+    # a mail relay. "required": always (without SMTP the link is only logged, as
+    # [DEV EMAIL]). "off": never, even with SMTP. Without verification there is
+    # no anti-enumeration dance on /auth/register either: a duplicate gets 409.
+    email_verification: str = "auto"
+
+    # --- SMTP (verification and reset mails) -------------------------------
+    # When smtp_host is empty, mails are logged instead of sent (dev mode).
     smtp_host: str = ""
     smtp_port: int = 587
     smtp_user: str = ""
@@ -385,6 +392,15 @@ class Settings(BaseSettings):
 
     # --- Logging ---------------------------------------------------------
     log_level: str = "INFO"
+
+    @property
+    def email_verification_required(self) -> bool:
+        mode = self.email_verification.strip().lower()
+        if mode == "off":
+            return False
+        if mode == "required":
+            return True
+        return bool(self.smtp_host)  # "auto" — and anything unrecognised
 
     @property
     def cors_origins_list(self) -> list[str]:

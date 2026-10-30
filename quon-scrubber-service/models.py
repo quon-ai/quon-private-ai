@@ -101,6 +101,10 @@ class HealthResponse(BaseModel):
     # sign-up form shows its invite field only then, and /auth/register reveals
     # the same fact by refusing without one.
     signup_invite_required: bool = False
+    # False when accounts are active on creation (EMAIL_VERIFICATION=auto without
+    # SMTP, or "off"): the sign-up flow then signs the user in instead of sending
+    # them to their inbox.
+    email_verification_required: bool = True
 
 
 class EntityTypeInfo(BaseModel):

@@ -31,8 +31,9 @@ uvicorn main:app --reload               # http://localhost:8000 — GET /health,
 
 Python 3.11+. GLiNER (`GLINER_ENABLED=true`) downloads a ~1.5 GB model once
 into `HF_HOME` and needs ~3 GB of RAM; it is the detector you almost certainly
-want on — see the self-hosting guide. Without SMTP configured, the account
-verification link is printed in the log as `[DEV EMAIL]`.
+want on — see the self-hosting guide. Without SMTP configured, accounts are
+active on creation (`EMAIL_VERIFICATION=auto`); with `required` the verification
+link is printed in the log as `[DEV EMAIL]`.
 
 Smoke test:
 

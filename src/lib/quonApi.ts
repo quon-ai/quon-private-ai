@@ -205,6 +205,8 @@ export interface HealthStatus {
   /** Registration needs an invite code on this instance (SIGNUP_INVITE_CODE is
    *  set). The sign-up form shows its invite field only then. */
   signup_invite_required?: boolean;
+  /** False when accounts are active on creation (no e-mail verification). */
+  email_verification_required?: boolean;
 }
 
 export interface EntityTypeInfo {

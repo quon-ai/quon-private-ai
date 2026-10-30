@@ -1,4 +1,4 @@
-> **Core edition.** This document describes the full QUON product. The core edition leaves out some features (connectors, chat tools and MCP, agents, shared projects, native apps) — see [docs/CORE.md](./CORE.md) for the list and the criteria.
+> **Note.** This document also covers features that are not part of this repository yet — connectors, chat tools and MCP, agents, shared projects, the desktop and Android apps. They follow once they are ready.
 
 # Self-hosting QUON
 
@@ -23,29 +23,14 @@ Content-Security-Policy expect.
   10–20 minutes on a small VPS, or build elsewhere and ship the image.
 - **Disk:** a few GB (images + the `quon-data` volume). The GLiNER model adds
   ~1.5 GB, downloaded once.
-- A domain with DNS pointing at the host, ports 80/443 reachable (Caddy
-  obtains and renews TLS certificates automatically).
+- **HTTPS**, one way or another — the browser only exposes the encryption
+  APIs QUON is built on (WebCrypto, passkeys) to a secure origin. A public
+  domain with ports 80/443 open lets Caddy fetch certificates on its own; on a
+  private network use Caddy's internal CA or Tailscale instead — see
+  [Where it runs](#where-it-runs). `http://localhost` also counts as secure.
 - An [OpenRouter](https://openrouter.ai) API key — either one shared key for
   the instance, or none at all (then every user brings their own key in
   Settings → Connections).
-
-### What it costs to run
-
-The software is free; **the model calls are not.** QUON is a gateway — it has no
-inference of its own, so every message is billed by your provider, pay-per-token:
-
-- **Each chat message costs once** — the answer. PII detection runs entirely
-  in-process on your server (spaCy/Presidio + a deterministic regex net +
-  GLiNER); it calls no provider, so it adds no per-message charge and no egress.
-- **Agents call a paid model on a schedule**, unattended — bound it with
-  `AGENT_MIN_INTERVAL_SECONDS`.
-- **Everything else is free**: embeddings, semantic search, OCR and dictation all
-  run on the user's device. Only chat and the optional cloud-OCR fallback leave
-  the machine.
-
-Actual spend depends entirely on the models you expose and how much people chat —
-watch it on your OpenRouter dashboard for the first week, and set a spend limit
-on the key there.
 
 ## Quick start
 
@@ -96,17 +81,24 @@ The backend **refuses to start** (with a clear log message) if
 `QUON_SERVER_SECRET` is missing or CORS is a wildcard while Secure cookies
 are on — check `docker compose logs scrubber` if it restarts.
 
-## Email verification (SMTP)
+## E-mail verification (optional)
 
-Registration requires a verified email address. Without `SMTP_HOST`, the
-verification links are only written to the backend log:
+`EMAIL_VERIFICATION=auto` (the default) means: **if `SMTP_HOST` is set,
+addresses are verified by mail; if not, an account is active the moment it is
+created.** A home server needs no mail relay at all. Set `required` to insist
+on verification (without SMTP the link is then only written to the scrubber
+log, as `[DEV EMAIL]` — fine for a test, useless for real users), or `off` to
+never verify, even with SMTP.
 
-```bash
-docker compose logs scrubber | grep "DEV EMAIL"
-```
+Two things change without verification: anyone who can reach the sign-up page
+can create an account under any address (combine with `SIGNUP_INVITE_CODE` on
+a host that is reachable from outside), and a second registration with an
+existing address is refused with a plain 409 instead of the anti-enumeration
+answer the mail flow gives.
 
-That works for trying it out, but set up real SMTP (any provider) before
-inviting other users. `SMTP_FROM` should match your domain.
+To send mail, set `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`,
+`SMTP_FROM` (and `SMTP_SSL=true` for implicit TLS on 465) — any plain SMTP
+relay works; the provider must offer SMTP. Password resets go the same way.
 
 ## Access control
 
@@ -233,6 +225,7 @@ The README covers the vars needed to boot. These are the ones that bite later:
 | `RATE_LIMIT_ENABLED`                       | `true`                                | Keep on for any instance with untrusted signups.                                                                                                                                                                                                                                                                                                                                                                                               |
 | `ORIGINALS_QUOTA_BYTES`                    | `209715200` (200 MB)                  | Per-user ceiling for stored original document bytes.                                                                                                                                                                                                                                                                                                                                                                                           |
 | `SIGNUP_INVITE_CODE`                       | `""`                                  | Non-empty ⇒ `/auth/register` requires this code. The invite gate.                                                                                                                                                                                                                                                                                                                                                                              |
+| `EMAIL_VERIFICATION`                       | `auto`                                | `auto` = verify by mail when `SMTP_HOST` is set, otherwise accounts are active on creation; `required`; `off`. See [E-mail verification](#e-mail-verification-optional). |
 | `SESSION_TTL_HOURS`                        | `720` (30 d)                          | Session lifetime.                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `COOKIE_SAMESITE` / `COOKIE_DOMAIN`        | `lax` / `""`                          | Only for unusual proxy/subdomain setups; host-only cookie by default.                                                                                                                                                                                                                                                                                                                                                                          |
 | `SMTP_STARTTLS`                            | `true`                                | `false` for implicit TLS on port 465 (see `SMTP_SSL`).                                                                                                                                                                                                                                                                                                                                                                                         |
@@ -257,12 +250,35 @@ replicate `deploy/Caddyfile.example`: strip the `/api` prefix, proxy SSE
 without buffering (`flush` immediately), and keep everything on one origin.
 The app sends its own per-request CSP — don't add a second one.
 
+### Where it runs
+
+- **Public domain** (the diagram above): DNS points at the host, 80/443 are
+  reachable, Caddy obtains and renews certificates by itself.
+- **Private network / home server** — the browser still needs HTTPS. Two
+  paths that need no public exposure:
+  - *Caddy's internal CA:* add `tls internal` to the site block in
+    `deploy/Caddyfile.example` (it is mounted as the Caddyfile), set
+    `QUON_DOMAIN` to the name your devices use (`quon.lan`, the host's name)
+    and trust Caddy's root certificate on each device once
+    (`docker compose exec caddy cat /data/caddy/pki/authorities/local/root.crt`).
+  - *Tailscale:* `tailscale cert <machine>.<tailnet>.ts.net` on the host and
+    point Caddy at the certificate — every device on the tailnet then reaches
+    QUON over a valid HTTPS name, nothing on the public internet.
+- **This machine only:** `http://localhost` is a secure origin; the
+  development setup in [CONTRIBUTING.md](../CONTRIBUTING.md) runs without
+  TLS for exactly that reason. Other machines on the LAN cannot use that URL.
+
+Why the insistence: the end-to-end encryption, the key wrapping and passkeys
+all run in the browser on `crypto.subtle`, which browsers only expose on a
+secure origin. On plain `http://192.168.…` the app cannot even unlock an
+account.
+
 ## Troubleshooting
 
 | Symptom                                         | Check                                                                                                     |
 | ----------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
 | Backend restarts on boot                        | `docker compose logs scrubber` — missing `QUON_SERVER_SECRET` / wildcard CORS fail fast with instructions |
-| Registration mail never arrives                 | SMTP unset → links are in the scrubber log (`DEV EMAIL`)                                                  |
+| Registration mail never arrives                 | no `SMTP_HOST` + `EMAIL_VERIFICATION=auto` → there is no mail, the account is already active; with `required` the link is in the scrubber log (`DEV EMAIL`)                                                  |
 | Chat blocked, "privacy filter unreachable"      | `/api/health` — the app **fails closed** when the scrubber is down                                        |
 | Streaming answers cut off behind your own proxy | proxy must not buffer SSE and must tolerate idle streams (the backend sends keep-alive pings every 20 s)  |
 | Models missing in the picker                    | no instance key → configure `OPENROUTER_API_KEY`, or add your own key in Settings          |

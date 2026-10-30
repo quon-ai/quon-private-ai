@@ -1,5 +1,5 @@
 /**
- * Sync-engine wiring for the optional features — core edition: there are
+ * Sync-engine wiring for the optional features — this build: there are
  * none, so every hook is a no-op. syncEngine.ts is identical in both editions.
  */
 import type { CollectionSync } from "./collectionSync";

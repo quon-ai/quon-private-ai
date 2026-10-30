@@ -54,6 +54,16 @@ def make_active_user(client, email: str = "user@quon.local", auth_token: bytes =
     return {"X-QUON-CSRF": client.cookies.get("quon_csrf")}
 
 
+@pytest.fixture(autouse=True)
+def _pin_email_verification(monkeypatch):
+    """The suite was written against the verify flow, so it runs with
+    EMAIL_VERIFICATION=required regardless of SMTP. Tests of the modes
+    themselves set the attribute again (a later monkeypatch wins)."""
+    from config import settings  # after the sys.path setup above, like quon_client
+
+    monkeypatch.setattr(settings, "email_verification", "required")
+
+
 @pytest.fixture
 def quon_client(monkeypatch, tmp_path):
     """A TestClient on an isolated temp DB, with email delivery captured and

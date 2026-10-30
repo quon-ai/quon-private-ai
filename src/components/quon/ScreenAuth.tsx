@@ -513,6 +513,9 @@ export function ScreenAuth() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [mnemonic, setMnemonic] = useState<string | null>(null);
+  // The instance created the account already active (no e-mail verification):
+  // after the recovery kit we sign in instead of showing "check your email".
+  const [registeredActive, setRegisteredActive] = useState(false);
   const [step, setStep] = useState<"form" | "kit" | "sent">("form");
 
   // Rendering on /join with a still-valid invite fragment in the URL — used to
@@ -549,6 +552,22 @@ export function ScreenAuth() {
     }
   }
 
+  /** Kit acknowledged on an instance without e-mail verification: the password
+   *  is still in memory, so sign in right here — that is also what derives the
+   *  keys the app needs. On an error the form comes back with the message. */
+  async function finishActiveRegistration() {
+    setBusy(true);
+    setError("");
+    try {
+      await login(email.trim().toLowerCase(), password);
+      resumePendingJoin(navigate);
+    } catch (err) {
+      setError(errMessage(err, t));
+      setStep("form");
+      setBusy(false);
+    }
+  }
+
   async function doRegister(e: React.FormEvent) {
     e.preventDefault();
     const pw = checkPassword(password);
@@ -558,8 +577,13 @@ export function ScreenAuth() {
     setBusy(true);
     setError("");
     try {
-      const phrase = await registerAccount(email.trim().toLowerCase(), password, inviteCode);
+      const { mnemonic: phrase, active } = await registerAccount(
+        email.trim().toLowerCase(),
+        password,
+        inviteCode,
+      );
       setMnemonic(phrase);
+      setRegisteredActive(active);
       setStep("kit");
     } catch (err) {
       setError(errMessage(err, t));
@@ -586,7 +610,10 @@ export function ScreenAuth() {
   if (mode === "register" && step === "kit" && mnemonic) {
     return (
       <div className="px-7 py-9">
-        <RecoveryKit mnemonic={mnemonic} onDone={() => setStep("sent")} />
+        <RecoveryKit
+          mnemonic={mnemonic}
+          onDone={() => (registeredActive ? void finishActiveRegistration() : setStep("sent"))}
+        />
       </div>
     );
   }

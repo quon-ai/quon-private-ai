@@ -1,4 +1,4 @@
-> **Core edition.** This document describes the full QUON product. The core edition leaves out some features (connectors, chat tools and MCP, agents, shared projects, native apps) — see [docs/CORE.md](./docs/CORE.md) for the list and the criteria.
+> **Note.** This document also covers features that are not part of this repository yet — connectors, chat tools and MCP, agents, shared projects, the desktop and Android apps. They follow once they are ready.
 
 # QUON — Architecture
 
@@ -345,7 +345,7 @@ Register (browser):  Argon2id(password) → authToken + pwWrapKey; MK=random;
   → server: user(pending) + user_keys; email a verify link
   → browser shows the recovery kit (12 words)
 Verify:  GET link → POST /auth/verify {token}
-  → server (synchronous, fails closed): mint $5 OpenRouter sub-key, seal it,
+  → server (synchronous, fails closed): mint a spend-capped provider sub-key (if a provisioning key is set), seal it,
     activate the account, set httpOnly session + CSRF cookies
 Login (new device):  GET /auth/kdf → derive authToken → POST /auth/login
   → server verifies, returns wrap_pw; browser unwraps the Master Key locally
@@ -617,7 +617,7 @@ Vite proxy). The DB layer is single-instance (SQLite) — see §11 for scaling.
 | ---------------------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Multi-user auth**          | ✅    | Email+password, verification, sessions, CSRF, per-user isolation (SQLite).                                                                                                                                                                                                      |
 | **E2E sync**                 | ✅    | Zero-knowledge encrypted chat blobs; BIP39 recovery; LWW.                                                                                                                                                                                                                       |
-| **OpenRouter provisioning**  | ✅    | Per-user $5 sub-key minted on verify; admin raise/disable; BYOK for self-host.                                                                                                                                                                                                  |
+| **Per-user provider keys**   | ✅    | Optional: a provisioning key mints a spend-capped sub-key per user; otherwise one shared key or BYOK.                                                                                                                                                                                                  |
 | **Memory**                   | ✅    | Zero-knowledge: facts/notes embedded on-device (Transformers.js on the web, native Rust in the desktop app), searched locally, synced as encrypted blobs. Maintenance surfaces contradictions, restatements and stale facts for a human decision — superseding, never deleting. |
 | **Documents**                | ✅    | Zero-knowledge: in-browser extract (pdf.js/mammoth) → chunk → embed → encrypted blob; on-device semantic query.                                                                                                                                                                 |
 | **Context-aware chat (RAG)** | ✅    | On-device retrieval of relevant Memory/Document snippets → **scrubbed** → injected as a system turn → re-hydrated answer (§4.7). Per-chat Context toggle.                                                                                                                       |

@@ -424,13 +424,22 @@ export async function ensureIdentity(): Promise<{ pub: Uint8Array }> {
 
 /** Create an account (pending until email verification). Returns the recovery
  *  mnemonic to show in the recovery kit. Does not start a session. */
+export interface RegistrationResult {
+  /** The 12-word recovery phrase, shown exactly once. */
+  mnemonic: string;
+  /** True when the instance does not verify e-mail addresses (EMAIL_VERIFICATION
+   *  auto without SMTP, or off): the account is usable right away and the caller
+   *  signs the user in instead of sending them to their inbox. */
+  active: boolean;
+}
+
 export async function registerAccount(
   email: string,
   password: string,
   inviteCode?: string,
-): Promise<string> {
+): Promise<RegistrationResult> {
   const { material } = await qc.buildRegistration(password);
-  await authApi.register({
+  const me = await authApi.register({
     email,
     invite_code: inviteCode?.trim() || undefined,
     terms_version: TERMS_VERSION,
@@ -443,7 +452,11 @@ export async function registerAccount(
     rec_salt: material.recSalt,
     wrap_rec: material.wrapRec,
   });
-  return material.mnemonic;
+  const active = me.status === "active";
+  // Without a verify step this response is the one that carries onboarding
+  // eligibility (verifyEmail does the same for the mail flow).
+  if (active) captureEligibility(me.onboarding_pending);
+  return { mnemonic: material.mnemonic, active };
 }
 
 /** Confirm the email token. On success a session is active but `locked` until

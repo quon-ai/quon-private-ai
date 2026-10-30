@@ -1,4 +1,4 @@
-> **Core edition.** This document describes the full QUON product. The core edition leaves out some features (connectors, chat tools and MCP, agents, shared projects, native apps) — see [docs/CORE.md](./docs/CORE.md) for the list and the criteria.
+> **Note.** This document also covers features that are not part of this repository yet — connectors, chat tools and MCP, agents, shared projects, the desktop and Android apps. They follow once they are ready.
 
 # Changelog
 
@@ -12,13 +12,16 @@ once it reaches 1.0.
 
 ### Added
 
-- **Core edition.** QUON can now be exported as a reduced, AGPL-3.0 edition
-  that contains the parts that are tested and settled — detection, the
-  filtered chat, accounts, encrypted sync, memory, documents, projects — and
-  leaves connectors, chat tools, agents, URL import, the briefing and the
-  native shells for later. Optional features register in three registries
-  (`optional_features.py`, `features.ts`, `syncExtras.ts`) instead of being
-  wired into screens, so the core needs no patches.
+- **Open-source release (AGPL-3.0).** The privacy gateway — detection, the
+  filtered chat, accounts, encrypted sync, memory, documents, projects and the
+  self-host stack — is published under the AGPL. Features still under review
+  (connectors, chat tools, agents, URL import, the briefing, the native apps)
+  follow later; they register in three registries (`optional_features.py`,
+  `features.ts`, `syncExtras.ts`) instead of being wired into screens.
+- **E-mail verification is optional.** `EMAIL_VERIFICATION=auto` (default)
+  verifies by mail when SMTP is configured and otherwise activates accounts
+  on creation — a home server needs no mail relay. The invite-code field
+  appears only on instances that require one.
 
 ### Fixed
 

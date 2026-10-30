@@ -324,6 +324,7 @@ async def health_endpoint() -> HealthResponse:
         gliner_enabled=settings.gliner_enabled,
         gliner_loaded=gliner_loaded,
         signup_invite_required=bool(settings.signup_invite_code),
+        email_verification_required=settings.email_verification_required,
     )
 
 

@@ -390,6 +390,10 @@ async def register(body: RegisterRequest) -> MeResponse:
             # token); notify the real owner instead, and return a fake pending
             # response — like a fresh signup, exactly one email goes out.
             if existing["status"] == "active":
+                if not settings.email_verification_required:
+                    # No verification ⇒ no inbox to notify and no fake-pending
+                    # dance; the honest answer is the useful one here.
+                    raise HTTPException(status_code=409, detail="An account with this email already exists.")
                 email_service.send_already_registered(email)
                 return MeResponse(id=str(uuid.uuid4()), email=email, status="pending")
             # Allow re-sending verification for a still-pending signup.
@@ -425,8 +429,40 @@ async def register(body: RegisterRequest) -> MeResponse:
                  rec_salt, wrap_rec, now),
             )
 
-    _issue_email_token(user_id, email, "verify", lang)
-    return MeResponse(id=user_id, email=email, status="pending")
+    if settings.email_verification_required:
+        _issue_email_token(user_id, email, "verify", lang)
+        return MeResponse(id=user_id, email=email, status="pending")
+    return await _activate_without_verification(user_id, email)
+
+
+async def _activate_without_verification(user_id: str, email: str) -> MeResponse:
+    """EMAIL_VERIFICATION=auto without SMTP, or "off": do what /auth/verify
+    would have done, minus the token — provision first (fails closed, exactly
+    like verify), then activate. No session is started: the client holds the
+    password and signs in, which is also what derives its keys."""
+    if openrouter_provisioning.is_enabled():
+        try:
+            await openrouter_provisioning.ensure_user_key(user_id)
+        except openrouter_provisioning.ProvisioningError as exc:
+            logger.error("provisioning failed for user %s: %s", user_id, exc)
+            raise HTTPException(
+                status_code=502, detail="could not provision your AI access — please retry"
+            ) from exc
+    now = db.now_ms()
+    with db.transaction() as c:
+        was_pending = c.execute(
+            "SELECT onboarding_pending FROM users WHERE id=?", (user_id,)
+        ).fetchone()["onboarding_pending"]
+        c.execute(
+            "UPDATE users SET status='active', activated_at=?, onboarding_pending=0"
+            " WHERE id=? AND status='pending'",
+            (now, user_id),
+        )
+        urow = c.execute("SELECT role FROM users WHERE id=?", (user_id,)).fetchone()
+    return MeResponse(
+        id=user_id, email=email, status="active", role=urow["role"],
+        onboarding_pending=bool(was_pending),
+    )
 
 
 def _issue_email_token(user_id: str, email: str, purpose: str, lang: str | None = None) -> None:

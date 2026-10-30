@@ -125,7 +125,7 @@ export default defineConfig({
         // deleting a concurrent run's database.
         `mkdir -p ${TMP_DIR} && rm -rf ${TMP_DIR}/* && cd quon-scrubber-service && ` +
         `DATABASE_PATH=${TEST_DB} RATE_LIMIT_ENABLED=false LLM_ENRICHMENT=false QUON_TEST_LIGHT_KDF=1 ` +
-        `SIGNUP_INVITE_CODE= SMTP_HOST= OPENROUTER_API_KEY= COOKIE_SECURE=false ` +
+        `EMAIL_VERIFICATION=required SIGNUP_INVITE_CODE= SMTP_HOST= OPENROUTER_API_KEY= COOKIE_SECURE=false ` +
         `./.venv/bin/python -m uvicorn main:app --host 127.0.0.1 --port ${API_PORT} ` +
         `2>&1 | tee ${BACKEND_LOG}`,
       url: `http://localhost:${API_PORT}/health`,

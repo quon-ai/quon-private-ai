@@ -1,4 +1,4 @@
-> **Core edition.** This document describes the full QUON product. The core edition leaves out some features (connectors, chat tools and MCP, agents, shared projects, native apps) — see [docs/CORE.md](./docs/CORE.md) for the list and the criteria.
+> **Note.** This document also covers features that are not part of this repository yet — connectors, chat tools and MCP, agents, shared projects, the desktop and Android apps. They follow once they are ready.
 
 # Contributing to QUON
 
@@ -37,8 +37,10 @@ cp .env.example .env                     # dev: set COOKIE_SECURE=false; OPENROU
 uvicorn main:app --reload                # http://localhost:8000 — GET /health to verify
 ```
 
-Register an account in the app; without SMTP configured, the verification link
-is printed in the backend log as `[DEV EMAIL]`.
+Register an account in the app; without SMTP configured the account is active
+right away (`EMAIL_VERIFICATION=auto`). To exercise the mail flow set
+`EMAIL_VERIFICATION=required` — the link is then printed in the backend log as
+`[DEV EMAIL]`.
 
 See [quon-scrubber-service/SETUP.md](quon-scrubber-service/SETUP.md) for the
 full operator/production configuration.
