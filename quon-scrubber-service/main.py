@@ -234,7 +234,7 @@ app.include_router(account.router)
 app.include_router(admin.router)
 app.include_router(sync.router)
 app.include_router(shares.router)
-# Optional features — everything outside the core edition, mounted from ONE
+# Optional features — everything a build may leave out, mounted from ONE
 # registry so this file is identical in both editions (see optional_features.py).
 for _router in optional_features.ROUTERS:
     app.include_router(_router)

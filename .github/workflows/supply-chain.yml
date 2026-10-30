@@ -149,7 +149,7 @@ jobs:
       - name: npm license inventory
         run: npx --yes license-checker --production --summary > npm-licenses.txt || true
       # --excludePrivatePackages: the gate judges DEPENDENCIES. The root package
-      # is private:true, and in the core edition it is itself AGPL-3.0 — without
+      # is private:true, and in the public edition it is itself AGPL-3.0 — without
       # this flag the gate would fail on the project's own licence.
       - name: npm license gate (no GPL/AGPL/SSPL in production)
         run: |
