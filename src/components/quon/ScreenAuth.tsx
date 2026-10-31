@@ -45,7 +45,7 @@ import { BioCancelledError, platformAuthenticatorAvailable } from "@/lib/webauth
 import { LanguageSelect } from "./LanguageSelect";
 import { LegalLinks } from "./LegalPage";
 import { Logo } from "./Logo";
-import { checkHealth } from "@/lib/quonApi";
+import { useQuonHealth } from "@/hooks/useQuonHealth";
 
 type Mode = "login" | "register" | "forgot";
 
@@ -496,19 +496,10 @@ export function ScreenAuth() {
   const [confirm, setConfirm] = useState("");
   const [inviteCode, setInviteCode] = useState("");
   // Only a closed instance (SIGNUP_INVITE_CODE set) has a code to ask for; an
-  // open one must not show a required field nobody can fill. /health says which.
-  const [inviteRequired, setInviteRequired] = useState(false);
-  useEffect(() => {
-    let cancelled = false;
-    checkHealth()
-      .then((h) => {
-        if (!cancelled) setInviteRequired(Boolean(h.signup_invite_required));
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  // open one must not show a required field nobody can fill. /health says
+  // which — read through the app's ONE shared poll (useQuonHealth), never a
+  // request of this screen's own: the health-poll E2E counts them.
+  const inviteRequired = Boolean(useQuonHealth().health?.signup_invite_required);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);

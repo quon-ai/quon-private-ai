@@ -149,7 +149,8 @@ function readVerifyTokenFromLog(email: string): string {
 export async function registerAndVerifyViaHttp(page: Page, creds: Creds): Promise<void> {
   await page.goto("/");
   await page.getByRole("button", { name: "Create an account" }).click();
-  await page.getByPlaceholder("Invite code").fill("e2e");
+  const inviteHttp = page.getByPlaceholder("Invite code");
+  if (await inviteHttp.count()) await inviteHttp.fill("e2e"); // shown only when the instance requires one
   await page.getByPlaceholder("Email").fill(creds.email);
   await page.getByPlaceholder("Password (min. 12 chars)").fill(creds.password);
   await page.getByPlaceholder("Confirm password").fill(creds.password);

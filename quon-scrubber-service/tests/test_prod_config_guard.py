@@ -110,3 +110,23 @@ def test_no_warning_when_provisioning_gives_each_user_a_capped_key(
     with caplog.at_level("WARNING"):
         _boot()
     assert "OPEN REGISTRATION" not in caplog.text
+
+
+def test_prod_boot_warns_when_registration_is_open_without_verification(monkeypatch, tmp_path, caplog):
+    """A public instance that activates accounts on creation and asks for no
+    invite code must say so on every boot — loudly, whether or not a shared
+    provider key is set (until 2026-10-31 only the shared key triggered it)."""
+    import logging
+
+    _prod_base(monkeypatch, tmp_path)
+    monkeypatch.setattr(settings, "signup_invite_code", "")
+    monkeypatch.setattr(settings, "email_verification", "off")
+    with caplog.at_level(logging.WARNING, logger="quon"):
+        _boot()
+    assert any("OPEN REGISTRATION" in r.message and "ACTIVE at once" in r.message for r in caplog.records)
+
+    caplog.clear()
+    monkeypatch.setattr(settings, "signup_invite_code", "closed-beta")
+    with caplog.at_level(logging.WARNING, logger="quon"):
+        _boot()
+    assert not any("OPEN REGISTRATION" in r.message for r in caplog.records)

@@ -123,7 +123,11 @@ export default defineConfig({
         // Wipe THIS session's scratch directory, rather than naming files that
         // another checkout might also be using. Structurally incapable of
         // deleting a concurrent run's database.
-        `mkdir -p ${TMP_DIR} && rm -rf ${TMP_DIR}/* && cd quon-scrubber-service && ` +
+        `mkdir -p ${TMP_DIR} && rm -rf ${TMP_DIR}/* && printf '{}' > ${TMP_DIR}/runtime_settings.json && cd quon-scrubber-service && ` +
+        // Hermetic runtime settings: without RUNTIME_SETTINGS_PATH the backend reads
+        // the checkout's own runtime_settings.json (a dev file with a July model
+        // catalog hid the image model from image-generation.spec on 2026-10-31).
+        `RUNTIME_SETTINGS_PATH=${TMP_DIR}/runtime_settings.json ` +
         `DATABASE_PATH=${TEST_DB} RATE_LIMIT_ENABLED=false LLM_ENRICHMENT=false QUON_TEST_LIGHT_KDF=1 ` +
         `EMAIL_VERIFICATION=required SIGNUP_INVITE_CODE= SMTP_HOST= OPENROUTER_API_KEY= COOKIE_SECURE=false ` +
         `./.venv/bin/python -m uvicorn main:app --host 127.0.0.1 --port ${API_PORT} ` +

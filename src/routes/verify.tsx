@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { AlertTriangle, Loader2, ShieldCheck } from "lucide-react";
 
-import { verifyEmail } from "@/lib/authStore";
+import { verifyOnce } from "@/lib/verifyOnce";
 import { Logo } from "@/components/quon/Logo";
 import { translateApiError } from "@/lib/i18n/apiErrors";
 import { useT } from "@/lib/i18n/i18n";
@@ -34,7 +34,7 @@ function VerifyPage() {
         return;
       }
       try {
-        await verifyEmail(token);
+        await verifyOnce(token);
         if (cancelled) return;
         setState("ok");
         // A brand-new invitee who registered from a /join link lands here on a
