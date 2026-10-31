@@ -117,11 +117,21 @@ async def lifespan(_app: FastAPI):
             )
         # Test the RESOLVED list, not the raw string: config maps an EMPTY value
         # to ["*"] as well, and the raw check let that one through (2026-10-30).
-        if settings.cors_origins_list == ["*"]:
+        # And test every ENTRY: Starlette treats a "*" anywhere in the list as
+        # allow-all and, with credentials on, reflects the caller's origin; "null"
+        # matches the Origin an attacker's sandboxed frame sends; an entry
+        # without a scheme can never match a real origin (2026-10-31).
+        bad = [
+            o
+            for o in settings.cors_origins_list
+            if o == "*" or o.lower() == "null" or not o.startswith(("http://", "https://"))
+        ]
+        if bad:
             raise RuntimeError(
-                "CORS_ALLOW_ORIGINS is '*' or empty but cookies are Secure (production). "
-                "Cookie auth requires explicit origins — set it to your exact "
-                "frontend origin, e.g. https://quon.example.com."
+                "CORS_ALLOW_ORIGINS is '*', empty, or contains an invalid entry "
+                f"({', '.join(bad)}) but cookies are Secure (production). Cookie "
+                "auth requires explicit origins — set it to your exact frontend "
+                "origin, e.g. https://quon.example.com."
             )
         if os.environ.get("QUON_TEST_LIGHT_KDF") == "1":
             raise RuntimeError(
@@ -137,20 +147,30 @@ async def lifespan(_app: FastAPI):
         # say it loudly, every boot, until one of the two is configured.
         import openrouter_provisioning as _prov  # local: avoids an import cycle
 
-        if (
-            not settings.signup_invite_code
-            and not _prov.is_enabled()
-            and settings_store.get_openrouter_key()
-        ):
-            logger.warning(
-                "OPEN REGISTRATION on a public deployment: SIGNUP_INVITE_CODE is "
-                "empty, so anyone who reaches this instance can create an account "
-                "— and every account bills chat + cloud PII extraction to your "
-                "single shared OPENROUTER_API_KEY, uncapped. The first account "
-                "created on a fresh instance also becomes the ADMIN. Set "
-                "SIGNUP_INVITE_CODE before exposing this host, or configure "
-                "OPENROUTER_PROVISIONING_KEY for per-user capped sub-keys."
-            )
+        if not settings.signup_invite_code:
+            shared_key = bool(settings_store.get_openrouter_key()) and not _prov.is_enabled()
+            unverified = not settings.email_verification_required
+            if shared_key or unverified:
+                logger.warning(
+                    "OPEN REGISTRATION on a public deployment: SIGNUP_INVITE_CODE is "
+                    "empty, so anyone who reaches this instance can create an account"
+                    + (
+                        " — and it is ACTIVE at once, under any address (no e-mail "
+                        "verification: EMAIL_VERIFICATION=%s, SMTP_HOST %s)"
+                        % (settings.email_verification, "set" if settings.smtp_host else "unset")
+                        if unverified
+                        else ""
+                    )
+                    + (
+                        ". Every account bills chat to your single shared "
+                        "OPENROUTER_API_KEY, uncapped"
+                        if shared_key
+                        else ""
+                    )
+                    + ". The first account created on a fresh instance becomes the ADMIN. "
+                    "Set SIGNUP_INVITE_CODE before exposing this host; a private network "
+                    "is the only place this is fine."
+                )
 
     # 1. DB migrations
     db.init_db()
@@ -498,15 +518,25 @@ async def set_models_endpoint(
     return _settings_response(user.id)
 
 
+async def _admin_session(user: auth.User = Depends(auth.current_active_user)) -> auth.User:
+    """The GLOBAL connections are the operator's: their base_url is where every
+    user's chat goes, with the operator's key attached. Until 2026-10-31 any
+    active account could repoint them — and with accounts active on creation,
+    "any active account" meant anyone on the internet."""
+    if user.role != "admin":
+        raise HTTPException(status_code=403, detail="forbidden")
+    return user
+
+
 @app.put("/settings/connections/{cid}", response_model=SettingsResponse)
 async def upsert_connection_endpoint(
     cid: str,
     body: ConnectionUpsertRequest,
-    user: auth.User = Depends(auth.current_active_user),
+    user: auth.User = Depends(_admin_session),
 ) -> SettingsResponse:
     """Update the operator's shared OpenRouter model catalog, or a global custom
-    connection. Per-user provider keys live on /settings/my-connections and
-    /settings/openrouter-key — this endpoint never sets a shared secret key
+    connection — ADMIN only. Per-user provider keys live on /settings/my-connections
+    and /settings/openrouter-key — this endpoint never sets a shared secret key
     (the built-in OpenRouter key is env/operator-managed)."""
     if cid == connections.OPENROUTER_ID:
         # The shared exposed-model list (catalog curation); the KEY is per-user
@@ -532,10 +562,11 @@ async def upsert_connection_endpoint(
 
 @app.delete("/settings/connections/{cid}", response_model=SettingsResponse)
 async def delete_connection_endpoint(
-    cid: str, user: auth.User = Depends(auth.current_active_user)
+    cid: str, user: auth.User = Depends(_admin_session)
 ) -> SettingsResponse:
     """Remove a global custom connection (the built-in OpenRouter connection cannot
-    be deleted). Per-user connections are removed via /settings/my-connections."""
+    be deleted) — ADMIN only. Per-user connections are removed via
+    /settings/my-connections."""
     if cid == connections.OPENROUTER_ID:
         raise HTTPException(status_code=400, detail="the OpenRouter connection cannot be removed")
     settings_store.delete_custom_connection(cid)

@@ -396,7 +396,11 @@ async def register(body: RegisterRequest) -> MeResponse:
                     raise HTTPException(status_code=409, detail="An account with this email already exists.")
                 email_service.send_already_registered(email)
                 return MeResponse(id=str(uuid.uuid4()), email=email, status="pending")
-            # Allow re-sending verification for a still-pending signup.
+            # Allow re-sending verification for a still-pending signup — in the
+            # MAIL flow only. Without verification, replacing the credentials
+            # would hand the pending account (and its role) to whoever asks.
+            if not settings.email_verification_required:
+                raise HTTPException(status_code=409, detail="An account with this email already exists.")
             user_id = existing["id"]
             c.execute(
                 "UPDATE users SET auth_verifier=?, auth_salt=?, created_at=?,"
@@ -445,6 +449,12 @@ async def _activate_without_verification(user_id: str, email: str) -> MeResponse
             await openrouter_provisioning.ensure_user_key(user_id)
         except openrouter_provisioning.ProvisioningError as exc:
             logger.error("provisioning failed for user %s: %s", user_id, exc)
+            # The row was created a moment ago by THIS request; without a
+            # verify step there is no way to finish it later, and a retry
+            # would hit "already exists". Remove it so the retry can succeed.
+            with db.transaction() as c:
+                c.execute("DELETE FROM user_keys WHERE user_id=?", (user_id,))
+                c.execute("DELETE FROM users WHERE id=? AND status='pending'", (user_id,))
             raise HTTPException(
                 status_code=502, detail="could not provision your AI access — please retry"
             ) from exc

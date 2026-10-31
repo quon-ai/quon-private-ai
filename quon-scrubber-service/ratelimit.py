@@ -81,12 +81,18 @@ _limiter = _FixedWindow()
 
 
 def _client_ip(request: Request) -> str:
-    cf = request.headers.get("cf-connecting-ip")
-    if cf:
-        return cf.strip()
+    # CF-Connecting-IP only when the operator says the instance is behind
+    # Cloudflare (which sets it itself); anywhere else it is client-controlled.
+    if settings.trust_cf_connecting_ip:
+        cf = request.headers.get("cf-connecting-ip")
+        if cf:
+            return cf.strip()
+    # X-Forwarded-For: the RIGHTMOST hop is the one the proxy in front of us
+    # appended (Caddy adds the peer address); everything left of it is whatever
+    # the client chose to send.
     xff = request.headers.get("x-forwarded-for")
     if xff:
-        return xff.split(",")[0].strip()
+        return xff.split(",")[-1].strip()
     return request.client.host if request.client else "unknown"
 
 

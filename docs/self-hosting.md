@@ -92,9 +92,11 @@ never verify, even with SMTP.
 
 Two things change without verification: anyone who can reach the sign-up page
 can create an account under any address (combine with `SIGNUP_INVITE_CODE` on
-a host that is reachable from outside), and a second registration with an
-existing address is refused with a plain 409 instead of the anti-enumeration
-answer the mail flow gives.
+a host that is reachable from outside — the backend logs a warning on every
+boot while both are open), and a second registration with an existing address
+is refused with a plain 409 instead of the anti-enumeration answer the mail
+flow gives. A still-pending account from an earlier verified setup is never
+handed to a new registration; it keeps waiting for its own link.
 
 To send mail, set `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`,
 `SMTP_FROM` (and `SMTP_SSL=true` for implicit TLS on 465) — any plain SMTP
@@ -226,6 +228,7 @@ The README covers the vars needed to boot. These are the ones that bite later:
 | `ORIGINALS_QUOTA_BYTES`                    | `209715200` (200 MB)                  | Per-user ceiling for stored original document bytes.                                                                                                                                                                                                                                                                                                                                                                                           |
 | `SIGNUP_INVITE_CODE`                       | `""`                                  | Non-empty ⇒ `/auth/register` requires this code. The invite gate.                                                                                                                                                                                                                                                                                                                                                                              |
 | `EMAIL_VERIFICATION`                       | `auto`                                | `auto` = verify by mail when `SMTP_HOST` is set, otherwise accounts are active on creation; `required`; `off`. See [E-mail verification](#e-mail-verification-optional). |
+| `TRUST_CF_CONNECTING_IP`                   | `false`                               | Only behind Cloudflare: lets the rate limiter key on `CF-Connecting-IP`. Elsewhere the hop Caddy appends to `X-Forwarded-For` is used; a client-sent header is ignored. |
 | `SESSION_TTL_HOURS`                        | `720` (30 d)                          | Session lifetime.                                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `COOKIE_SAMESITE` / `COOKIE_DOMAIN`        | `lax` / `""`                          | Only for unusual proxy/subdomain setups; host-only cookie by default.                                                                                                                                                                                                                                                                                                                                                                          |
 | `SMTP_STARTTLS`                            | `true`                                | `false` for implicit TLS on port 465 (see `SMTP_SSL`).                                                                                                                                                                                                                                                                                                                                                                                         |

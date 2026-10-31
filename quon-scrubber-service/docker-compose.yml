@@ -66,6 +66,10 @@ services:
       # Closed-beta signup gate: when set, /auth/register requires this code.
       # Empty → open registration. Set the value in .env (never hard-code here).
       SIGNUP_INVITE_CODE: ${SIGNUP_INVITE_CODE:-}
+      # auto = verify by mail when SMTP_HOST is set, else active on creation; required; off
+      EMAIL_VERIFICATION: ${EMAIL_VERIFICATION:-auto}
+      # only behind Cloudflare (it sets the header itself); see config.py
+      TRUST_CF_CONNECTING_IP: ${TRUST_CF_CONNECTING_IP:-false}
       # --- SMTP (email verification). Empty SMTP_HOST → links logged (dev). ---
       SMTP_HOST: ${SMTP_HOST:-}
       SMTP_PORT: ${SMTP_PORT:-587}

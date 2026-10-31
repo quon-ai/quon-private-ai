@@ -50,7 +50,12 @@ function buildCsp(nonce: string, userExtra: string | null): string {
   // (whole-instance, e.g. the operator's own Paperless) and the USER's cookie
   // (per-browser, strictly ONE shape-validated origin — see lib/cspExtra.ts
   // for the rules and the honestly-stated costs).
-  const extra = [(process.env.QUON_CSP_CONNECT_EXTRA ?? "").trim(), userExtra ?? ""]
+  // The user cookie exists for the Paperless connector; a build without
+  // connectors has no reason to widen its CSP for it.
+  const extra = [
+    (process.env.QUON_CSP_CONNECT_EXTRA ?? "").trim(),
+    FEATURES.connectors ? (userExtra ?? "") : "",
+  ]
     .filter(Boolean)
     .join(" ");
   return [

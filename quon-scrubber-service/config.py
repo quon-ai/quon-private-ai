@@ -335,6 +335,13 @@ class Settings(BaseSettings):
     # Per-IP rate limiting on /auth/* (brute-force / signup-abuse guard). On by
     # default; disabled in the test harness.
     rate_limit_enabled: bool = True
+    # The limiter keys on the CLIENT address. Behind the bundled Caddy that is
+    # the hop Caddy appended to X-Forwarded-For; a client-sent header is never
+    # trusted. Set this ONLY when the instance sits behind Cloudflare, which
+    # strips any CF-Connecting-IP a client sends — on a plain self-host, Caddy
+    # passes the header through and a spoofer would get a fresh bucket per
+    # request (found 2026-10-31).
+    trust_cf_connecting_ip: bool = False
 
     # --- Sync: original document bytes ------------------------------------
     # Per-user total-bytes cap for the `originals` sync collection (client-side
@@ -398,9 +405,11 @@ class Settings(BaseSettings):
         mode = self.email_verification.strip().lower()
         if mode == "off":
             return False
-        if mode == "required":
-            return True
-        return bool(self.smtp_host)  # "auto" — and anything unrecognised
+        if mode == "auto":
+            return bool(self.smtp_host)
+        # "required" — and anything unrecognised ("requried", "true", "on"):
+        # a typo must never open registration. Fail closed.
+        return True
 
     @property
     def cors_origins_list(self) -> list[str]:

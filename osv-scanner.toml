@@ -32,13 +32,23 @@ reason = "requirements.txt is not a lockfile: OSV reports floor versions for und
 
 # --- npm leftovers of the 2026-10-30 advisory round --------------------------
 # Everything with a non-major fix was bumped that day (TanStack Start XSS,
-# DOMPurify, seroval, xmldom, adm-zip, js-yaml, sharp, ...). These two have none:
+# DOMPurify, seroval, xmldom, adm-zip, js-yaml, sharp, ...). katex followed on
+# 2026-10-31 via an npm override to 0.18 (mermaid 12 + rehype-katex still pin
+# 0.16); the Capacitor-CLI uuid chain closed with Capacitor 8.6.0.
+
+
+# --- minimatch / glob (published 2026-10-30/31) -----------------------------
+# Both reach the tree only through BUILD tooling: @capacitor/cli → rimraf →
+# glob → minimatch, and eslint's config loader. Nothing served or run on the
+# server imports them. No non-major fix exists yet in either chain (npm's
+# "fix" is a downgrade to Capacitor 4); the ecosystem will move within weeks.
 [[IgnoredVulns]]
-id = "GHSA-238p-pmpm-9mq7"
-ignoreUntil = 2026-12-31T00:00:00Z
-reason = "katex: prototype-pollution bypass of the `trust` option. QUON renders math through rehype-katex with trust OFF (the default) and never passes user-controlled options; the fixed katex comes only with mermaid 12 (major), which needs its own render check first."
+id = "GHSA-g3hv-75wg-m249"
+ignoreUntil = 2026-11-30T00:00:00Z
+reason = "minimatch ReDoS via glob patterns — dev/build tooling only (eslint config loader, Capacitor CLI); not in the served bundle or the server build."
 
 [[IgnoredVulns]]
-id = "GHSA-w5hq-g745-h8pq"
-ignoreUntil = 2026-12-31T00:00:00Z
-reason = "uuid v3/v5/v6 buffer bounds — reached only through xcode -> @capacitor/cli, the build-time CLI for the native shells. Never in the served bundle or the server build; fix arrives with the Capacitor 8.6 bump, which needs an Android rebuild to verify."
+id = "GHSA-3g3m-2fjr-6pw4"
+ignoreUntil = 2026-11-30T00:00:00Z
+reason = "glob AbortSignal cancellation bypass — reached only via rimraf inside @capacitor/cli, a build-time tool; nothing at runtime uses glob."
+
