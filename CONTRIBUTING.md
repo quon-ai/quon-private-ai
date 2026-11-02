@@ -111,14 +111,26 @@ idempotent-ingest contract and the i18n requirements.
 - For security-sensitive findings, **do not open a PR or issue** — follow
   [SECURITY.md](SECURITY.md) instead.
 
-## License of contributions
+## License of contributions — the DCO
 
-The licence QUON ships under is the one in the `LICENSE` file at the root of
-the repository you are contributing to. Contributions are accepted under the
-standard **inbound = outbound** rule: by submitting a pull request, you agree
-that your contribution is licensed to the project under that same licence,
-including any change of licence the file itself announces. There is no
-separate CLA.
+Contributions are accepted under the licence in the `LICENSE` file at the root
+of the repository (inbound = outbound). There is no contributor licence
+agreement and no transfer of rights: your code stays yours, licensed to
+everyone under that same licence.
+
+What we ask instead is the **Developer Certificate of Origin**
+(https://developercertificate.org, version 1.1): a one-line statement in every
+commit that you have the right to submit it under the project's licence. Add
+it with `git commit -s`, which appends
+
+```
+Signed-off-by: Your Name <you@example.org>
+```
+
+A pull request whose commits lack that line fails the `DCO` check; `git commit
+--amend -s` fixes the last commit, `git rebase --signoff` a whole branch. Use a
+real name and an address you can be reached at — GitHub's noreply address is
+fine.
 
 ## Code of conduct
 
