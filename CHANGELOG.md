@@ -10,6 +10,14 @@ once it reaches 1.0.
 
 ## [Unreleased]
 
+## [0.10.0] – 2026-11-02
+
+The first release of the open-source edition. Everything below the heading
+was unreleased work since 0.9.0; the user-visible changes of the release
+itself are the e-mail-verification mode, the invite field that appears only
+when required, the English default of the public build, and the dependency
+and security round of 2026-10-30/31.
+
 ### Added
 
 - **Open-source release (AGPL-3.0).** The privacy gateway — detection, the

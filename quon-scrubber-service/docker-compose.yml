@@ -15,7 +15,7 @@
 services:
   scrubber:
     build: .
-    image: quon-scrubber:0.1.0
+    image: quon-scrubber:0.10.0
     ports:
       - "127.0.0.1:8000:8000"
     environment:

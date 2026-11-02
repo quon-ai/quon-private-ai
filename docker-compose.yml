@@ -38,7 +38,7 @@ services:
       context: .
       args:
         VITE_QUON_API_URL: /api
-    image: quon-frontend:0.9.0
+    image: quon-frontend:0.10.0
     environment:
       HOST: 0.0.0.0
       PORT: 8080
@@ -54,7 +54,7 @@ services:
 
   scrubber:
     build: ./quon-scrubber-service
-    image: quon-scrubber:0.9.0
+    image: quon-scrubber:0.10.0
     environment:
       LOG_LEVEL: INFO
       DATABASE_PATH: /app/data/quon.db

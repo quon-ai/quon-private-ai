@@ -149,6 +149,17 @@ export default defineConfig(async ({ command, mode }): Promise<UserConfig> => {
         "@paddleocr/paddleocr-js",
       ],
     },
+    ssr: {
+      // The frontend image is dist/ and nothing else — no node_modules — so
+      // the SSR bundle must carry every package it imports. Vite's default
+      // leaves dependencies external (fine for a server with node_modules,
+      // fatal here): a fresh self-host install died on its first request with
+      // ERR_MODULE_NOT_FOUND for "h3-v2", TanStack's aliased h3 import, on
+      // 2026-11-02. `true` bundles all of them; scripts/check-ssr-externals.mjs
+      // fails the gate if a bare import ever survives again.
+      noExternal: true,
+    },
+
     server: {
       host: "::",
       // strictPort: fail loudly instead of walking to the next free port. The

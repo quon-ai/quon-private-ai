@@ -28,7 +28,7 @@
     "ci:cancel": "node scripts/ci-cancel.mjs",
     "licenses:notices": "npx --yes generate-license-file --input package.json --output THIRD_PARTY_NOTICES.txt --overwrite",
     "licenses:check": "npx --yes license-checker --production --excludePrivatePackages --failOn 'GPL-2.0;GPL-2.0-only;GPL-2.0-or-later;GPL-3.0;GPL-3.0-only;GPL-3.0-or-later;AGPL-3.0;AGPL-3.0-only;AGPL-3.0-or-later;SSPL-1.0'",
-    "preflight": "npm run typecheck && npm run lint && npm run test && npm run build",
+    "preflight": "npm run typecheck && npm run lint && npm run test && npm run build && node scripts/check-ssr-externals.mjs",
     "pree2e": "node scripts/fetch-e2e-models.mjs && node scripts/write-version.mjs",
     "write-version": "node scripts/write-version.mjs"
   },

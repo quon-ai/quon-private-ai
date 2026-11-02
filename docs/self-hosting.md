@@ -41,7 +41,7 @@ cp .env.example .env
 #   QUON_DOMAIN          your domain, e.g. quon.example.com
 #   QUON_SERVER_SECRET   openssl rand -base64 32   (keep it stable forever!)
 #   OPENROUTER_API_KEY   or leave empty for BYOK-only
-#   SMTP_*               required for real users (email verification)
+#   SMTP_*               only if you want e-mail verification (see below)
 #   SIGNUP_INVITE_CODE   SET THIS before the host is reachable — see below
 docker compose up -d --build
 ```

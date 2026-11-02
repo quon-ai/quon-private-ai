@@ -81,6 +81,9 @@ jobs:
       - run: npm run lint
       - run: npm run test
       - run: npm run build
+      # The frontend image ships dist/ without node_modules: every package the
+      # SSR bundle needs must be inside it (the h3-v2 crash of 2026-11-02).
+      - run: node scripts/check-ssr-externals.mjs
 
   backend:
     name: Backend (pytest)
