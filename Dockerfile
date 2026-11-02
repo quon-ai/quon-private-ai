@@ -20,6 +20,11 @@ COPY . .
 ARG VITE_QUON_API_URL=/api
 ENV VITE_QUON_API_URL=$VITE_QUON_API_URL
 # prebuild runs scripts/copy-ort.mjs (self-hosted ONNX WASM into public/ort/).
+# The SSR bundle is self-contained (vite.config.ts ssr.noExternal) and carries
+# the heavy client libraries; bundling it needs more than Node's default heap
+# on an 8 GB host — the build died with "Reached heap limit" on 2026-11-02.
+# docs/self-hosting.md budgets ~4 GB for the build.
+ENV NODE_OPTIONS=--max-old-space-size=4096
 RUN npm run build
 
 FROM node:22-slim
