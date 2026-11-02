@@ -24,7 +24,7 @@ cryptography>=50.0.2,<51.0.0
 # in step: a lower presidio pulls an older cryptography back in.
 # setuptools: the CPU torch index resolved 78.1.0 on a fresh install
 # (PYSEC-2025-49, PYSEC-2026-3447, GHSA-xmj3-9gf7-h52w; fixed 84.1.0).
-setuptools>=84.1
+setuptools>=84.2.1
 
 # Primary detector: Presidio AnalyzerEngine + spaCy NER (person names) plus the
 # built-in pattern recognizers (EMAIL / PHONE / IBAN / CREDIT_CARD / SSN).
