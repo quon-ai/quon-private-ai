@@ -6,7 +6,7 @@ pytest>=9.1.1,<10.0
 # Synthetic PII corpus generator for the scrubber quality suite (tests/synth.py).
 faker>=24,<40
 
-pytest-xdist>=3.6
+pytest-xdist>=3.8.0
 
 # PDF text extraction for the real-DOCUMENT eval (tests/realworld_docs_ingest.py).
 # Test-only: the production image never parses PDFs — under the zero-knowledge
