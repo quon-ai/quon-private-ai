@@ -1,14 +1,14 @@
 """Per-user settings overrides layered over the global defaults.
 
-Every user can override — for THEMSELVES only — the PII detection engine (cloud
-vs local, model, endpoint, key), their OpenRouter key, and which models they see.
-Anything a user hasn't set falls back to the operator-managed global default
-(``settings_store`` / ``config.py``). Because each override is scoped to its own
-user, no user can change another user's routing — so a user pointing their PII
-endpoint somewhere only ever exposes their *own* text (their choice, like BYOK),
-never anyone else's.
+Every user can override, for THEMSELVES only, their OpenRouter key and which
+models they see. Anything a user hasn't set falls back to the operator-managed
+global default (``settings_store`` / ``config.py``). Because each override is
+scoped to its own user, no user can change another user's routing: a key or
+model choice only ever affects that user's own chats, never anyone else's.
+(Detection itself runs in-process on this server for everyone; there is no
+per-user detection endpoint.)
 
-The two key fields are sealed at rest under ``QUON_SERVER_SECRET`` (reusing
+Key fields are sealed at rest under ``QUON_SERVER_SECRET`` (reusing
 :mod:`crypto_server`, same trust model as :mod:`user_connections`) and never
 returned to the browser. Setting a key requires the server secret to be
 configured; the non-secret fields work without it.

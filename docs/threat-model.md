@@ -1,4 +1,4 @@
-> **Note.** This document also covers features that are not part of this repository yet — connectors, chat tools and MCP, agents, shared projects, the desktop and Android apps. They follow once they are ready.
+> **Note.** This document also covers features that are not part of this repository yet: connectors, chat tools and MCP, agents, shared projects, the desktop and Android apps. They follow once they are ready.
 
 # QUON Threat Model
 
@@ -8,8 +8,8 @@ anything reaches a model provider, and re-hydrated locally in the answer. Chat
 history, Memory, Documents, and Projects are end-to-end encrypted in the
 browser; the server stores only opaque ciphertext.
 
-This document describes what QUON protects, from whom, how, and — just as
-importantly — what it does **not** protect against. It should be read alongside
+This document describes what QUON protects, from whom and how, and also
+what it does **not** protect against. It should be read alongside
 [ARCHITECTURE.md](../ARCHITECTURE.md) (especially §4 data flows, §5 detection
 pipeline, and §8 security model).
 
@@ -17,15 +17,15 @@ pipeline, and §8 security model).
 
 ## 1. Assets
 
-| Asset                                            | Where it lives                                                                                                                                                                                                                                         | Sensitivity                               |
-| ------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------- |
-| **Master Key (MK)**                              | Browser memory only (plus `sessionStorage` for reload survival). Stored server-side only in wrapped form: `wrap_pw` (password-derived key), `wrap_rec` (BIP39 recovery-phrase-derived key), optional per-device `wrap_bio` (WebAuthn-PRF-derived key). | Critical — unlocks everything below.      |
-| **Plaintext chats, Memory, Documents, Projects** | Browser only. Synced as `secretbox` ciphertext blobs under MK-derived per-collection keys; device caches (localStorage/IndexedDB) are also sealed under a MK-derived cache key.                                                                        | Critical                                  |
-| **Raw PII in prompts**                           | Exists in plaintext only in the browser and transiently on the scrubber during `/scrub` detection. The model provider sees placeholders, never values.                                                                                                 | Critical                                  |
-| **Re-hydration map** (`[PERSON_1]` → real value) | Browser only; persisted inside the encrypted session blob.                                                                                                                                                                                             | Critical                                  |
-| **Provider API keys**                            | Server-side only: the operator's global OpenRouter key, per-user provisioned sub-keys, and per-user BYOK keys — the latter two sealed at rest with `QUON_SERVER_SECRET`. Never sent to the browser.                                                    | High                                      |
-| **Account metadata**                             | Server: email address, Argon2id auth verifier, session records, blob timestamps/sizes, usage counters.                                                                                                                                                 | Moderate — see residual risks (metadata). |
-| **Recovery phrase**                              | User-held (printable recovery kit). Never sent to the server.                                                                                                                                                                                          | Critical                                  |
+| Asset                                             | Where it lives                                                                                                                                                                                                                                         | Sensitivity                              |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------- |
+| **Master Key (MK)**                               | Browser memory only (plus `sessionStorage` for reload survival). Stored server-side only in wrapped form: `wrap_pw` (password-derived key), `wrap_rec` (BIP39 recovery-phrase-derived key), optional per-device `wrap_bio` (WebAuthn-PRF-derived key). | Critical; unlocks everything below.      |
+| **Plaintext chats, Memory, Documents, Projects**  | Browser only. Synced as `secretbox` ciphertext blobs under MK-derived per-collection keys; device caches (localStorage/IndexedDB) are also sealed under a MK-derived cache key.                                                                        | Critical                                 |
+| **Raw PII in prompts**                            | Exists in plaintext only in the browser and transiently on the scrubber during `/scrub` detection. The model provider sees placeholders, never values.                                                                                                 | Critical                                 |
+| **Re-hydration map** (`[PERSON_1]` to real value) | Browser only; persisted inside the encrypted session blob.                                                                                                                                                                                             | Critical                                 |
+| **Provider API keys**                             | Server-side only: the operator's global OpenRouter key, per-user provisioned sub-keys, and per-user BYOK keys; the latter two are sealed at rest with `QUON_SERVER_SECRET`. Never sent to the browser.                                                 | High                                     |
+| **Account metadata**                              | Server: email address, Argon2id auth verifier, session records, blob timestamps/sizes, usage counters.                                                                                                                                                 | Moderate; see residual risks (metadata). |
+| **Recovery phrase**                               | User-held (printable recovery kit). Never sent to the server.                                                                                                                                                                                          | Critical                                 |
 
 ---
 
@@ -40,22 +40,22 @@ pipeline, and §8 security model).
          ▲ TLS (reverse proxy / tunnel in between — network is untrusted)
 ```
 
-- **Browser** — the trusted computing base. All encryption, embedding, semantic
+- **Browser**: the trusted computing base. All encryption, embedding, semantic
   search, document extraction, OCR, and re-hydration happen here.
-- **QUON server (scrubber service)** — trusted with _transient_ raw prompt text
+- **QUON server (scrubber service)**: trusted with _transient_ raw prompt text
   during detection, and with provider keys. Detection is entirely in-process
   (NER + GLiNER + regex): since 2026-08-23 `/scrub` forwards text to no one, so
   raw text never leaves this boundary. **Not** trusted with stored content: sync
   blobs are opaque ciphertext, and the server never holds an unwrapped Master
   Key.
 - **Model provider** (OpenRouter or a user-configured OpenAI-compatible
-  endpoint) — never trusted with PII. Receives scrubbed text with placeholders.
-- **Network path** (CDN/tunnel/reverse proxy) — untrusted; TLS end to end,
+  endpoint): never trusted with PII. Receives scrubbed text with placeholders.
+- **Network path** (CDN/tunnel/reverse proxy): untrusted; TLS end to end,
   `Secure`/`SameSite` cookies, CSRF tokens on writes.
 
 Note the deliberate asymmetry (ARCHITECTURE §2): stored content is
 **zero-knowledge** (user-controlled keys), while provider keys are a
-**server-side secret** (sealed with `QUON_SERVER_SECRET`) — the relay must be
+**server-side secret** (sealed with `QUON_SERVER_SECRET`); the relay must be
 able to use them, so they cannot be zero-knowledge.
 
 ---
@@ -69,7 +69,7 @@ observes traffic passing through the relay.
 
 _What they can learn:_ account emails, timing/size metadata, model choices, and
 the **scrubbed** text of prompts in transit (placeholders plus non-PII
-content). They cannot read chat history, Memory, Documents, or Projects — those
+content). They cannot read chat history, Memory, Documents, or Projects; those
 are ciphertext under keys derived from the Master Key, which the server never
 holds unwrapped.
 
@@ -89,24 +89,24 @@ now runs in a background task that buffers its event stream **in RAM** under a
 random, user-scoped job id, so a phone that gets backgrounded (page frozen,
 socket dropped) can re-attach instead of losing the answer. The buffered events
 are exactly the **scrubbed, placeholder-only** tokens the relay already
-forwards — re-hydration is client-side, so the buffer cannot hold real values.
-What changes is retention: seconds in flight → up to `JOB_TTL_SECONDS`
+forwards; re-hydration is client-side, so the buffer cannot hold real values.
+What changes is retention: from seconds in flight to up to `JOB_TTL_SECONDS`
 (15 min) in memory, capped per user, never written to disk, and gone on
-restart (a restart simply makes resume 404 and the client falls back to its
+restart (after a restart, resume returns 404 and the client falls back to its
 Retry path). An operator with live process access could read a buffered
-in-flight answer — the same scrubbed text they can already observe passing
-through the relay, so this widens the window, not the content.
+in-flight answer, the same scrubbed text they can already observe passing
+through the relay; this widens the window, not the content.
 
 _Residual:_ a database thief (or the operator) can attempt an **offline
 brute-force** of a user's password against the Argon2id verifier and then open
-`wrap_pw`. Argon2id (64 MiB, 3 passes) makes this expensive, not impossible —
+`wrap_pw`. Argon2id (64 MiB, 3 passes) makes this expensive, not impossible;
 password strength matters. The `wrap_bio` wrap key derives from 32 bytes of
 hardware-held PRF entropy and is not brute-forceable this way.
 
 ### 3.2 Fully compromised or malicious server
 
 _Capabilities:_ everything above, **plus** the ability to modify server
-behavior and — crucially — to serve modified client code.
+behavior and, above all, to serve modified client code.
 
 This is the classic web-E2EE caveat, and we state it honestly: **the server
 ships the JavaScript that implements the client-side encryption.** A malicious
@@ -115,15 +115,15 @@ client that exfiltrates the Master Key or plaintext on unlock. Browser-based
 end-to-end encryption protects against a _curious_ or _breached-at-rest_
 server; it cannot protect against a persistently malicious code-serving origin.
 Mitigating this fully requires out-of-band client distribution (signed
-packaged app, browser extension with pinned code) — not currently built.
+packaged app, browser extension with pinned code), which is not currently built.
 
 _Partial mitigations:_ self-hosting (you are the operator, so you trust the
-code you deploy — the intended posture for a self-hosted release);
+code you deploy, which is the intended posture for a self-hosted release), and
 open source code that can be audited and diffed against what an instance
 serves.
 
 A malicious server can also: drop or reorder sync blobs (denial of service /
-rollback — clients merge last-write-wins and would not detect a targeted
+rollback; clients merge last-write-wins and would not detect a targeted
 rollback), refuse scrubbing (the client then **fails closed** and blocks
 sending rather than forwarding raw text), and log scrubbed prompt text in
 transit.
@@ -137,41 +137,41 @@ _Mitigations:_
 
 - TLS on all hops; the reference deployment exposes no inbound ports (outbound
   tunnel only).
-- Session cookies are opaque, `httpOnly`, `Secure`, `SameSite=Lax`; state-
-  changing requests require a CSRF token.
-- Stored content is end-to-end encrypted independently of TLS — a TLS break
+- Session cookies are opaque, `httpOnly`, `Secure`, `SameSite=Lax`;
+  state-changing requests require a CSRF token.
+- Stored content is end-to-end encrypted independently of TLS; a TLS break
   exposes scrubbed prompts and ciphertext blobs, not stored plaintext or keys.
 - `CORS_ALLOW_ORIGINS` must be explicit in production (wildcard + credentials
   is rejected with a warning).
 
 ### 3.4 Malicious or curious model provider
 
-_Capabilities:_ sees everything the relay sends — the scrubbed conversation:
-typed placeholders (`[PERSON_1]`, `[IBAN_1]`, …), all non-PII text, scrubbed
+_Capabilities:_ sees everything the relay sends, i.e. the scrubbed conversation:
+typed placeholders (`[PERSON_1]`, `[IBAN_1]`, ...), all non-PII text, scrubbed
 RAG context, and the system prompt.
 
 _What is protected:_ detected PII values never reach the provider. Assistant
 turns are re-sent to the provider in their **placeholder** form (not the
 re-hydrated text), so history replay does not leak either.
 
-_What is not protected — semantic leakage:_ the surrounding context is real
+_What is not protected (semantic leakage):_ the surrounding context is real
 text. "My [PERSON_1] has [diagnosis] and works at the courthouse in [small
 town]" can be deanonymizing even with perfect detection. Indexed placeholders
 are stable across a conversation by design (that is what makes re-hydration
 and natural answers work), so a provider can track that `[PERSON_1]` in turn 1
 is the same entity in turn 12 and accumulate attributes against it
-(co-reference inference — see §5). Users handling highly sensitive material
+(co-reference inference, see §5). Users handling highly sensitive material
 should treat scrubbing as strong PII _value_ protection, not content
 anonymization.
 
 _Mitigations:_ hybrid detection with a deterministic always-on safety net
-(§3.8 below); Review mode for manual inspection/override before sending; the
+(§3.9 below); Review mode for manual inspection/override before sending; the
 "always redact" personal list; per-user BYOK so users can choose a provider
 they trust; opt-in cloud OCR pinned to zero-data-retention routing.
 
 ### 3.5 XSS attacker
 
-_Capabilities:_ execute script in the app origin — the single most dangerous
+_Capabilities:_ execute script in the app origin, the single most dangerous
 client-side attack, since the Master Key lives in browser memory.
 
 _Mitigations:_
@@ -187,8 +187,8 @@ _Mitigations:_
   markup (`dangerouslySetInnerHTML` with generated SVG,
   `src/components/quon/MermaidBlock.tsx`). Diagram source is untrusted twice
   over: it is model output, and the model may have been quoting an attacker's
-  document. Two independent barriers: mermaid runs with
-  `securityLevel: "strict"` (labels sanitised, `click` handlers refused —
+  document. There are two independent barriers: mermaid runs with
+  `securityLevel: "strict"` (labels sanitised, `click` handlers refused;
   `src/lib/mermaid.ts`), and the nonce-based CSP forbids inline script execution
   regardless, so even a sanitizer escape yields inert markup rather than script
   in the app origin. Detection of untagged diagram blocks is deliberately
@@ -205,13 +205,13 @@ OCR engine in a separate-origin sandbox so the main app can drop
 `'unsafe-eval'` again.
 
 _Documented trade-off (user-chosen connector origin in `connect-src`, 2026-07):_
-saving a network connector (Paperless) stores its ORIGIN — never the token —
+saving a network connector (Paperless) stores its ORIGIN (never the token)
 in a plain cookie; the SSR entry appends that origin to `connect-src` after a
 hard shape check (exactly one `https://host[:port]` or plain-http loopback, no
-path/wildcard, bounded length — `src/lib/cspExtra.ts`). Costs, accepted
+path/wildcard, bounded length; `src/lib/cspExtra.ts`). Costs, accepted
 deliberately so hosted users can attach their own archive without operator
 involvement: (a) the frontend server/operator learns the connector hostname
-(the cookie rides every request — metadata only, content stays browser-direct);
+(the cookie rides every request; metadata only, content stays browser-direct);
 (b) an attacker who ALREADY has XSS in the session gains that one user-chosen
 origin as an exfiltration target. The validator is unit-tested as a security
 boundary; a malformed cookie is ignored and can never break page delivery.
@@ -224,9 +224,9 @@ _Mitigations:_
 
 - Per-user data isolation on every authed route (sessions resolve to a user
   id; blobs, keys, and usage are user-scoped).
-- **Per-user settings:** PII-backend routing, BYOK endpoints, and provider
-  keys are per-user overrides over the operator default — one user's endpoint
-  choice only ever routes _their own_ text, never anyone else's.
+- **Per-user settings:** BYOK endpoints and provider keys are per-user
+  overrides over the operator default; one user's endpoint choice only ever
+  routes _their own_ text, never anyone else's.
 - SSRF guard on user-supplied endpoint URLs (BYOK chat endpoints),
   validated at write time and re-validated at request time against DNS
   rebinding.
@@ -242,7 +242,7 @@ _Mitigations:_
 
 _Capabilities:_ an invited account holding a valid grant for a shared project.
 
-_Design:_ sharing is end-to-end encrypted — items re-encrypt under a random
+_Design:_ sharing is end-to-end encrypted: items re-encrypt under a random
 project key delivered via sealed-box grants to each member's X25519 identity
 key; invite links carry the key in the **URL fragment**, which never reaches
 the server.
@@ -251,13 +251,13 @@ _v1 limitations (by design, documented in the UI):_
 
 - Invitees are **read-only**; the server additionally rejects reader writes.
 - Chats are never shared; original document bytes stay device-local.
-- **Revoke ≠ key rotation:** revoking a member removes their grant and future
+- **Revoking is not key rotation:** revoking a member removes their grant and future
   access, but a member who already held the project key could retain
   ciphertext they previously synced. Treat revocation as access removal going
   forward, not retroactive secrecy.
 - Invite links are bearer tokens (single-use): anyone who obtains an unused
   link can join as the invitee. There is no independent identity verification
-  of the joining account (trust-on-first-use — see §5).
+  of the joining account (trust-on-first-use, see §5).
 
 ### 3.8 Malicious or compromised MCP tool server
 
@@ -272,7 +272,7 @@ _What it can do:_
   dialog precisely so the user knows this).
 - Return **prompt-injection payloads** in tool results, trying to steer the
   model or trigger further tool calls.
-- Exfiltrate nothing beyond what was consented — it never sees the Master
+- Exfiltrate nothing beyond what was consented; it never sees the Master
   Key, stored content, or the conversation.
 
 _Mitigations:_
@@ -280,14 +280,14 @@ _Mitigations:_
 - **Consent gate per call** (default deny; "always allow" is per-tool,
   per-device, sealed at rest). A backgrounded chat auto-denies.
 - Tool **results are scrubbed** like user input before they re-enter the
-  relay, with collision-free placeholder folding — the model provider never
+  relay, with collision-free placeholder folding, so the model provider never
   sees raw tool output; if the scrubber is unreachable the result is
   **withheld (fail-closed)**, never forwarded raw.
 - Tool-call rounds are capped per message (loop bound), the proxy is
   rate-limited, SSRF-guarded (write + request time), and the server's auth
   secret is sealed under `QUON_SERVER_SECRET`, never sent to the browser.
 - Residual risk: prompt injection inside scrubbed results can still influence
-  the model's _text_ — but any follow-up tool call it provokes hits the
+  the model's _text_, but any follow-up tool call it provokes hits the
   consent gate again.
 - Transport honesty: tool traffic transits the QUON backend proxy (the user's
   own machine when self-hosted; an explicit trade-off shown in the UI on
@@ -297,8 +297,8 @@ _Mitigations:_
 
 The desktop app can search a mailbox, read single mails on demand and import
 picked ones as documents (IMAP, read-only; deliberately NOT a mirror). The
-design keeps the line the email-integration research drew: **no QUON server is
-ever involved** — the Rust host on the user's own device connects to the mail
+design keeps the line the email-integration research drew. **No QUON server is
+ever involved**: the Rust host on the user's own device connects to the mail
 server over TLS, parses MIME locally, and the page ingests the text through
 the ordinary encrypt-at-rest / scrub-on-use pipeline. What that means per
 adversary:
@@ -309,20 +309,20 @@ adversary:
   (`com.quon.desktop.mail`), gated by the OS, not in localStorage; the mail
   content sits in the same sealed local caches as every document.
 - **Mail server / network:** sees a normal IMAP client login from the user's
-  own IP — strictly less exposure than the "majors'" server-side fetching,
+  own IP, strictly less exposure than the "majors'" server-side fetching,
   which logs in from a datacenter and retains fetched excerpts.
 - **Mail content as attack input:** mails are attacker-controlled text
   (anyone can send one). They reach the model only through the scrubbed
   tool-result / document-context path, and the untrusted-content rules of
-  §3.10 apply unchanged — a mail that says "delete my documents" is context,
+  §3.10 apply unchanged: a mail that says "delete my documents" is context,
   not an instruction. The chat tools (`search_mail`, `read_mail`,
   `import_mail`) are read/read/write-consented like their Paperless
   counterparts, advertised only when mail is actually connected in the
   desktop app. Prompt injection via imported content is the standing, **not yet
   fully mitigated** surface here (see §3.10) and it rises in priority with this
-  connector: mail is attacker-writable by definition — anyone can send you one.
+  connector: mail is attacker-writable by definition; anyone can send you one.
 - **Write scope:** none. The session uses EXAMINE + BODY.PEEK; QUON cannot
-  mark, move, send or delete mail even if fully compromised — the IMAP session
+  mark, move, send or delete mail even if fully compromised, because the IMAP session
   itself is read-only.
 
 ### 3.8c Conversational filesystem access (desktop app only)
@@ -338,28 +338,28 @@ purpose:
 - **Every later argument is resolved against the listing**, not treated as a
   path: `read_folder_file`/`import_folder_file` match the model's string
   against entries QUON actually enumerated inside the grant, so a traversal
-  string (`../../…`) simply finds nothing. Independently, the host
-  canonicalizes and prefix-checks every read (src-tauri/src/files.rs) — the
+  string (`../../...`) finds nothing. Independently, the host
+  canonicalizes and prefix-checks every read (src-tauri/src/files.rs), the
   belt to this suspenders.
-- **The writes are `create_folders`, `write_folder_file` and
-  `move_folder_items` (since 2026-10-25) — the only places model output becomes
+- **The writes (`create_folders`, `write_folder_file` and
+  `move_folder_items`, since 2026-10-25) are the only places model output becomes
   a path**, always a RELATIVE one under the picked root. All three are
   NON-DESTRUCTIVE by construction: nothing is ever deleted, and nothing is ever
-  overwritten — a new file is created with O_CREAT|O_EXCL (`create_new`), and a
+  overwritten. A new file is created with O_CREAT|O_EXCL (`create_new`), and a
   file move is `link()` + `unlink()`, which fails where `rename()` would silently
   replace a file that appeared since the check. So every action can be undone
-  by moving back. Writes are text only (`.md`, `.txt`, `.csv`) — nothing written
-  can be executed by opening it — and editing an existing file is deliberately
+  by moving back. Writes are text only (`.md`, `.txt`, `.csv`), so nothing written
+  can be executed by opening it, and editing an existing file is deliberately
   not offered, because it is the one operation that destroys content.
-  Validated twice — in JS before the consent card
+  Paths are validated twice, in JS before the consent card
   (`src/lib/tools/folderPaths.ts`), so a refused name is shown as refused and
   never as approvable, and again in the host (`mkdir_contained` in
   `src-tauri/src/files.rs`), which is the authority: no `..`, no absolute
   paths, no hidden names (a leading dot covers `.git` and `.ssh`), no `\`, `:`
   or control characters, at most 6 levels deep; per call at most 20 folders,
   100 moves or 10 files of 512 KB.
-  The host cannot reuse the read path's canonicalize check here — a path that
-  does not exist yet has no canonical form — so it walks every source and
+  The host cannot reuse the read path's canonicalize check here (a path that
+  does not exist yet has no canonical form), so it walks every source and
   target path one segment at a time and refuses any symlink on the way, in
   either direction (a move can neither pull a file in through a link nor push
   one out). A plain
@@ -373,37 +373,38 @@ purpose:
   Every call needs consent with every folder, every move and the full file
   content shown, and write tools can never be set to "always allow".
 - **The grant is memory-only and per session.** It dies with the app and on
-  sign-out (authStore.logout → clearFolderGrant). Silently remembered
+  sign-out (authStore.logout calls clearFolderGrant). Silently remembered
   filesystem access would be worth more to an attacker than it is worth to the
   user; re-picking is one click.
 
 File CONTENT is attacker-controlled in the same sense as mail (§3.8b): a
 document may contain injected instructions. It reaches the model only through
 the scrubbed tool-result path, and the §3.10 untrusted-content rules apply
-unchanged — reading a file can never itself trigger a write; import and
+unchanged: reading a file can never itself trigger a write; import and
 `create_folders` are separate, consented write tools, and a write that follows
 external content in the same turn (a listing or a file read) gets an explicit
 provenance warning on its consent card. A backgrounded app denies by default.
 
 ### 3.9 Detection-evasion / imperfect detection (cross-cutting)
 
-Not an adversary with a face, but the most likely failure mode: PII the
-pipeline does not catch ships to the provider in the clear.
+This is the most likely failure mode, though not an adversary with a face: PII
+the pipeline does not catch ships to the provider in the clear.
 
-_Mitigations (defense in depth — no layer is load-bearing alone):_
+_Mitigations (defense in depth; no layer is load-bearing alone):_
 
-- Three merged layers: spaCy/Presidio NER, an **always-on deterministic regex
-  safety net** (EMAIL/PHONE/IBAN, optionally amounts) that never depends on an
-  ML model being up, and best-effort LLM enrichment for context-dependent PII.
-- **Fail closed:** scrubber unreachable ⇒ sending is blocked and the input
-  preserved. LLM enrichment unavailable ⇒ NER+regex still stand and the
-  response is flagged `fallback_mode` (surfaced honestly in the UI as reduced
-  detection).
+- Three merged layers, all in-process on the server: spaCy/Presidio NER, GLiNER
+  span scoring (opt-in, for context-dependent PII) and an **always-on
+  deterministic regex safety net** (EMAIL/PHONE/IBAN, optionally amounts) that
+  never depends on an ML model being up. A guard chain filters the merged result.
+- **Fail closed:** if the scrubber is unreachable, sending is blocked and the
+  input preserved. If the NER model is not loaded, the regex safety net still
+  stands and the response is flagged `fallback_mode` (surfaced honestly in the
+  UI as reduced detection).
 - Review mode: manual approval, un-redaction, and manual redaction of missed
   spans before each send.
 - Per-user "always redact" list for the user's own high-value identifiers.
 - A ~1,500-case synthetic evaluation corpus with recall/precision **ratchet
-  floors enforced in CI** — a detection regression fails the build.
+  floors enforced in CI**; a detection regression fails the build.
 
 _Residual:_ recall is <100% by nature. Novel formats, unusual languages,
 misspellings, and context-dependent identifiers can slip through. QUON's
@@ -415,7 +416,7 @@ Three features have the QUON **server** fetch a user-supplied public URL: the
 `web_fetch` chat tool, the `POST /fetch-url` document import, and the read-only
 **calendar (.ics) subscription** (`POST /fetch-url` with `raw=true`, parsed
 client-side to feed the daily briefing). This is a deliberate, disclosed
-departure from zero-knowledge _for the URL and the fetched public content_ — the
+departure from zero-knowledge _for the URL and the fetched public content_: the
 server sees the address the user asked for and the returned public bytes (never
 the user's private/encrypted data). The extracted text / parsed events stay on
 the client; the calendar URL itself is stored **E2E-encrypted** in the prefs
@@ -425,7 +426,7 @@ server-side in the clear).
 _Mitigations:_
 
 - **SSRF:** `net_guard.validate_public_url` on the initial URL AND on every
-  redirect `Location` — the fetch uses `follow_redirects=False` and re-validates
+  redirect `Location`; the fetch uses `follow_redirects=False` and re-validates
   each hop, so a redirect can never bounce to a loopback/private/cloud-metadata
   host (https-only, public-IP-only; capped hops).
 - **Amplification/DoS:** response body read incrementally and aborted past a
@@ -442,7 +443,7 @@ use URL import / web_fetch. Self-hosters' server is their own machine.
 
 When an answer cites web results, the sources strip shows them with a picture.
 The pictures are fetched **by the server**, not the browser, and re-served from
-QUON's own origin. This is the same trust class as §3.9b — but note the
+QUON's own origin. This is the same trust class as §3.9b, but note the
 alternative it replaces: putting the merchant's `og:image` straight into an
 `<img src>` would tell every cited site the user's IP, the time, and (via the
 Referer) that this particular person just asked about them. That passive leak is
@@ -458,14 +459,14 @@ _Mitigations:_
   The URL that reaches `/link-image` is therefore never trusted because a
   previous step produced it.
 - **Content confusion:** the proxied image's `Content-Type` is decided by MAGIC
-  BYTES, never by the origin's header — an origin cannot get arbitrary bytes
+  BYTES, never by the origin's header, so an origin cannot get arbitrary bytes
   re-served from QUON's domain under an `image/*` label it chose itself.
   Non-image bodies are refused (415).
 - **Amplification/DoS:** bodies are STREAMED with a hard cap (512 KB HTML,
   3 MB image) rather than buffered-then-checked; per-answer fan-out is capped
   (6 URLs, 4 concurrent); both routes are rate-limited (60/h previews,
   300/h images).
-- **Availability coupling:** every failure degrades to "no picture" — a dead or
+- **Availability coupling:** every failure degrades to "no picture"; a dead or
   hostile site can never break the answer it was cited in.
 
 _Residual:_ the operator's server sees the cited URLs (already true via the
@@ -476,7 +477,7 @@ user's. That is the intended trade.
 ### 3.10 Injected content driving a first-party write tool
 
 QUON exposes first-party chat tools (`quon__*`) that run in the browser over
-the user's own decrypted stores — reads (`search_documents`, `search_dropbox`)
+the user's own decrypted stores: reads (`search_documents`, `search_dropbox`)
 and WRITES (`save_memory`, `save_document`, `import_dropbox_document`,
 `import_paperless_document`).
 `import_dropbox_document` fetches the chosen Dropbox file's BYTES on-device
@@ -489,15 +490,15 @@ the classic
 "lethal trifecta": private data + injected instructions + a side-effect
 channel. The scrubber structurally caps the _provider_ channel (an injected
 "send the IBAN" can only ever carry `[IBAN_1]` to the model), but a write
-executes in the browser with REAL values — so writes get their own tier:
+executes in the browser with REAL values, so writes get their own tier:
 
 _Mitigations:_
 
-- **Write tools are never silent and never "always-allowed"** — structurally:
+- **Write tools are never silent and never "always-allowed"**, structurally:
   the always-allow store ignores/refuses entries for `trust:"write"` tools even
   if present (a stale or tampered consent entry cannot arm a write). Every
   write shows a per-action consent card with the FULL re-hydrated payload
-  (real values — the point is catching a poisoned write before it lands).
+  (real values; the point is catching a poisoned write before it lands).
 - **Provenance warning:** once an untrusted tool result has entered a run, any
   write proposed afterwards carries an explicit banner on its consent card
   ("follows content read from an external tool this turn"). Warn-not-block:
@@ -508,7 +509,7 @@ _Mitigations:_
   always count as external. Since the Paperless round, _first-party_ tools can
   carry `provenance: "external"` too: `search_paperless` /
   `read_paperless_document` are read-tier (no side effect, always-allow
-  eligible) but their RESULT is document content from a live outside archive —
+  eligible) but their RESULT is document content from a live outside archive;
   a scanned letter is attacker-authorable input (anyone can mail the user a
   poisoned letter that Paperless OCRs). Executing any external-provenance tool
   flips the run's injection guard exactly like an MCP result, so a later write
@@ -517,24 +518,24 @@ _Mitigations:_
 - First-party reads execute locally and return the user's own data (or, for
   external-provenance reads, data fetched browser-direct from the user's own
   service); their results are scrubbed before re-entering the relay like any
-  tool result (fail-closed when the scrubber is down — large results go
+  tool result (fail-closed when the scrubber is down; large results go
   through the same chunked scrubbing as attachments, so "too big to scrub in
   time" cannot become a reason to skip the scrub).
 - Tool rounds stay capped; a read result can never auto-approve a later write;
   backgrounded chats auto-deny all tool consent.
 
 - **No first-party tool writes outside the user's own stores.** This used to be
-  the sharpest case: the Azure DevOps tools wrote into a THIRD-PARTY system —
-  typically the user's employer's backlog — so a poisoned write was visible to
+  the sharpest case: the Azure DevOps tools wrote into a THIRD-PARTY system
+  (typically the user's employer's backlog), so a poisoned write was visible to
   colleagues and might not be cleanly reversible. That integration was removed
   in 2026-08, and with it the whole category. Every remaining `trust:"write"`
   tool (`save_memory`, `save_document`, `create_agent`, the `import_*` family)
   targets the user's own encrypted store, where the blast radius of a bad write
   is their own data and the fix is deleting the item. External REACHES still
-  exist — MCP servers the user configures can do anything their own tools do —
+  exist (MCP servers the user configures can do anything their own tools do),
   but those are out-of-tree by construction and carry `provenance:"external"`.
 
-_Residual:_ the consent card is the safety margin — a user who reflexively
+_Residual:_ the consent card is the safety margin; a user who reflexively
 approves defeats it. The banner, the mandatory content preview and the
 structural always-allow exclusion reduce, but cannot eliminate, that risk. The
 residual is now bounded by the user's own store for first-party tools; for
@@ -544,7 +545,7 @@ user-configured MCP servers it is whatever those servers can reach.
 
 A **device agent** is a saved prompt (`kind:"doc-digest"`) that runs
 unattended on a device the user marked as a runner, over the user's OWN
-encrypted memory/documents — no per-run consent. Its definition and results
+encrypted memory/documents, with no per-run consent. Its definition and results
 live only in the E2E-encrypted `jobs` sync collection (key `deriveJobsKey`, ctx
 `quonjob0`); the server relays opaque blobs and never runs or reads it (unlike a
 server-side web-watch, whose query is public metadata in the `agents` table).
@@ -553,20 +554,20 @@ _Mitigations:_
 
 - **Same fail-closed relay as chat.** Each run scrubs the retrieved context AND
   the saved prompt in ONE `scrubText` pass before any relay; if the scrubber is
-  unreachable the run ends `error` and the model is NEVER called — no raw PII
+  unreachable the run ends `error` and the model is NEVER called, so no raw PII
   leaves the device (`runner.executeAgentPrompt`; `runner.test.ts` asserts
   `chatStream` is not called when scrub throws). Retrieved snippets carry the
-  user's real memory text, so scrubbing them is mandatory — storing the result
+  user's real memory text, so scrubbing them is mandatory; storing the result
   encrypted does not exempt the outbound relay.
 - **No new server surface / no plaintext at rest.** Reuses the collection-
   agnostic sync; prompt and result are ciphertext everywhere off-device.
 - **Runs only while a device is open + unlocked** (MK is browser-only). A
-  service worker cannot run agents (no MK). Honest in the UI; no background
-  execution promise QUON can't keep.
+  service worker cannot run agents (no MK). The UI says so; QUON makes no
+  background-execution promise it can't keep.
 - **Exactly-once across devices.** A run is claimed by writing the claiming
   device id into the synced blob; the LWW _total order_ (`jobItemWins`:
   updatedAt, then a globally-unique `claimSeq`) plus a post-claim confirm window
-  make two simultaneous runners converge to ONE owner — no double execution,
+  make two simultaneous runners converge to ONE owner: no double execution,
   no double provider spend (`jobsStore.test.ts`). A dead claimant (no heartbeat
   past `RECLAIM_MS`) is reclaimable.
 
@@ -582,13 +583,13 @@ reintroduce the write-tool surface of §3.10) are deliberately NOT in v1.
 
 | Mitigation                                                                          | Where           | Defends against                                  |
 | ----------------------------------------------------------------------------------- | --------------- | ------------------------------------------------ |
-| Argon2id KDF (auth verifier ⟂ wrap keys)                                            | client + server | 3.1, 3.3 (credential theft, offline attack cost) |
+| Argon2id KDF (auth verifier independent of wrap keys)                               | client + server | 3.1, 3.3 (credential theft, offline attack cost) |
 | MK wrapped via `secretbox` (password, recovery phrase, WebAuthn PRF)                | client          | 3.1, 3.2-at-rest                                 |
 | Per-collection MK-derived keys; ciphertext-only sync (LWW)                          | client + server | 3.1, 3.3                                         |
 | Sealed local caches (localStorage/IndexedDB encrypted under a MK-derived cache key) | client          | device theft while locked                        |
-| Fail-closed scrubbing; `fallback_mode` honesty                                      | client + server | 3.8                                              |
-| Always-on regex safety net under NER + LLM layers                                   | server          | 3.8                                              |
-| Corpus ratchet floors in CI                                                         | CI              | 3.8 (regressions)                                |
+| Fail-closed scrubbing; `fallback_mode` honesty                                      | client + server | 3.9                                              |
+| Always-on regex safety net under the NER and GLiNER layers                          | server          | 3.9                                              |
+| Corpus ratchet floors in CI                                                         | CI              | 3.9 (regressions)                                |
 | Nonce-based enforcing CSP + tight `connect-src`                                     | server (SSR)    | 3.5                                              |
 | SSRF guard (write-time + request-time, DNS-rebinding aware)                         | server          | 3.6, server-side pivoting                        |
 | Rate limits on auth/sensitive routes                                                | server          | 3.3, 3.6                                         |
@@ -607,9 +608,9 @@ reintroduce the write-tool surface of §3.10) are deliberately NOT in v1.
 - **Semantic leakage / co-reference inference.** Scrubbing removes PII
   _values_; it cannot remove _meaning_. Consistent indexed placeholders let a
   provider accumulate attributes about the same entity across turns.
-- **Detection recall < 100%.** See §3.8. Review mode exists precisely because
+- **Detection recall < 100%.** See §3.9. Review mode exists precisely because
   no automatic detector is sufficient for the highest-stakes content.
-- **Malicious code-serving origin.** See §3.2 — a persistently malicious
+- **Malicious code-serving origin.** See §3.2: a persistently malicious
   operator can backdoor the web client. Self-host if your threat model
   includes the operator.
 - **Device compromise.** Malware, a hostile browser extension, or a shared
@@ -617,8 +618,8 @@ reintroduce the write-tool surface of §3.10) are deliberately NOT in v1.
   while unlocked; locked-at-rest caches help only against offline access.
 - **Offline dictionary attack on the cached key material.** To make offline
   unlock work (reading your data with no server in reach), the device caches
-  the password key material — `wrap_pw` (a secretbox ciphertext whose key is
-  Argon2id(password)) plus the public KDF salt/params — in plain localStorage
+  the password key material, `wrap_pw` (a secretbox ciphertext whose key is
+  Argon2id(password)) plus the public KDF salt/params, in plain localStorage
   (`quon_offline_v1`). An attacker with disk access can therefore mount an
   offline dictionary attack on the account password; the Argon2id parameters
   are what makes that expensive. This is the same trade-off every local
@@ -629,7 +630,7 @@ reintroduce the write-tool surface of §3.10) are deliberately NOT in v1.
   identity keys are not verified out of band in v1, and revocation does not
   rotate the project key.
 - **Lost credentials.** Losing both the password and the recovery phrase makes
-  data unrecoverable — by design, and stated to users.
+  data unrecoverable; that is by design, and stated to users.
 - **Third-party model behavior.** What a provider does with scrubbed text
   (retention, training) is governed by that provider's terms; QUON pins
   zero-data-retention routing where the API supports it (e.g. cloud OCR) but
@@ -641,5 +642,5 @@ reintroduce the write-tool surface of §3.10) are deliberately NOT in v1.
 
 ## 6. Reporting
 
-Found a hole in any of the above — or a gap between this document and what the
+Found a hole in any of the above, or a gap between this document and what the
 code actually does? Please report it privately: see [SECURITY.md](../SECURITY.md).
