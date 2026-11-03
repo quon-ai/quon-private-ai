@@ -10,6 +10,14 @@ once it reaches 1.0.
 
 ## [Unreleased]
 
+### Added
+
+- **A scrub-only demo at `/demo`.** A visitor without an account pastes a text
+  and sees what a model would receive: names, e-mail addresses, phone numbers,
+  IBANs and more as placeholders, with the list of what was replaced. Nothing
+  is stored and no model is called. Off by default (`DEMO_SCRUB_ENABLED`),
+  capped in length, rate-limited per IP and for all visitors together.
+
 ### Changed
 
 - **Contributions are accepted under a Contributor License Agreement** (`CLA.md`):

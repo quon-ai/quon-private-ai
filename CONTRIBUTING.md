@@ -76,6 +76,8 @@ vulnerability scans) live in `.github/workflows/supply-chain.yml`.
   `quon-scrubber-service/`. The floors only ratchet upward: a change that
   lowers recall or precision below the floor will not be merged. If your
   change legitimately improves quality, raise the floors with it.
+  [docs/detection-evaluation.md](docs/detection-evaluation.md) explains what the
+  corpus measures and what it cannot see.
 - **Larger features** should include unit coverage and, where they touch user
   flows, an e2e spec (Chromium + WebKit).
 - Fail-closed behavior is not negotiable: any change to the scrub/send path

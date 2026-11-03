@@ -57,7 +57,8 @@ QUON_RUN_CORPUS=1 ./.venv/bin/python -m pytest tests/test_corpus.py -q
 ```
 
 Recall/precision floors are ratcheted, so a contribution that trades away
-recall somewhere else fails CI. Add synthetic cases for the shapes you
+recall somewhere else fails CI. [detection-evaluation.md](detection-evaluation.md)
+describes every measurement and its blind spots. Add synthetic cases for the shapes you
 target (`tests/synth.py`).
 
 ---

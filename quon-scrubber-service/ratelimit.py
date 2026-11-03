@@ -22,6 +22,9 @@ from config import settings
 # (path-prefix, max requests, window seconds). First match wins. Generous enough
 # that real users are unaffected, tight enough to stop automated abuse.
 _RULES: list[tuple[str, int, int]] = [
+    # The scrub-only demo, no account behind it: a human pastes a few texts,
+    # a script pastes thousands. The endpoint adds a process-wide ceiling.
+    ("/demo/scrub", 30, 60),
     ("/auth/login", 20, 60),
     ("/auth/register", 10, 3600),
     ("/auth/kdf", 60, 60),
@@ -78,6 +81,15 @@ class _FixedWindow:
 
 
 _limiter = _FixedWindow()
+
+
+# Process-wide ceilings for endpoints with no account behind them. The rules
+# above bound one client; this bounds all of them together.
+_global = _FixedWindow()
+
+
+def allow_global(name: str, limit: int, window: int) -> bool:
+    return _global.allow(f"global:{name}", limit, window, time.time())
 
 
 def _client_ip(request: Request) -> str:

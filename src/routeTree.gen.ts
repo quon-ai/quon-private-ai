@@ -14,6 +14,7 @@ import { Route as AdminRouteImport } from './routes/admin'
 import { Route as ChangeEmailRouteImport } from './routes/change-email'
 import { Route as ChatRouteImport } from './routes/chat'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as DemoRouteImport } from './routes/demo'
 import { Route as DocumentsRouteImport } from './routes/documents'
 import { Route as ImprintRouteImport } from './routes/imprint'
 import { Route as MemoryRouteImport } from './routes/memory'
@@ -48,6 +49,11 @@ const ChatRoute = ChatRouteImport.update({
 const DashboardRoute = DashboardRouteImport.update({
   id: '/dashboard',
   path: '/dashboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DemoRoute = DemoRouteImport.update({
+  id: '/demo',
+  path: '/demo',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DocumentsRoute = DocumentsRouteImport.update({
@@ -107,6 +113,7 @@ export interface FileRoutesByFullPath {
   '/change-email': typeof ChangeEmailRoute
   '/chat': typeof ChatRoute
   '/dashboard': typeof DashboardRoute
+  '/demo': typeof DemoRoute
   '/documents': typeof DocumentsRoute
   '/imprint': typeof ImprintRoute
   '/memory': typeof MemoryRoute
@@ -124,6 +131,7 @@ export interface FileRoutesByTo {
   '/change-email': typeof ChangeEmailRoute
   '/chat': typeof ChatRoute
   '/dashboard': typeof DashboardRoute
+  '/demo': typeof DemoRoute
   '/documents': typeof DocumentsRoute
   '/imprint': typeof ImprintRoute
   '/memory': typeof MemoryRoute
@@ -142,6 +150,7 @@ export interface FileRoutesById {
   '/change-email': typeof ChangeEmailRoute
   '/chat': typeof ChatRoute
   '/dashboard': typeof DashboardRoute
+  '/demo': typeof DemoRoute
   '/documents': typeof DocumentsRoute
   '/imprint': typeof ImprintRoute
   '/memory': typeof MemoryRoute
@@ -161,6 +170,7 @@ export interface FileRouteTypes {
     | '/change-email'
     | '/chat'
     | '/dashboard'
+    | '/demo'
     | '/documents'
     | '/imprint'
     | '/memory'
@@ -178,6 +188,7 @@ export interface FileRouteTypes {
     | '/change-email'
     | '/chat'
     | '/dashboard'
+    | '/demo'
     | '/documents'
     | '/imprint'
     | '/memory'
@@ -195,6 +206,7 @@ export interface FileRouteTypes {
     | '/change-email'
     | '/chat'
     | '/dashboard'
+    | '/demo'
     | '/documents'
     | '/imprint'
     | '/memory'
@@ -213,6 +225,7 @@ export interface RootRouteChildren {
   ChangeEmailRoute: typeof ChangeEmailRoute
   ChatRoute: typeof ChatRoute
   DashboardRoute: typeof DashboardRoute
+  DemoRoute: typeof DemoRoute
   DocumentsRoute: typeof DocumentsRoute
   ImprintRoute: typeof ImprintRoute
   MemoryRoute: typeof MemoryRoute
@@ -260,6 +273,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard'
       preLoaderRoute: typeof DashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/demo': {
+      id: '/demo'
+      path: '/demo'
+      fullPath: '/demo'
+      preLoaderRoute: typeof DemoRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/documents': {
@@ -341,6 +361,7 @@ const rootRouteChildren: RootRouteChildren = {
   ChangeEmailRoute: ChangeEmailRoute,
   ChatRoute: ChatRoute,
   DashboardRoute: DashboardRoute,
+  DemoRoute: DemoRoute,
   DocumentsRoute: DocumentsRoute,
   ImprintRoute: ImprintRoute,
   MemoryRoute: MemoryRoute,

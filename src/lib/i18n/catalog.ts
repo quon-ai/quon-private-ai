@@ -12,6 +12,7 @@ import { auth } from "./catalogs/auth";
 import { chat } from "./catalogs/chat";
 import { common } from "./catalogs/common";
 import { connectors } from "./catalogs/connectors";
+import { demo } from "./catalogs/demo";
 import { docs } from "./catalogs/docs";
 import { errors } from "./catalogs/errors";
 import { memory } from "./catalogs/memory";
@@ -29,6 +30,7 @@ export const EN = {
   ...settings.en,
   ...nav.en,
   ...connectors.en,
+  ...demo.en,
   ...trust.en,
   ...memory.en,
   ...docs.en,
@@ -47,6 +49,7 @@ export const DE: Record<MessageKey, string> = {
   ...settings.de,
   ...nav.de,
   ...connectors.de,
+  ...demo.de,
   ...trust.de,
   ...memory.de,
   ...docs.de,

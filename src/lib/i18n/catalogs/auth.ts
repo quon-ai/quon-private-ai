@@ -22,6 +22,7 @@ export const auth = {
 
     // Login
     "auth.signIn": "Sign in",
+    "auth.tryDemo": "Try the redaction without an account",
     "auth.forgotPasswordQuestion": "Forgot password?",
     "auth.newToQuon": "New to QUON? ",
     "auth.createAnAccount": "Create an account",
@@ -165,6 +166,7 @@ export const auth = {
 
     // Login
     "auth.signIn": "Anmelden",
+    "auth.tryDemo": "Schwärzung ohne Konto ausprobieren",
     "auth.forgotPasswordQuestion": "Passwort vergessen?",
     "auth.newToQuon": "Neu bei QUON? ",
     "auth.createAnAccount": "Konto erstellen",

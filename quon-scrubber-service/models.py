@@ -76,6 +76,15 @@ class ScrubMetadata(BaseModel):
     low_case_signal: bool = False
 
 
+class DemoScrubRequest(BaseModel):
+    """The scrub-only demo: text in, placeholders out. No account, no options
+    beyond the language hint; the length cap is a setting checked by the
+    endpoint, so an operator can change it without a code change."""
+
+    text: str = Field(..., description="Text to pseudonymize.")
+    language_hint: Literal["de", "en"] | None = None
+
+
 class ScrubResponse(BaseModel):
     scrubbed: str
     original_length: int
@@ -105,6 +114,8 @@ class HealthResponse(BaseModel):
     # SMTP, or "off"): the sign-up flow then signs the user in instead of sending
     # them to their inbox.
     email_verification_required: bool = True
+    demo_scrub_enabled: bool = False
+    demo_scrub_max_chars: int = 0
 
 
 class EntityTypeInfo(BaseModel):

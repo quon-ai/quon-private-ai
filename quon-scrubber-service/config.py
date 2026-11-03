@@ -314,6 +314,15 @@ class Settings(BaseSettings):
     # invite_code. Empty = open registration (default). Used for the closed beta —
     # hand the code to invited testers; it replaces the Caddy basic-auth gate.
     signup_invite_code: str = ""
+    # The scrub-only demo (POST /demo/scrub, no account): a visitor pastes a
+    # text and sees the placeholders. OFF by default so a self-hosted instance
+    # exposes nothing new; the hosted landing turns it on. The text is
+    # processed in memory for one request and never stored or logged. The
+    # per-IP limit lives in ratelimit.py; the ceiling below bounds every
+    # visitor together, so the demo cannot take the detector away from users.
+    demo_scrub_enabled: bool = False
+    demo_scrub_max_chars: int = 2000
+    demo_scrub_global_per_minute: int = 300
 
     # SSRF guard: provider base_urls (BYOK / custom connections) must be https and
     # resolve to public IPs. Set true ONLY for a self-host pointing at a local

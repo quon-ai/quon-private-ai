@@ -41,12 +41,14 @@ from models import (
     ChatRequest,
     ChatResponse,
     ConnectionUpsertRequest,
+    DemoScrubRequest,
     EntityTypeInfo,
     HealthResponse,
     ModelsConfigRequest,
     OcrCloudRequest,
     OcrCloudResponse,
     OpenRouterKeyRequest,
+    ScrubOptions,
     ScrubRequest,
     ScrubResponse,
     SettingsResponse,
@@ -278,12 +280,40 @@ async def scrub_endpoint(
 ) -> ScrubResponse:
     """Pseudonymize raw text and return the scrubbed text plus an entity report.
 
-    Requires an active account. The user's OpenRouter sub-key funds cloud PII
-    extraction; if it is unavailable, scrubbing still runs the always-on NER +
-    regex base (fails safe), it just skips LLM enrichment.
+    Requires an active account. Detection runs in-process (NER, GLiNER when
+    enabled, the regex safety net, the guard chain); nothing leaves the server.
     """
-    api_key = key_resolver.resolve_openrouter_key(user.id)
-    return await scrubber.scrub(request.text, request.options, api_key=api_key)
+    return await scrubber.scrub(request.text, request.options)
+
+
+@app.post("/demo/scrub", response_model=ScrubResponse)
+async def demo_scrub_endpoint(request: DemoScrubRequest) -> ScrubResponse:
+    """The scrub-only demo: a visitor without an account pastes a text and gets
+    the placeholders back. Same detector as /scrub, default options.
+
+    Off unless DEMO_SCRUB_ENABLED (404, so the surface does not exist on a
+    self-hosted instance by default). Capped in length (413), rate-limited per
+    IP by the middleware (429) and process-wide here (503). The text is handled
+    for this one request and is neither stored nor logged; no model is called.
+    """
+    if not settings.demo_scrub_enabled:
+        raise HTTPException(status_code=404, detail="demo not enabled")
+    if len(request.text) > settings.demo_scrub_max_chars:
+        raise HTTPException(
+            status_code=413,
+            detail=f"demo texts are limited to {settings.demo_scrub_max_chars} characters",
+        )
+    if not ratelimit.allow_global("demo-scrub", settings.demo_scrub_global_per_minute, 60):
+        raise HTTPException(status_code=503, detail="demo busy, try again in a minute")
+    # The indexed style the app uses ([EMAIL_1]); the plain default would hand the
+    # page [EMAIL], which its placeholder regex does not recognise.
+    options = ScrubOptions(
+        language="auto",
+        language_hint=request.language_hint,
+        show_entities=True,
+        placeholder_style="indexed",
+    )
+    return await scrubber.scrub(request.text, options)
 
 
 @app.post("/ocr/cloud", response_model=OcrCloudResponse)
@@ -345,6 +375,8 @@ async def health_endpoint() -> HealthResponse:
         gliner_loaded=gliner_loaded,
         signup_invite_required=bool(settings.signup_invite_code),
         email_verification_required=settings.email_verification_required,
+        demo_scrub_enabled=settings.demo_scrub_enabled,
+        demo_scrub_max_chars=settings.demo_scrub_max_chars,
     )
 
 

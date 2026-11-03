@@ -499,7 +499,9 @@ export function ScreenAuth() {
   // open one must not show a required field nobody can fill. /health says
   // which — read through the app's ONE shared poll (useQuonHealth), never a
   // request of this screen's own: the health-poll E2E counts them.
-  const inviteRequired = Boolean(useQuonHealth().health?.signup_invite_required);
+  const health = useQuonHealth().health;
+  const inviteRequired = Boolean(health?.signup_invite_required);
+  const demoEnabled = Boolean(health?.demo_scrub_enabled);
   const [acceptedTerms, setAcceptedTerms] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -822,6 +824,13 @@ export function ScreenAuth() {
       )}
 
       <LegalLinks className="mt-8" />
+      {demoEnabled && (
+        <p className="mt-3 text-center text-[11px] text-quon-muted">
+          <Link to="/demo" className="underline-offset-2 hover:text-quon-text hover:underline">
+            {t("auth.tryDemo")}
+          </Link>
+        </p>
+      )}
     </div>
   );
 }

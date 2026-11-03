@@ -205,6 +205,8 @@ export interface HealthStatus {
   /** Registration needs an invite code on this instance (SIGNUP_INVITE_CODE is
    *  set). The sign-up form shows its invite field only then. */
   signup_invite_required?: boolean;
+  demo_scrub_enabled?: boolean;
+  demo_scrub_max_chars?: number;
   /** False when accounts are active on creation (no e-mail verification). */
   email_verification_required?: boolean;
 }
@@ -361,6 +363,21 @@ export class ScrubIncompleteError extends QuonError {
 }
 
 /** Scrub raw text and return the pseudonymized result + entity report. */
+/** The scrub-only demo (/demo): no session, no options beyond the language
+ *  hint, no re-hydration map kept anywhere. The backend answers 404 when the
+ *  instance has the demo off, 413 over its length cap, 429 per IP and 503 at
+ *  its process-wide ceiling; the page maps those to its own messages. */
+export async function demoScrub(
+  text: string,
+  languageHint: "de" | "en" | null,
+): Promise<ScrubResult> {
+  return request<ScrubResult>(
+    "/demo/scrub",
+    { method: "POST", body: JSON.stringify({ text, language_hint: languageHint }) },
+    30_000,
+  );
+}
+
 export async function scrubText(text: string, options?: ScrubOptions): Promise<ScrubResult> {
   const result = await scrubRequest(text, options);
   // ⚠️ The choke point that makes a hand-redaction a GUARANTEE rather than a

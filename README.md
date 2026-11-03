@@ -114,6 +114,7 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md) for the rest.
 - [docs/threat-model.md](./docs/threat-model.md): what QUON protects against, and what it does not
 - [docs/self-hosting.md](./docs/self-hosting.md): running your own instance, on a public domain or at home
 - [docs/extending.md](./docs/extending.md): contributing a detector, a recognizer or an entity type
+- [docs/detection-evaluation.md](./docs/detection-evaluation.md): how detection quality is measured, and what the numbers cannot see
 - [SECURITY.md](./SECURITY.md): reporting a vulnerability
 
 ## License

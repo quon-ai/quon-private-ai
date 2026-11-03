@@ -135,6 +135,10 @@ provider.
 
 _Mitigations:_
 
+- The scrub-only demo (`POST /demo/scrub`, off by default) is the one
+  endpoint that runs the detector without a session. It is capped in length,
+  rate-limited per IP and for all visitors together, stores nothing and calls
+  no model; an attacker gets a redaction service and nothing else.
 - TLS on all hops; the reference deployment exposes no inbound ports (outbound
   tunnel only).
 - Session cookies are opaque, `httpOnly`, `Secure`, `SameSite=Lax`;

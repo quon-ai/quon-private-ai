@@ -1,4 +1,4 @@
-"""The 50-case QUON evaluation corpus.
+"""The 58-case QUON evaluation corpus.
 
 Each case declares:
   - ``must_anonymize``      values that MUST be removed (plain string or ``{value, type}``)

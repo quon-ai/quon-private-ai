@@ -128,7 +128,7 @@ export default defineConfig({
         // the checkout's own runtime_settings.json (a dev file with a July model
         // catalog hid the image model from image-generation.spec on 2026-10-31).
         `RUNTIME_SETTINGS_PATH=${TMP_DIR}/runtime_settings.json ` +
-        `DATABASE_PATH=${TEST_DB} RATE_LIMIT_ENABLED=false LLM_ENRICHMENT=false QUON_TEST_LIGHT_KDF=1 ` +
+        `DATABASE_PATH=${TEST_DB} RATE_LIMIT_ENABLED=false DEMO_SCRUB_ENABLED=true LLM_ENRICHMENT=false QUON_TEST_LIGHT_KDF=1 ` +
         `EMAIL_VERIFICATION=required SIGNUP_INVITE_CODE= SMTP_HOST= OPENROUTER_API_KEY= COOKIE_SECURE=false ` +
         `./.venv/bin/python -m uvicorn main:app --host 127.0.0.1 --port ${API_PORT} ` +
         `2>&1 | tee ${BACKEND_LOG}`,
