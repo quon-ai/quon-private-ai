@@ -80,7 +80,14 @@ jobs:
       - run: npm run typecheck
       - run: npm run lint
       - run: npm run test
+      # The self-contained SSR bundle (vite.config.ts, ssr.noExternal) needs
+      # more heap than Node's default: the build died with "JavaScript heap out
+      # of memory" on the self-hosted runner on 2026-11-02 (exit 134) while the
+      # hosted runner's larger default heap let it pass. Same value as the
+      # Dockerfile's build stage.
       - run: npm run build
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
       # The frontend image ships dist/ without node_modules: every package the
       # SSR bundle needs must be inside it (the h3-v2 crash of 2026-11-02).
       - run: node scripts/check-ssr-externals.mjs

@@ -157,7 +157,14 @@ export default defineConfig(async ({ command, mode }): Promise<UserConfig> => {
       // ERR_MODULE_NOT_FOUND for "h3-v2", TanStack's aliased h3 import, on
       // 2026-11-02. `true` bundles all of them; scripts/check-ssr-externals.mjs
       // fails the gate if a bare import ever survives again.
-      noExternal: true,
+      //
+      // BUILD ONLY. In `vite dev` the SSR side runs through Vite's module
+      // runner, which cannot inline a CommonJS package: with noExternal on, the
+      // first request died with "ReferenceError: module is not defined" in
+      // react/index.js, and the E2E suite (whose web server is `vite dev`)
+      // failed in 6 minutes on the first public CI run, 2026-11-02. Dev keeps
+      // Vite's default (dependencies external, loaded from node_modules).
+      noExternal: command === "build" ? true : undefined,
     },
 
     server: {
