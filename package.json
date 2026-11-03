@@ -64,7 +64,7 @@
     "lucide-react": "^0.575.0",
     "mammoth": "^1.12.0",
     "mermaid": "^12.2.0",
-    "motion": "^12.40.0",
+    "motion": "^14.9.0",
     "onnxruntime-web": "1.24.3",
     "pdfjs-dist": "^6.0.227",
     "react": "^19.3.1",
