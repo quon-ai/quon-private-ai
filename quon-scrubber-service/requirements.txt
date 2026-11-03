@@ -70,4 +70,4 @@ gliner>=0.2.28,<0.3
 # unavailable") and the detector contributes nothing — measured 2026-10-30 on a
 # GitHub-hosted runner, invisible on any box whose HF cache already holds the
 # converted tokenizer. Same "package first" rule as above.
-protobuf>=5
+protobuf>=7.36.2
