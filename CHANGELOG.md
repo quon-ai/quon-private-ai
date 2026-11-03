@@ -10,6 +10,14 @@ once it reaches 1.0.
 
 ## [Unreleased]
 
+### Changed
+
+- **Contributions are accepted under a Contributor License Agreement** (`CLA.md`):
+  a bot asks for one signature on the first pull request, and the Signed-off-by
+  requirement is retired. Contributors keep their copyright; the agreement lets
+  the project owner distribute QUON under other terms as well, which keeps a
+  commercial or hosted offering possible.
+
 ### Fixed
 
 - **Third-party notices of the backend are generated from the runtime

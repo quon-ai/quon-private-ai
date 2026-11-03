@@ -112,26 +112,25 @@ requirements.
 - For security-sensitive findings, **do not open a PR or issue**; follow
   [SECURITY.md](SECURITY.md) instead.
 
-## License of contributions: the DCO
+## License of contributions: the CLA
 
-Contributions are accepted under the licence in the `LICENSE` file at the root
-of the repository (inbound = outbound). There is no contributor licence
-agreement and no transfer of rights: your code stays yours, licensed to
-everyone under that same licence.
+QUON is licensed to everyone under the AGPL-3.0 (`LICENSE`). Contributions are
+accepted under the Contributor License Agreement in [CLA.md](CLA.md): you keep
+the copyright in your work and grant the project owner a licence to it that
+includes distributing QUON under other terms. That last part is the reason the
+agreement exists. It keeps a commercial or hosted offering of QUON, and a
+future licence change, possible without asking every past contributor again.
+The agreement does not transfer copyright, and it takes nothing away from the
+AGPL grant you receive like everyone else.
 
-What we ask instead is the **Developer Certificate of Origin**
-(https://developercertificate.org, version 1.1): a one-line statement in every
-commit that you have the right to submit it under the project's licence. Add
-it with `git commit -s`, which appends
+Signing is one comment on your first pull request: a bot asks, you reply with
+the sentence it quotes, and the signature (GitHub login, date, agreement
+version) is recorded on the `cla-signatures` branch of this repository, where
+anyone can see it. One signature covers all later contributions. If you
+contribute on behalf of an employer, make sure you are authorised to sign for
+it; the agreement says what that means.
 
-```
-Signed-off-by: Your Name <you@example.org>
-```
-
-A pull request whose commits lack that line fails the `DCO` check; `git commit
---amend -s` fixes the last commit, `git rebase --signoff` a whole branch. Use a
-real name and an address you can be reached at; GitHub's noreply address is
-fine.
+`git commit -s` is welcome but no longer required.
 
 ## Code of conduct
 

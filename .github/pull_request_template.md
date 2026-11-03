@@ -18,7 +18,7 @@ of opening a public PR (see SECURITY.md).
 - [ ] **Tests added/updated** — regression test for logic fixes; unit/e2e
       coverage for new features; detection changes keep the corpus ratchet
       green (`QUON_RUN_CORPUS=1 python -m pytest tests/test_corpus.py -q`).
-- [ ] **Commits are signed off** (`git commit -s`) — the DCO, see CONTRIBUTING.md
+- [ ] **CLA signed** — a bot asks on your first pull request; one comment, once (see CONTRIBUTING.md)
 - [ ] **No secrets or personal data** — nothing from `.env`,
       `runtime_settings.json`, or `quon.db`; only synthetic PII in tests
       and fixtures.
