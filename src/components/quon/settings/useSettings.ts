@@ -9,6 +9,7 @@ import { getSettings, type ProviderConnection, type SettingsStatus } from "@/lib
 export interface UseSettingsReturn {
   configured: boolean;
   ownKey: boolean;
+  region: string;
   connections: ProviderConnection[];
   reachable: boolean | null;
   applySettings: (s: SettingsStatus) => void;
@@ -17,12 +18,14 @@ export interface UseSettingsReturn {
 export function useSettings(): UseSettingsReturn {
   const [configured, setConfigured] = useState(false);
   const [ownKey, setOwnKey] = useState(false);
+  const [region, setRegion] = useState("global");
   const [connections, setConnections] = useState<ProviderConnection[]>([]);
   const [reachable, setReachable] = useState<boolean | null>(null);
 
   function applySettings(s: SettingsStatus) {
     setConfigured(s.openrouter_configured);
     setOwnKey(!!s.own_openrouter_key);
+    setRegion(s.region ?? "global");
     setConnections(s.connections);
   }
 
@@ -38,6 +41,7 @@ export function useSettings(): UseSettingsReturn {
   return {
     configured,
     ownKey,
+    region,
     connections,
     reachable,
     applySettings,

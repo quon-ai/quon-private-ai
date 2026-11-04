@@ -14,8 +14,10 @@ Content-Security-Policy expect.
 
 ## Requirements
 
-- A Linux host with Docker + Docker Compose v2 (`docker compose`), x86-64
-  (ARM64 should work, since the base images are multi-arch, but is untested).
+- A Linux host with Docker and Docker Compose v2 (`docker compose version`
+  must answer; on Debian and Ubuntu that is the `docker-compose-plugin`
+  package, the old `docker-compose` v1 binary is not enough), x86-64 (ARM64
+  should work, since the base images are multi-arch, but is untested).
 - **RAM:** ~2 GB for the backend at runtime (spaCy German+English NER models +
   Presidio), ~3 GB more with GLiNER on (the third detector, see below; you
   almost certainly want it). **Note the build needs more than the runtime:** `docker compose up

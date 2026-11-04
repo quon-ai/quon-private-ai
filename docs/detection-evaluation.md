@@ -37,15 +37,15 @@ carries values that must disappear (`must_anonymize`, each with a type) and
 values that must survive (`must_not_anonymize`). `grade_case` compares the
 scrubbed text against both.
 
-- **Recall** is the share of gold values that no longer appear in the output.
+- Recall is the share of gold values that no longer appear in the output.
   A name leaks when any distinctive word of it survives on a word boundary; an
   atomic value such as an IBAN leaks on a substring match.
-- **Leak rate** is one minus recall, per value, reported per entity type.
-- **Sample leak rate** is the share of messages that leak at least one value.
+- Leak rate is one minus recall, per value, reported per entity type.
+- Sample leak rate is the share of messages that leak at least one value.
   The corpus report treats it as the primary number.
-- **Precision** is the share of must-not values that survived. It measures
+- Precision is the share of must-not values that survived. It measures
   over-redaction.
-- **Confidence interval**: `_wilson` computes a 95% Wilson score interval on
+- Confidence interval: `_wilson` computes a 95% Wilson score interval on
   recall, so a type with few samples shows a range instead of a point.
 
 ## The synthetic corpus
@@ -169,21 +169,21 @@ send path comes with a fresh row. The scrub-path series by message size lives in
 
 ## Known limits
 
-- **Recall is synthetic.** The only recall numbers come from generated prose
+- Recall is synthetic. The only recall numbers come from generated prose
   and the 58 hand-written cases. Real documents are evaluated for false
   positives only.
-- **Precision is bounded by the distractor lists.** The corpus counts a false
+- Precision is bounded by the distractor lists. The corpus counts a false
   positive only on a value a template marked as must-not.
-- **Two languages.** Generators, NER models and the language heuristic cover
+- Two languages. Generators, NER models and the language heuristic cover
   German and English.
-- **Unmarked secrets are out of scope.** A high-entropy string with no prefix,
+- Unmarked secrets are out of scope. A high-entropy string with no prefix,
   label or assignment is reported and never gated.
-- **Lowercase names.** NER defers PERSON detection on all-lowercase input, so
+- Lowercase names. NER defers PERSON detection on all-lowercase input, so
   the casual slice keeps names capitalised. With GLiNER off, a lowercase name
   is a known gap.
-- **The default ratchet describes the floor.** A run without
+- The default ratchet describes the floor. A run without
   `GLINER_ENABLED=1` says nothing about a deployment that has GLiNER on.
-- **Nothing here measures a model provider.** The evaluation stops at the
+- Nothing here measures a model provider. The evaluation stops at the
   scrubbed text. What a provider does with placeholders, and whether an answer
   re-hydrates correctly, are tested elsewhere.
 

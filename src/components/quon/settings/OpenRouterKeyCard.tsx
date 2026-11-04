@@ -11,11 +11,19 @@ interface Props {
    *  card must say so and offer to remove it (#91: a wrong key could never be
    *  taken back from the UI). */
   ownKey?: boolean;
+  /** OpenRouter routing region; "eu" = strict in-region routing (region.py). */
+  region?: string;
   reachable: boolean | null;
   onApply: (s: SettingsStatus) => void;
 }
 
-export function OpenRouterKeyCard({ configured, ownKey = false, reachable, onApply }: Props) {
+export function OpenRouterKeyCard({
+  configured,
+  ownKey = false,
+  region = "global",
+  reachable,
+  onApply,
+}: Props) {
   const { t } = useT();
   const [apiKey, setApiKey] = useState("");
   const [showKey, setShowKey] = useState(false);
@@ -93,8 +101,21 @@ export function OpenRouterKeyCard({ configured, ownKey = false, reachable, onApp
             <div className="text-[10px] text-quon-muted">{t("settings.openRouterDesc")}</div>
           </div>
         </div>
-        {statusBadge}
+        <div className="flex items-center gap-1.5">
+          {region === "eu" && (
+            <span
+              className="inline-flex items-center gap-1 rounded-full border border-quon-indigo/40 bg-quon-indigo/10 px-2 py-0.5 text-[10px] font-semibold text-quon-indigo"
+              data-testid="eu-routing-badge"
+            >
+              {t("settings.euRoutingBadge")}
+            </span>
+          )}
+          {statusBadge}
+        </div>
       </div>
+      {region === "eu" && (
+        <p className="mt-2 text-[10px] text-quon-muted">{t("settings.euRoutingHint")}</p>
+      )}
 
       <label className="mt-3 block text-[10px] font-semibold uppercase tracking-wide text-quon-muted">
         {t("settings.openRouterKeyLabel")}

@@ -189,6 +189,10 @@ export interface ScrubResult {
 export interface HealthStatus {
   status: string;
   version: string;
+  /** OpenRouter routing region: "global" or "eu" (strict in-region routing). */
+  region?: string;
+  /** False in EU routing: the web-search plugin is refused there — the chat hides the toggle. */
+  web_search_available?: boolean;
   /** true when the spaCy/Presidio NER engine is loaded and ready */
   ner_ready?: boolean;
   /** Active PII extraction backend. "local" now means the whole detection stack
@@ -929,6 +933,10 @@ export interface SettingsStatus {
   openrouter_configured: boolean;
   /** The caller has an own OpenRouter key stored (overrides the included one). */
   own_openrouter_key?: boolean;
+  /** OpenRouter routing region: "global" or "eu" (strict in-region routing). */
+  region?: string;
+  /** False in EU routing: the web-search plugin is refused there — hide the toggle. */
+  web_search_available?: boolean;
   models: ChatModel[];
   connections: ProviderConnection[];
 }

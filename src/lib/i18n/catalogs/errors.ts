@@ -44,6 +44,8 @@ export const errors = {
     "errors.ownKeyUnverified":
       "Could not verify the key with OpenRouter right now — try again in a moment.",
     "errors.providerUnreachable": "Couldn't reach the AI provider — please try again.",
+    "errors.modelNotInRegion":
+      "This model is not available with EU routing — pick another model from the list.",
     // generic
     "errors.generic": "Something went wrong. Please try again.",
     "errors.offline": "QUON's privacy filter can't be reached — please try again in a moment.",
@@ -84,6 +86,8 @@ export const errors = {
     "errors.ownKeyUnverified":
       "Der Schlüssel konnte gerade nicht bei OpenRouter geprüft werden — versuch es gleich noch einmal.",
     "errors.providerUnreachable": "Der KI-Anbieter war nicht erreichbar — versuch es noch einmal.",
+    "errors.modelNotInRegion":
+      "Dieses Modell gibt es im EU-Routing nicht — wähl ein anderes Modell aus der Liste.",
     "errors.generic": "Etwas ist schiefgelaufen. Versuch es noch einmal.",
     "errors.offline":
       "QUONs Datenschutzfilter ist nicht erreichbar — versuch es gleich noch einmal.",

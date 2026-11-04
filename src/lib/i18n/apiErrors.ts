@@ -48,6 +48,7 @@ const PROVIDER_SUBSTRING_TO_KEY: Array<[string, MessageKey]> = [
   ["rate-limiting", "errors.providerRateLimited"],
   ["budget is used up", "errors.providerBudgetExhausted"],
   ["rejected this account's API key", "errors.providerBadKey"],
+  ["not available with EU routing", "errors.modelNotInRegion"],
   ["Could not reach", "errors.providerUnreachable"],
 ];
 

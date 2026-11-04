@@ -38,7 +38,7 @@ const TAB_TRIGGERS: Array<{ value: string; labelKey: MessageKey; Icon: typeof Sh
 export function SettingsTabs() {
   const { t } = useT();
   const { health } = useQuonHealth();
-  const { configured, ownKey, connections, reachable, applySettings } = useSettings();
+  const { configured, ownKey, region, connections, reachable, applySettings } = useSettings();
 
   return (
     <Tabs defaultValue="detection" className="flex min-h-0 flex-1 flex-col">
@@ -82,6 +82,7 @@ export function SettingsTabs() {
           <OpenRouterKeyCard
             configured={configured}
             ownKey={ownKey}
+            region={region}
             reachable={reachable}
             onApply={applySettings}
           />

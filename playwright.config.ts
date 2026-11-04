@@ -51,6 +51,8 @@ export const TEST_DB = sessionEnv.QUON_E2E_DB;
 // (mirrors activateInDb() reaching into the sqlite file directly).
 export const BACKEND_LOG = sessionEnv.QUON_E2E_BACKEND_LOG;
 
+const SERVER_OUTPUT = process.env.CI ? { stdout: "pipe" as const, stderr: "pipe" as const } : {};
+
 export default defineConfig({
   testDir: "./tests/e2e",
   globalSetup: "./tests/e2e/global-setup.ts",
@@ -135,6 +137,11 @@ export default defineConfig({
       url: `http://localhost:${API_PORT}/health`,
       timeout: 60_000,
       reuseExistingServer: false,
+      // On CI the servers' own output is the only evidence when one dies
+      // before its URL answers ("Process from config.webServer exited early",
+      // hosted runner, 2026-11-03: nothing else in the log). Locally it stays
+      // quiet; the backend's log is in BACKEND_LOG anyway.
+      ...SERVER_OUTPUT,
     },
     {
       // `npx vite dev`, NOT `npm run dev` — so npm's `predev` hook does not
@@ -155,6 +162,7 @@ export default defineConfig({
       url: `http://localhost:${WEB_PORT}`,
       timeout: 90_000,
       reuseExistingServer: false,
+      ...SERVER_OUTPUT,
     },
   ],
 });

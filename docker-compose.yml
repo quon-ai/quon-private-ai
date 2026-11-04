@@ -89,6 +89,10 @@ services:
       EMAIL_VERIFICATION: ${EMAIL_VERIFICATION:-auto}
       # only behind Cloudflare (it sets the header itself); see config.py
       TRUST_CF_CONNECTING_IP: ${TRUST_CF_CONNECTING_IP:-false}
+      # The scrub-only demo at /demo (docs/self-hosting.md): off unless set.
+      DEMO_SCRUB_ENABLED: ${DEMO_SCRUB_ENABLED:-false}
+      DEMO_SCRUB_MAX_CHARS: ${DEMO_SCRUB_MAX_CHARS:-2000}
+      DEMO_SCRUB_GLOBAL_PER_MINUTE: ${DEMO_SCRUB_GLOBAL_PER_MINUTE:-300}
       # --- SMTP (email verification). Empty SMTP_HOST → links only logged. ---
       SMTP_HOST: ${SMTP_HOST:-}
       SMTP_PORT: ${SMTP_PORT:-587}

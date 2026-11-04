@@ -798,7 +798,12 @@ export function ScreenChat() {
   // Conversation-wide state for placeholder re-hydration.
   const globalCounts = useRef<Record<string, number>>({});
   const rehydration = useRef<Record<string, string>>({});
-  const { status } = useQuonHealth();
+  const { status, health } = useQuonHealth();
+  // EU routing (strict): OpenRouter refuses the web-search plugin on the EU
+  // domain, so the toggle is hidden and a send never asks for it. Read from
+  // the health poll the app already runs (retried every 30 s) — a separate
+  // timed fetch left the toggle in place on a slow runner.
+  const webSearchAvailable = health?.web_search_available !== false;
   const [pendingReview, setPendingReview] = useState<{
     original: string;
     base: string;
@@ -1670,7 +1675,7 @@ export function ScreenChat() {
             effort,
             roundDefs.length ? roundDefs : undefined,
             onToolCalls,
-            webSearchEnabled,
+            webSearchEnabled && webSearchAvailable,
             onReasoning,
             onSources,
             {
@@ -2856,19 +2861,21 @@ export function ScreenChat() {
             {hasContextData && <InfoHint text={t("chat.contextInfoHint")} />}
             {/* Web-search pill — OpenRouter's agentic server tool: the MODEL
               decides when to search (queries derive from the scrubbed prompt
-              only). Global synced pref, default on. */}
-            <button
-              onClick={() => quon.setWebSearchEnabled(!webSearchEnabled)}
-              aria-pressed={webSearchEnabled}
-              title={webSearchEnabled ? t("chat.webOnTitle") : t("chat.webOffTitle")}
-              className={`inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border px-2 py-0.5 text-[11px] font-medium transition ${
-                webSearchEnabled
-                  ? "border-quon-indigo/40 bg-quon-indigo/10 text-quon-indigo"
-                  : "border-quon-border bg-quon-surface text-quon-muted hover:text-quon-text"
-              }`}
-            >
-              <Globe className="h-3.5 w-3.5 shrink-0" /> {t("chat.webLabel")}
-            </button>
+              only). Global synced pref, default on. Absent in EU routing. */}
+            {webSearchAvailable && (
+              <button
+                onClick={() => quon.setWebSearchEnabled(!webSearchEnabled)}
+                aria-pressed={webSearchEnabled}
+                title={webSearchEnabled ? t("chat.webOnTitle") : t("chat.webOffTitle")}
+                className={`inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border px-2 py-0.5 text-[11px] font-medium transition ${
+                  webSearchEnabled
+                    ? "border-quon-indigo/40 bg-quon-indigo/10 text-quon-indigo"
+                    : "border-quon-border bg-quon-surface text-quon-muted hover:text-quon-text"
+                }`}
+              >
+                <Globe className="h-3.5 w-3.5 shrink-0" /> {t("chat.webLabel")}
+              </button>
+            )}
             {/* Overflow menu — currently just the reasoning-effort picker, kept out of
               the always-visible row so Filter/Review/Context/model stay the
               compact, primary controls. Effective = per-chat override ?? global

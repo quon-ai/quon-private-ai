@@ -110,6 +110,11 @@ class HealthResponse(BaseModel):
     # sign-up form shows its invite field only then, and /auth/register reveals
     # the same fact by refusing without one.
     signup_invite_required: bool = False
+    # OpenRouter routing region (region.py): "global" or "eu". On /health so
+    # the client learns it from the poll it already runs — the chat hides the
+    # Web toggle on it, the trust page names it.
+    region: str = "global"
+    web_search_available: bool = True
     # False when accounts are active on creation (EMAIL_VERIFICATION=auto without
     # SMTP, or "off"): the sign-up flow then signs the user in instead of sending
     # them to their inbox.
@@ -317,6 +322,10 @@ class SettingsResponse(BaseModel):
     # The CALLER has stored an own OpenRouter key that overrides the included
     # sub-key (#91: without this the settings card could not offer "remove").
     own_openrouter_key: bool = False
+    # OpenRouter routing region (region.py): "global" or "eu". With "eu" the
+    # catalog is already filtered to in-region models and web search is off.
+    region: str = "global"
+    web_search_available: bool = True
     models: list[ChatModelInfo]
     # Provider connections (OpenRouter + any BYOK OpenAI-compatible providers).
     connections: list[ConnectionInfo] = Field(default_factory=list)

@@ -153,6 +153,9 @@ export const settings = {
     "settings.openRouterKeyPlaceholderEmpty": "sk-or-v1-…",
     "settings.saveKey": "Save key",
     "settings.ownKeyInUse": "Your own key is in use",
+    "settings.euRoutingBadge": "EU routing",
+    "settings.euRoutingHint":
+      "Your requests are processed in the EU only (OpenRouter EU routing). Models without an EU endpoint are not offered; web search and image generation are not available.",
     "settings.removeKey": "Remove key",
     "settings.removingKey": "Removing…",
     "settings.keyRemoved": "Key removed — your included credit is used again.",
@@ -411,6 +414,9 @@ export const settings = {
     "settings.openRouterKeyPlaceholderEmpty": "sk-or-v1-…",
     "settings.saveKey": "Schlüssel speichern",
     "settings.ownKeyInUse": "Dein eigener Schlüssel ist aktiv",
+    "settings.euRoutingBadge": "EU-Routing",
+    "settings.euRoutingHint":
+      "Deine Anfragen werden nur in der EU verarbeitet (OpenRouter EU-Routing). Modelle ohne EU-Standort werden nicht angeboten; Websuche und Bildgenerierung gibt es dabei nicht.",
     "settings.removeKey": "Schlüssel entfernen",
     "settings.removingKey": "Wird entfernt…",
     "settings.keyRemoved": "Schlüssel entfernt — dein inkludiertes Guthaben wird wieder genutzt.",

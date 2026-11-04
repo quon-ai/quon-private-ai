@@ -56,6 +56,9 @@ services:
       CORS_ALLOW_ORIGINS: ${CORS_ALLOW_ORIGINS:?set CORS_ALLOW_ORIGINS in .env, e.g. https://quon.example.com}
       # --- Secrets: passed from host env / .env, never hard-coded here ---
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
+      # In-region routing: "eu" sends every chat to eu.openrouter.ai (strict —
+      # the catalog is filtered, web search off). Default: global.
+      OPENROUTER_REGION: ${OPENROUTER_REGION:-global}
       # Seals per-user OpenRouter sub-keys at rest. MUST be set + stable in prod.
       QUON_SERVER_SECRET: ${QUON_SERVER_SECRET:-}
       # Enable per-user $5 sub-keys. Empty → self-host BYOK (no provisioning).
@@ -70,6 +73,10 @@ services:
       EMAIL_VERIFICATION: ${EMAIL_VERIFICATION:-auto}
       # only behind Cloudflare (it sets the header itself); see config.py
       TRUST_CF_CONNECTING_IP: ${TRUST_CF_CONNECTING_IP:-false}
+      # The scrub-only demo at /demo (docs/self-hosting.md): off unless set.
+      DEMO_SCRUB_ENABLED: ${DEMO_SCRUB_ENABLED:-false}
+      DEMO_SCRUB_MAX_CHARS: ${DEMO_SCRUB_MAX_CHARS:-2000}
+      DEMO_SCRUB_GLOBAL_PER_MINUTE: ${DEMO_SCRUB_GLOBAL_PER_MINUTE:-300}
       # --- SMTP (email verification). Empty SMTP_HOST → links logged (dev). ---
       SMTP_HOST: ${SMTP_HOST:-}
       SMTP_PORT: ${SMTP_PORT:-587}

@@ -15,6 +15,7 @@ from __future__ import annotations
 import re
 
 import key_resolver
+import region
 import settings_store
 import user_connections
 from config import settings
@@ -52,6 +53,11 @@ def is_image_output_slug(slug: str) -> bool:
 
 def _openrouter_models() -> list[str]:
     return settings_store.get_openrouter_models() or _DEFAULT_OPENROUTER_MODELS
+
+
+def openrouter_slugs() -> list[str]:
+    """The OpenRouter catalog as configured (runtime override, else default)."""
+    return list(_openrouter_models())
 
 
 def list_connections(user_id: str | None = None) -> list[ConnectionInfo]:
@@ -112,6 +118,11 @@ def chat_catalog(user_id: str | None = None) -> list[ChatModelInfo]:
     out: list[ChatModelInfo] = []
     for conn in list_connections(user_id):
         for slug in conn.models:
+            # Strict EU routing: a model the EU domain does not serve is not
+            # offered at all (region.py). Unknown stays visible — the request
+            # fails closed upstream, with a worded error.
+            if conn.id == OPENROUTER_ID and region.available(slug) is False:
+                continue
             label = slug if conn.id == OPENROUTER_ID else f"{slug} · {conn.label}"
             mid = f"{conn.id}::{slug}"
             out.append(

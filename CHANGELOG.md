@@ -12,6 +12,13 @@ once it reaches 1.0.
 
 ### Added
 
+- **EU routing.** When the gateway runs with OpenRouter's EU routing, every
+  chat request is processed on provider endpoints in the EU only — never
+  routed elsewhere. The model list then shows only models with an EU
+  endpoint, and the „Web" toggle and image generation are not offered,
+  because OpenRouter does not provide them in the EU region. Settings →
+  Providers shows an „EU-Routing" badge, and „Wie deine Daten fließen" says
+  it at the provider step.
 - **A scrub-only demo at `/demo`.** A visitor without an account pastes a text
   and sees what a model would receive: names, e-mail addresses, phone numbers,
   IBANs and more as placeholders, with the list of what was replaced. Nothing

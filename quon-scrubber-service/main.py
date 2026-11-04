@@ -22,6 +22,7 @@ import user_connections
 import db
 import key_resolver
 import openrouter_keycheck
+import region
 import ner
 import net_guard
 import ocr_cloud
@@ -62,6 +63,8 @@ def _settings_response(user_id: str | None = None) -> SettingsResponse:
     return SettingsResponse(
         openrouter_configured=settings_store.is_configured(),
         own_openrouter_key=user_settings.has_openrouter_key(user_id),
+        region=region.region(),
+        web_search_available=region.web_search_available(),
         models=connections.chat_catalog(user_id),
         connections=connections.list_connections(user_id),
     )
@@ -212,10 +215,14 @@ async def lifespan(_app: FastAPI):
     except Exception:
         logger.exception("boot sweep failed (continuing)")
     sweeper = asyncio.create_task(_maintenance_loop())
+    # 4. EU routing: learn what the EU domain serves (hourly) and probe the
+    # catalog's floating aliases (daily) — a no-op in global mode.
+    region_refresh = asyncio.create_task(region.refresh_loop(connections.openrouter_slugs))
 
     yield
 
     sweeper.cancel()
+    region_refresh.cancel()
     if gliner_warm is not None:
         gliner_warm.cancel()
 
@@ -374,6 +381,8 @@ async def health_endpoint() -> HealthResponse:
         gliner_enabled=settings.gliner_enabled,
         gliner_loaded=gliner_loaded,
         signup_invite_required=bool(settings.signup_invite_code),
+        region=region.region(),
+        web_search_available=region.web_search_available(),
         email_verification_required=settings.email_verification_required,
         demo_scrub_enabled=settings.demo_scrub_enabled,
         demo_scrub_max_chars=settings.demo_scrub_max_chars,

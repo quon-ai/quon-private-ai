@@ -261,6 +261,11 @@ class Settings(BaseSettings):
     # Set it in .env (preferred, git-ignored) or the environment.
     openrouter_api_key: str = ""
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
+    # In-region routing (region.py): "global" (default) or "eu" — chat goes to
+    # the EU domain, the catalog is filtered to in-region models, web search
+    # is off. Key management stays on openrouter_base_url.
+    openrouter_region: str = "global"
+    openrouter_eu_base_url: str = "https://eu.openrouter.ai/api/v1"
     openrouter_timeout: float = 120.0  # provider completions can be slow
     # Attribution headers recommended by OpenRouter.
     openrouter_app_url: str = "http://localhost:8080"

@@ -16,6 +16,7 @@ from datetime import datetime, timezone
 import httpx
 
 import net_guard
+import region
 import settings_store
 from config import settings
 from models import ChatTurn
@@ -104,6 +105,11 @@ def friendly_provider_error(status_code: int, body: bytes | str) -> str:
             "spending cap has been reached. Add your own provider API key under "
             "Settings → Providers to keep chatting."
         )
+    if "data region" in low or "region-specific endpoint" in low:
+        return (
+            "This model is not available with EU routing — pick another model "
+            "from the list."
+        )
     if status_code in (401, 403):
         return (
             "The AI provider rejected this account's API key. If you added your "
@@ -134,7 +140,7 @@ def _build_request(
         raise ProviderError(
             "This provider is not configured — add its API key in Settings.", status=503
         )
-    endpoint = (base_url or settings.openrouter_base_url).rstrip("/")
+    endpoint = (base_url or region.chat_base_url()).rstrip("/")
     system_prompt = SYSTEM_PROMPT_PROTECTED if protected else SYSTEM_PROMPT_UNPROTECTED
     # Today's date, stated outright. This replaces OpenRouter's
     # `openrouter:datetime` server tool, which was measured to stall EVERY
@@ -178,7 +184,9 @@ def _build_request(
     # So web_search is free and the other two cost ~9 s on EVERY message. The
     # date they were partly there for is now simply stated in the system prompt
     # above, and "read this URL" is already served by POST /fetch-url.
-    if web_search and endpoint == settings.openrouter_base_url.rstrip("/"):
+    # …and not in EU routing: the plugin is refused there for every model
+    # ("Web search is not available in your data region"), so it is never sent.
+    if web_search and endpoint == settings.openrouter_base_url.rstrip("/") and not region.is_eu():
         payload.setdefault("tools", []).append({"type": "openrouter:web_search"})
     # OpenRouter's unified reasoning param — normalizes effort across o-series
     # (effort) and Anthropic/Gemini (token budget). Models without reasoning ignore

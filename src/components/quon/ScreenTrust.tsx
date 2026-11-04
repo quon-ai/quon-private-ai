@@ -53,6 +53,8 @@ function rich(s: string, emph = "font-semibold text-quon-text"): ReactNode[] {
 export function ScreenTrust() {
   const { t } = useT();
   const { status, health } = useQuonHealth();
+  // EU routing (strict): the provider step says where the request is processed.
+  const euRouting = health?.region === "eu";
 
   // Same three-way split the pill and the (removed) status card used: anything
   // that is neither "active" nor "offline" is treated as degraded.
@@ -127,6 +129,7 @@ export function ScreenTrust() {
               </div>
               <h3>{t("trust.flowProviderTitle")}</h3>
               <p>{t("trust.flowProviderBody")}</p>
+              {euRouting && <p data-testid="trust-eu-routing">{t("trust.flowProviderEu")}</p>}
             </div>
 
             {/* the ant trail: real PII in (amber), placeholders out (green) */}
