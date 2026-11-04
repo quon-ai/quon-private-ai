@@ -202,6 +202,7 @@ jobs:
           cache: ${{ !vars.CI_RUNNER && 'npm' || '' }}
       - run: npm ci
       - uses: actions/setup-python@v7
+        id: py
         with:
           python-version: "3.11"
           cache: ${{ !vars.CI_RUNNER && 'pip' || '' }}
@@ -222,7 +223,13 @@ jobs:
         uses: actions/cache@v4
         with:
           path: quon-scrubber-service/.venv
-          key: venv-v1-${{ runner.os }}-py3.11-${{ hashFiles('quon-scrubber-service/requirements-dev.txt', 'quon-scrubber-service/requirements.txt') }}
+          # The EXACT interpreter version, not "3.11": the venv's bin/python is a
+          # symlink into /opt/hostedtoolcache/Python/<version>/, and the hosted
+          # runner pool hands out neighbouring patch releases. A venv built on
+          # 3.11.18 restored on a 3.11.17 runner cannot exec at all, which showed
+          # up as "Process from config.webServer exited early" with no output
+          # (three public runs, 2026-11-03/04).
+          key: venv-v2-${{ runner.os }}-py${{ steps.py.outputs.python-version }}-${{ hashFiles('quon-scrubber-service/requirements-dev.txt', 'quon-scrubber-service/requirements.txt') }}
       - name: Set up scrubber venv
         if: steps.venv-cache.outputs.cache-hit != 'true'
         working-directory: quon-scrubber-service
