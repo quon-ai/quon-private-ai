@@ -211,6 +211,8 @@ export interface HealthStatus {
   signup_invite_required?: boolean;
   demo_scrub_enabled?: boolean;
   demo_scrub_max_chars?: number;
+  demo_contact_url?: string;
+  demo_contact_email?: string;
   /** False when accounts are active on creation (no e-mail verification). */
   email_verification_required?: boolean;
 }

@@ -386,6 +386,8 @@ async def health_endpoint() -> HealthResponse:
         email_verification_required=settings.email_verification_required,
         demo_scrub_enabled=settings.demo_scrub_enabled,
         demo_scrub_max_chars=settings.demo_scrub_max_chars,
+        demo_contact_url=settings.demo_contact_url,
+        demo_contact_email=settings.demo_contact_email,
     )
 
 

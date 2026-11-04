@@ -56,6 +56,10 @@ def test_demo_has_a_process_wide_ceiling(quon_client, monkeypatch):
 def test_health_reports_the_demo(quon_client, monkeypatch):
     monkeypatch.setattr(settings, "demo_scrub_enabled", True)
     monkeypatch.setattr(settings, "demo_scrub_max_chars", 1234)
+    monkeypatch.setattr(settings, "demo_contact_url", "https://example.org/waitlist")
+    monkeypatch.setattr(settings, "demo_contact_email", "hello@example.org")
     h = quon_client.get("/health").json()
     assert h["demo_scrub_enabled"] is True
     assert h["demo_scrub_max_chars"] == 1234
+    assert h["demo_contact_url"] == "https://example.org/waitlist"
+    assert h["demo_contact_email"] == "hello@example.org"

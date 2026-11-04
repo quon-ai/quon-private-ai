@@ -328,6 +328,10 @@ class Settings(BaseSettings):
     demo_scrub_enabled: bool = False
     demo_scrub_max_chars: int = 2000
     demo_scrub_global_per_minute: int = 300
+    # Where an interested visitor goes from the demo: a waiting-list page and
+    # a contact address, both optional. Empty = the page offers sign-in instead.
+    demo_contact_url: str = ""
+    demo_contact_email: str = ""
 
     # SSRF guard: provider base_urls (BYOK / custom connections) must be https and
     # resolve to public IPs. Set true ONLY for a self-host pointing at a local

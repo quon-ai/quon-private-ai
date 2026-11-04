@@ -121,6 +121,8 @@ class HealthResponse(BaseModel):
     email_verification_required: bool = True
     demo_scrub_enabled: bool = False
     demo_scrub_max_chars: int = 0
+    demo_contact_url: str = ""
+    demo_contact_email: str = ""
 
 
 class EntityTypeInfo(BaseModel):

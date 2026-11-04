@@ -4,7 +4,8 @@
  * scanner can pick them up.
  */
 
-import { tr } from "./i18n/i18n";
+import { tr, translate } from "./i18n/i18n";
+import type { Lang } from "./langPref";
 import type { MessageKey } from "./i18n/catalog";
 
 export interface EntityStyle {
@@ -107,9 +108,12 @@ const DEFAULT_STYLE: RawStyle = {
   chip: "text-quon-muted bg-quon-muted/10 border-quon-muted/30",
 };
 
-export function entityStyle(type: string): EntityStyle {
+/** `lang` overrides the app's active language for the label: the public demo
+ *  page is English regardless of the instance's default. */
+export function entityStyle(type: string, lang?: Lang): EntityStyle {
   const raw = STYLES[type];
   // Unknown type → keep the raw type string as the label (no catalog entry).
   if (!raw) return { label: type, dot: DEFAULT_STYLE.dot, chip: DEFAULT_STYLE.chip };
-  return { label: tr(raw.labelKey), dot: raw.dot, chip: raw.chip };
+  const label = lang ? translate(lang, raw.labelKey) : tr(raw.labelKey);
+  return { label, dot: raw.dot, chip: raw.chip };
 }

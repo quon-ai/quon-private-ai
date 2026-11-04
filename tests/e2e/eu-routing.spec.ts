@@ -33,7 +33,7 @@ test("in EU routing the chat offers no Web toggle, settings and trust say EU", a
   await login(page, sharedCreds());
   await openChat(page);
   await expect(page.getByRole("button", { name: "Filter" })).toBeVisible({ timeout: 30_000 });
-  await expect(page.getByRole("button", { name: "Web" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Web", exact: true })).toHaveCount(0);
 
   await page.goto("/settings");
   await page.getByRole("tab", { name: "Providers" }).click();
@@ -47,7 +47,9 @@ test("in EU routing the chat offers no Web toggle, settings and trust say EU", a
 test("in global routing the Web toggle is there and nothing says EU", async ({ page }) => {
   await login(page, sharedCreds());
   await openChat(page);
-  await expect(page.getByRole("button", { name: "Web" })).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByRole("button", { name: "Web", exact: true })).toBeVisible({
+    timeout: 30_000,
+  });
   await page.goto("/settings");
   await page.getByRole("tab", { name: "Providers" }).click();
   await expect(page.getByRole("tab", { name: "Providers" })).toHaveAttribute(

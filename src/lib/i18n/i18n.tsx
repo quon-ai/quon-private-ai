@@ -21,7 +21,7 @@ import {
 import { getLangPref, setLangPref, type Lang } from "@/lib/langPref";
 import { DE, EN, type MessageKey } from "./catalog";
 
-type Params = Record<string, string | number>;
+export type Params = Record<string, string | number>;
 
 const CATALOGS: Record<Lang, Record<MessageKey, string>> = { en: EN, de: DE };
 

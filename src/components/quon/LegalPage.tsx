@@ -1,7 +1,9 @@
 import { Link } from "@tanstack/react-router";
 import { AlertTriangle, ArrowLeft } from "lucide-react";
 
-import { useT } from "@/lib/i18n/i18n";
+import type { MessageKey } from "@/lib/i18n/catalog";
+import { translate, useT } from "@/lib/i18n/i18n";
+import type { Lang } from "@/lib/langPref";
 import { TERMS_EFFECTIVE_DATE, TERMS_IS_DRAFT, TERMS_VERSION } from "@/lib/legal";
 import { Logo } from "./Logo";
 
@@ -20,8 +22,11 @@ type LegalPath = (typeof LEGAL_PAGES)[number]["to"];
 /** Inline row of links to the three legal documents, for app footers (Settings,
  *  auth screen). Opens in a new tab so the user never loses their place in the
  *  app; the standalone legal pages also carry a "Zurück" link of their own. */
-export function LegalLinks({ className }: { className?: string }) {
-  const { t } = useT();
+/** `lang` pins the labels to a page language; the public demo page is English
+ *  whatever the app's language, and its footer should be too. */
+export function LegalLinks({ className, lang }: { className?: string; lang?: Lang }) {
+  const { t: appT } = useT();
+  const t = (key: MessageKey) => (lang ? translate(lang, key) : appT(key));
   return (
     <div
       className={`flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1 text-[11px] text-quon-muted ${className ?? ""}`}
