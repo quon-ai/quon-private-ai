@@ -111,7 +111,7 @@ jobs:
       # like findings and were an unparsed flag. Skipping the root git repo is
       # the v2 DEFAULT (`--include-git-root` opts back in), so the fix is to
       # delete the line, not to translate it.
-      - uses: google/osv-scanner-action/osv-scanner-action@v2.3.8
+      - uses: google/osv-scanner-action/osv-scanner-action@v2.7.0
         with:
           scan-args: |-
             --recursive
