@@ -22,6 +22,10 @@ _Review mode: you see exactly what leaves the device. The provider receives
 `[PERSON_1]`, `[EMAIL_1]`, `[PHONE_1]`; the answer comes back with the real
 values restored locally._
 
+**Try the redaction without an account:** paste a text at
+[app.quon-ai.com/demo](https://app.quon-ai.com/demo) and see what a model would
+receive. Nothing is stored and no model is called.
+
 ## What you get
 
 - **Redaction you can see.** Three detectors run on your server (spaCy/Presidio

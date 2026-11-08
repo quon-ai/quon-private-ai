@@ -13,9 +13,10 @@
  */
 import { Link } from "@tanstack/react-router";
 import { Bot, ShieldCheck, Undo2, UserRound } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 
 import { useQuonHealth } from "@/hooks/useQuonHealth";
+import { useHydrated } from "@/lib/useHydrated";
 import { DEMO_SAMPLE, splitByPlaceholders } from "@/lib/demoScrub";
 import type { MessageKey } from "@/lib/i18n/catalog";
 import { translate, type Params } from "@/lib/i18n/i18n";
@@ -52,15 +53,12 @@ export function ScreenDemo() {
   const contactEmail = health?.demo_contact_email || "";
 
   const [text, setText] = useState("");
-  // The page is server-rendered, so the textarea exists before React takes
-  // over. Whatever a visitor (or WebKit's fill in the e2e suite) typed before
-  // hydration is in the DOM but not in state; adopt it once on mount.
-  const boxRef = useRef<HTMLTextAreaElement>(null);
-  useEffect(() => {
-    const typed = boxRef.current?.value ?? "";
-    if (typed) setText(typed.slice(0, max));
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- once, at hydration
-  }, []);
+  // The page is server-rendered: its controls exist before React takes over,
+  // and a click or keystroke in that window is lost (the language click in
+  // Chromium, the filled text in WebKit, on the e2e runner). Until hydration
+  // the textarea is read-only and the buttons disabled, so nothing can be
+  // lost; Playwright's auto-wait and a human's patience both cover ~300 ms.
+  const hydrated = useHydrated();
   const [result, setResult] = useState<ScrubResult | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -97,6 +95,7 @@ export function ScreenDemo() {
     <button
       type="button"
       onClick={() => setLang(value)}
+      disabled={!hydrated}
       aria-pressed={lang === value}
       lang={value}
       className={`rounded-md px-3 py-1 text-xs font-semibold transition ${
@@ -167,7 +166,7 @@ export function ScreenDemo() {
             <label className="mt-6 block">
               <span className="sr-only">{t("demo.textareaLabel")}</span>
               <textarea
-                ref={boxRef}
+                readOnly={!hydrated}
                 value={text}
                 onChange={(e) => setText(e.target.value.slice(0, max))}
                 maxLength={max}
@@ -182,6 +181,7 @@ export function ScreenDemo() {
               <button
                 type="button"
                 onClick={() => setText(DEMO_SAMPLE[lang].slice(0, max))}
+                disabled={!hydrated}
                 className="underline-offset-2 hover:text-quon-text hover:underline"
               >
                 {t("demo.sample")}
@@ -190,7 +190,7 @@ export function ScreenDemo() {
             <button
               type="button"
               onClick={() => void run()}
-              disabled={busy || !text.trim()}
+              disabled={!hydrated || busy || !text.trim()}
               className="mt-4 w-full rounded-xl bg-quon-indigo px-4 py-2.5 text-sm font-semibold text-white disabled:opacity-50"
             >
               {busy ? t("demo.running") : t("demo.run")}
@@ -290,6 +290,13 @@ export function ScreenDemo() {
                 {t("demo.ctaSignIn")}
               </Link>
             )}
+            <Link
+              to="/docs/detection"
+              search={{ lang }}
+              className="text-quon-muted underline-offset-2 hover:text-quon-text hover:underline"
+            >
+              {t("demo.ctaHowTested")}
+            </Link>
             <a
               href={SOURCE_URL}
               target="_blank"

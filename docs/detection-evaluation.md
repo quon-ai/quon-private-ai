@@ -11,6 +11,9 @@ This document explains how that quality is measured, what each measurement can
 and cannot see, and how a contributor runs the same checks. It states no
 current numbers: every enforced number lives in a test constant or a tracked
 ledger, and this page names the place, so it stays true when a floor moves.
+The dated record of what was actually tried — every setup, every model, every
+data set, with the numbers each experiment produced and the decisions made on
+them — is [detection-experiments.md](detection-experiments.md).
 
 ## The pipeline
 

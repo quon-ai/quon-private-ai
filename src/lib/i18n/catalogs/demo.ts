@@ -46,6 +46,7 @@ export const demo = {
     "demo.ctaMail": "Write to {email}",
     "demo.ctaSignIn": "Sign in or create an account",
     "demo.ctaSource": "Source code and self-hosting",
+    "demo.ctaHowTested": "How we test the filter",
   },
   de: {
     "demo.metaTitle": "QUON-Demo: Was die KI zu sehen bekommt",
@@ -87,5 +88,6 @@ export const demo = {
     "demo.ctaMail": "Schreib an {email}",
     "demo.ctaSignIn": "Anmelden oder Konto erstellen",
     "demo.ctaSource": "Quellcode und Selbst-Hosten",
+    "demo.ctaHowTested": "So testen wir den Filter",
   },
 } as const;
