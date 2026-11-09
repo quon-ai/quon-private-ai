@@ -80,7 +80,7 @@
     "vite-tsconfig-paths": "^6.1.1"
   },
   "devDependencies": {
-    "@eslint/js": "^9.32.0",
+    "@eslint/js": "^10.0.1",
     "@playwright/test": "^1.65.0",
     "@tauri-apps/api": "^2.12.4",
     "@tauri-apps/cli": "^2.12.4",
