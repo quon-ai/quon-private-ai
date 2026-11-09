@@ -8,7 +8,7 @@
 #                      rebuild is needed per domain and the production CSP
 #                      works out of the box.
 
-FROM node:22-slim AS build
+FROM node:26-slim AS build
 WORKDIR /app
 
 COPY package.json package-lock.json .npmrc ./
@@ -27,7 +27,7 @@ ENV VITE_QUON_API_URL=$VITE_QUON_API_URL
 ENV NODE_OPTIONS=--max-old-space-size=4096
 RUN npm run build
 
-FROM node:22-slim
+FROM node:26-slim
 WORKDIR /app
 ENV NODE_ENV=production HOST=0.0.0.0 PORT=8080
 COPY --from=build /app/dist ./dist
