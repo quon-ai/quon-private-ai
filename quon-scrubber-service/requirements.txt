@@ -52,7 +52,7 @@ python-multipart>=0.0.32,<0.1
 
 # Server-side Readability for the "add a URL as a document" feature
 # (fetch_url.py): main-text + title extraction from a fetched public page.
-trafilatura==2.1.0
+trafilatura==2.3.1
 
 # GLiNER — the third detector (a ~300M span-scoring encoder), run in-process on
 # CPU. Pulls torch + transformers, which is most of the image size: measured
