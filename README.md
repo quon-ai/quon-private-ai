@@ -2,6 +2,9 @@
 
 [![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue)](./LICENSE)
 
+Development, issues and releases are on [GitHub](https://github.com/quon-ai/quon-private-ai).
+A read-only mirror is kept at [codeberg.org/quon-ai/quon-private-ai](https://codeberg.org/quon-ai/quon-private-ai).
+
 > A privacy gateway for chatting with LLMs. Personal data is detected and
 > replaced with typed placeholders **on your side** before anything reaches a
 > model provider. In the answer they are restored locally, so the conversation

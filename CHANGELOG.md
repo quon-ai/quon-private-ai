@@ -10,6 +10,18 @@ since 1.0.
 
 ## [Unreleased]
 
+### Added
+
+- A read-only mirror of this repository on Codeberg; the README names it next to the GitHub repository where development, issues and releases live.
+
+### Changed
+
+- Dependency refresh across frontend and backend: every minor and patch update within the declared ranges, trafilatura 2.3.1 for URL extraction, and the GitHub Actions cache and OSV scanner on their current majors. The backend requirement floors now name the versions the test suite runs against.
+
+### Security
+
+- The lockfile no longer resolves the glob and minimatch versions covered by GHSA-3g3m-2fjr-6pw4 and GHSA-g3hv-75wg-m249. Both sat on development-only paths (the linter and the Capacitor CLI); the minimatch fix is a scoped override until typescript-eslint moves its own range.
+
 ## [1.0.0] - 2026-11-08
 
 The first stable release. From here on, a change that breaks the configuration
