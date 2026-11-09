@@ -1,15 +1,14 @@
-/** trust.* — the "what runs where" surface: the clickable protection pill and
- *  the /trust page. Written because a beta user could not find QUON's own
- *  privacy story at the moment he doubted it (feedback #50/51/52/56): the
- *  answer lived in ARCHITECTURE.md, not in the product. Every claim here must
- *  stay TRUE — when the architecture changes, this file is part of the change.
+/** trust.* - the "what runs where" surface: the clickable protection pill and
+ *  the /trust page. It exists so a user who doubts QUON's privacy story finds
+ *  the answer in the product, not in ARCHITECTURE.md. Every claim here must
+ *  stay TRUE - when the architecture changes, this file is part of the change.
  *
- *  Redesigned (feedback: "das ist klar als KI-Text erkennbar … der PII-Filter
- *  kommt zu kurz … das Cloud-Modell wird gar nicht erwähnt … cooler, grafischer
+ *  Redesigned (feedback: "das ist klar als KI-Text erkennbar ... der PII-Filter
+ *  kommt zu kurz ... das Cloud-Modell wird gar nicht erwähnt ... cooler, grafischer
  *  mit einer Ameisenstraße der Datenflüsse"): natural German, the filter as the
  *  hero of an animated data-flow diagram, the model named, and the
- *  zero-knowledge point made unmissable — the server never SEES stored data,
- *  the one read is the momentary filter pass. Inline `*…*` marks a bold span and
+ *  zero-knowledge point made unmissable - the server never SEES stored data,
+ *  the one read is the momentary filter pass. Inline `*...*` marks a bold span and
  *  `{model}` is filled from the PII_MODEL constant in ScreenTrust (single source
  *  of truth for the model's display name). */
 export const trust = {
@@ -23,7 +22,7 @@ export const trust = {
     "trust.pillEngineOffline": "unreachable — sending is blocked",
     "trust.pillLink": "How your data flows",
 
-    // Live status pill at the top of the page — mirrors the health probe so the
+    // Live status pill at the top of the page - mirrors the health probe so the
     // page never reassures you of something the status indicator contradicts.
     "trust.heroPillActive": "Protected · filter active",
     "trust.heroPillDegraded": "Protected · limited mode",

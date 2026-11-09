@@ -6,9 +6,9 @@ import { login, sharedCreds } from "./helpers/account";
  * Regression: the document viewer must not overflow a mobile viewport. A long
  * filename used to blow the DialogHeader ~558px past the screen (its min-width
  * defaulted to auto as a grid child, so the non-wrapping title couldn't shrink
- * and the title was clipped off-screen — the reported bug). The fix is `min-w-0`
+ * and the title was clipped off-screen - the reported bug). The fix is `min-w-0`
  * down the header chain so the title truncates instead. A wide table inside the
- * body may still scroll horizontally — that's expected — so the assertion is
+ * body may still scroll horizontally - that's expected - so the assertion is
  * scoped to the HEADER/title, which must stay within the viewport.
  */
 test("document viewer keeps a long title within a mobile viewport", async ({ page }, testInfo) => {
@@ -45,7 +45,7 @@ test("document viewer keeps a long title within a mobile viewport", async ({ pag
       bodyHorizScroll: document.documentElement.scrollWidth - document.documentElement.clientWidth,
     };
   });
-  // ≤ 2px tolerance for sub-pixel rounding. On the old code this was ~558.
+  // <= 2px tolerance for sub-pixel rounding. On the old code this was ~558.
   expect(overflow.titleOverflow).toBeLessThanOrEqual(2);
   // The page itself must never gain a horizontal scrollbar.
   expect(overflow.bodyHorizScroll).toBeLessThanOrEqual(0);

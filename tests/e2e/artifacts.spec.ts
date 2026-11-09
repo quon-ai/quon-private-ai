@@ -57,9 +57,9 @@ test("a markdown artifact in a reply can be saved into Documents", async ({ page
 
 /**
  * Reported: dismissing the save offer leaves the answer as RAW markup. It is a
- * rendering bug, not a dismissal bug — the system prompt asks the model to wrap
+ * rendering bug, not a dismissal bug - the system prompt asks the model to wrap
  * a standalone document in a ```markdown fence, and Markdown renders a fence as
- * a CODE BLOCK. So the reply that IS a document always read as its own source,
+ * a CODE BLOCK. So the reply that is a document always read as its own source,
  * and dismissing the card just removed the only thing that looked deliberate.
  *
  * The document must render as a document: headings as headings, no fence.
@@ -98,19 +98,19 @@ test("a document reply renders as a document, before and after dismissing the ca
     .fill("Schreib mir eine Kündigung als Dokument.");
   await clickSend(page);
 
-  // Rendered as a real heading — fails on the old build, where the whole
+  // Rendered as a real heading - fails on the old build, where the whole
   // document sat inside a <code> block.
-  // TWO rendered headings while the card is up: the answer body AND the card's
-  // own preview. Counting them is what makes this fail on the old build — there
-  // the body was a code block, so the card's preview was the ONLY heading and a
+  // Two rendered headings while the card is up: the answer body AND the card's
+  // own preview. Counting them is what makes this fail on the old build - there
+  // the body was a code block, so the card's preview was the only heading and a
   // `.first()` assertion would have passed for the wrong reason.
   const h1 = page.locator("main h1", { hasText: heading });
   await expect(h1).toHaveCount(2, { timeout: 20_000 });
   await expect(page.locator("main h2", { hasText: "Betreff" }).first()).toBeVisible();
-  // The answer bubble holds no code block — the document is prose, not source.
+  // The answer bubble holds no code block - the document is prose, not source.
   await expect(page.locator("main pre")).toHaveCount(0);
 
-  // Dismiss the offer — the document must STAY readable.
+  // Dismiss the offer - the document must stay readable.
   await expect(page.getByText("Markdown artifact")).toBeVisible();
   await page.getByRole("button", { name: "Dismiss" }).click();
   await expect(page.getByText("Markdown artifact")).toHaveCount(0);
@@ -125,8 +125,8 @@ test("a document reply renders as a document, before and after dismissing the ca
  * verbatim, and every product picture was a broken-image icon.
  *
  * Two distinct causes, one render path:
- *  - react-markdown does not render raw HTML (deliberate — model output must
- *    never become live markup), and `<br>` is the ONLY line break a model can
+ *  - react-markdown does not render raw HTML (deliberate - model output must
+ *    never become live markup), and `<br>` is the only line break a model can
  *    put in a GFM table cell, since a newline would end the row;
  *  - the app's CSP is `img-src 'self' data: blob:`, so a remote image URL is
  *    blocked outright. Routing it through QUON's own image proxy fixes the
@@ -185,7 +185,7 @@ test("a table with <br> cells and remote images renders cleanly", async ({ page 
   await expect(cell.locator("br")).toHaveCount(1);
   await expect(page.getByText("<br>")).toHaveCount(0);
 
-  // The picture renders — through OUR proxy, never from the origin.
+  // The picture renders - through our proxy, never from the origin.
   const img = page.locator('main td img[src*="link-image"]');
   await expect(img).toBeVisible({ timeout: 20_000 });
   expect(proxyCalls).toBeGreaterThan(0);
@@ -195,7 +195,7 @@ test("a table with <br> cells and remote images renders cleanly", async ({ page 
 /**
  * A model's comparison table is unreadable on a phone: three columns of prose in
  * ~390 px means either a sideways scroll (reported) or columns squeezed to two
- * words. The same content therefore gets two layouts — the table on wide
+ * words. The same content therefore gets two layouts - the table on wide
  * screens, one card per ROW on a narrow one, with the first cell as the card
  * title and the remaining cells labelled by their column header.
  */
@@ -232,8 +232,8 @@ test("a comparison table becomes cards on a phone and stays a table on desktop",
   // header as the label. Fails on the old build, which only ever had a table.
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(table).toBeHidden();
-  // Each string also exists in the (now hidden) table, so target the LAST match
-  // — the card copy — and assert it is the one actually on screen.
+  // Each string also exists in the (now hidden) table, so target the last match
+  // - the card copy - and assert it is the one actually on screen.
   for (const label of ["Marke A", "Marke B"]) {
     await expect(page.locator("main").getByText(label, { exact: true }).last()).toBeVisible();
   }

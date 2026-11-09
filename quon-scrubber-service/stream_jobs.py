@@ -3,7 +3,7 @@
 Mobile browsers freeze a backgrounded page: JavaScript stops and the open SSE
 connection dies, so switching apps mid-answer used to lose the generation
 ("Verbindung verloren"). No web page can keep its own socket alive through that
-— but the SERVER can keep generating.
+ - but the SERVER can keep generating.
 
 So a `/chat/stream` request now runs its provider stream in a background task
 that appends every event to an in-memory buffer; the HTTP response merely
@@ -12,10 +12,10 @@ the number of events it already saw, gets the missing ones replayed, and then
 rides the live tail (or finds the job finished and takes the rest at once).
 
 Zero-knowledge: the buffered events are exactly the scrubbed, placeholder-only
-tokens the server already relays today — re-hydration happens client-side, so
+tokens the server already relays today - re-hydration happens client-side, so
 nothing here can hold real values. What changes is RETENTION: seconds in flight
-→ minutes in RAM. Never written to disk, evicted on TTL, and gone on restart
-(a restart simply degrades to today's behaviour: resume 404s → the client
+-> minutes in RAM. Never written to disk, evicted on TTL, and gone on restart
+(a restart simply degrades to today's behaviour: resume 404s -> the client
 falls back to its Retry path).
 """
 
@@ -37,7 +37,7 @@ JOB_TTL_SECONDS = 15 * 60
 # Hard cap per user: a job holds its whole answer in RAM, so a client that
 # reconnects instead of resuming must not pile them up. Oldest evicted first.
 MAX_JOBS_PER_USER = 4
-# Safety cap per job — a runaway provider stream must not grow unbounded.
+# Safety cap per job - a runaway provider stream must not grow unbounded.
 MAX_EVENTS_PER_JOB = 20_000
 
 
@@ -85,7 +85,7 @@ def create(user_id: str) -> StreamJob:
     for old in mine[: max(0, len(mine) - (MAX_JOBS_PER_USER - 1))]:
         _jobs.pop(old.id, None)
     # 32 hex chars of CSPRNG: a job id is a bearer-ish handle, so it must not be
-    # guessable — though `get` also checks the session's user id.
+    # guessable - though `get` also checks the session's user id.
     job = StreamJob(id=secrets.token_hex(16), user_id=user_id)
     _jobs[job.id] = job
     return job
@@ -112,7 +112,7 @@ def count() -> int:
 
 
 def reset() -> None:
-    """Test hook — the registry is process-global."""
+    """Test hook - the registry is process-global."""
     _jobs.clear()
 
 
@@ -122,20 +122,20 @@ async def pump(job: StreamJob, agen: AsyncIterator[Any], provider_error: type[Ex
     keeps arriving and simply waits in RAM.
 
     Normalizes to the same event shapes the endpoint sent before: a plain string
-    delta becomes {"delta": …}, dicts (tool_calls/reasoning/annotations) pass
-    through, the terminal event is {"done": True} or {"error": …}.
+    delta becomes {"delta": ...}, dicts (tool_calls/reasoning/annotations) pass
+    through, the terminal event is {"done": True} or {"error": ...}.
     """
     try:
         async for chunk in agen:
             job.append(chunk if isinstance(chunk, dict) else {"delta": chunk})
         job.append({"done": True})
-    except provider_error as exc:  # provider.ProviderError — injected to avoid a cycle
+    except provider_error as exc:  # provider.ProviderError - injected to avoid a cycle
         job.append({"error": str(exc)})
     except asyncio.CancelledError:
         # Shutdown: mark finished so followers don't hang on a dead job.
         job.append({"error": "stream cancelled"})
         raise
-    except Exception as exc:  # noqa: BLE001 — never leave a job unfinished
+    except Exception as exc:  # noqa: BLE001 - never leave a job unfinished
         logger.exception("stream job %s failed", job.id)
         job.append({"error": f"unexpected stream failure: {exc}"})
     finally:

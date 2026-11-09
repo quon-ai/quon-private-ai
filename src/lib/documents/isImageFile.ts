@@ -1,5 +1,5 @@
 /**
- * "Is this file a photo?" — the one routing decision the upload surfaces
+ * "Is this file a photo?" - the one routing decision the upload surfaces
  * share: photos take the on-device OCR review path (extract.ts cannot read
  * images, and a transcript must be user-checked before it is indexed or
  * attached); everything else goes through extract.ts.

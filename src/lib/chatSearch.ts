@@ -3,16 +3,16 @@
  *
  * Purely lexical and fully client-side: it runs over the already-decrypted
  * in-memory session list from quonStore, so nothing ever leaves the device
- * (zero-knowledge). Deliberately NOT embedding-based — semantic retrieval
+ * (zero-knowledge). Deliberately not embedding-based - semantic retrieval
  * exists for Memory/Documents (rag.ts); someone searching their chat history
  * wants exact recall of a message they remember, not semantic neighbours.
  *
  * Matching semantics: the query is split into whitespace tokens; each token
- * matches as a case-insensitive substring. ALL tokens must appear in the
- * session title, or together within a SINGLE message ("per-message AND" —
+ * matches as a case-insensitive substring. All tokens must appear in the
+ * session title, or together within a SINGLE message ("per-message AND" -
  * precision over recall: "invoice müller" finds the turn about Müller's
  * invoice, not a session that mentions the two words in unrelated turns).
- * Error bubbles are skipped — their text is UI copy, not conversation.
+ * Error bubbles are skipped - their text is UI copy, not conversation.
  *
  * Ranking: title matches first, then most-recently-updated.
  */
@@ -28,7 +28,7 @@ export interface HighlightRange {
 export interface ChatSearchSnippet {
   messageId: number;
   role: "user" | "assistant";
-  /** Short excerpt around the first match ("…" marks truncation). */
+  /** Short excerpt around the first match ("..." marks truncation). */
   snippet: string;
   /** Match positions within `snippet`, sorted and non-overlapping. */
   highlights: HighlightRange[];
@@ -59,8 +59,8 @@ export function tokenizeQuery(query: string): string[] {
 
 /**
  * Lowercase without shifting character offsets. `toLowerCase` can grow a
- * string for a handful of code points (e.g. "İ" → "i̇"), which would misalign
- * highlight ranges against the original text — leave those characters as-is.
+ * string for a handful of code points (e.g. "İ" -> "i̇"), which would misalign
+ * highlight ranges against the original text - leave those characters as-is.
  */
 function lowerAligned(s: string): string {
   const lower = s.toLowerCase();
@@ -120,7 +120,7 @@ function makeSnippet(
 }
 
 /**
- * Search `sessions` for `query`. Pure and synchronous — the whole history
+ * Search `sessions` for `query`. Pure and synchronous - the whole history
  * (30 sessions max, already in memory) is scanned per call; memoize on
  * (sessions, query) at the call site.
  */

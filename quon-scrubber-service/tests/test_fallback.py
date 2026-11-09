@@ -4,15 +4,15 @@ from __future__ import annotations
 
 from fallback import detect_safety_net
 
-# --- Real-document regressions, 2026-08-20 -------------------------------------
-# All four found by an operator testing scanned paperwork locally. Each is a rule
-# that worked on single-line prose and broke on the layout real documents have.
+# --- Real-document regressions -------------------------------------------------
+# All four come from scanned paperwork. Each is a rule that worked on
+# single-line prose and broke on the layout real documents have.
 
 
 def test_labelled_identifier_does_not_run_past_the_line_end():
     """On a form, "\\s" let the value group swallow the newline AND the first letter
     of the next line's label: "Angebots-Nr.: 20240110" captured "20240110\\nK",
-    a span that no longer matches cleanly and is dropped — so the identifier
+    a span that no longer matches cleanly and is dropped - so the identifier
     silently stayed in the clear while the one below it appeared to work."""
     text = "Angebots-Nr.: 20240110\nKunden-Nr.: 10023\nSeite: 1 von 3"
     values = {d["value"] for d in detect_safety_net(text)}
@@ -28,7 +28,7 @@ def test_postcode_city_does_not_match_across_a_line_break():
     text = "Kunden-Nr.: 10023\nSeite: 1 von 3"
     addresses = [d["value"] for d in detect_safety_net(text) if d["type"] == "ADDRESS"]
     assert addresses == [], f"postcode rule crossed a line: {addresses}"
-    # …while a real address on one line still works.
+    # ...while a real address on one line still works.
     ok = [d["value"] for d in detect_safety_net("16540 Hohen Talbach") if d["type"] == "ADDRESS"]
     assert ok == ["16540 Hohen Talbach"]
 
@@ -58,9 +58,9 @@ def test_ocr_split_email_does_not_eat_the_next_sentence():
 
 
 def test_labelled_identifier_beats_a_postcode_guess():
-    """PDF extraction of a two-column form merges the columns onto ONE line:
+    """PDF extraction of a two-column form merges the columns onto one line:
     "Kunden-Nr.: 10023 Seite: 1 von 3". The postcode branch then read "10023
-    Seite" as PLZ+city — mislabelling the customer number AND swallowing the word
+    Seite" as PLZ+city - mislabelling the customer number AND swallowing the word
     "Seite". Making the rules line-local fixed the newline version of this; an
     explicit label must also beat a shape guess on the same line."""
     got = detect_safety_net("Kunden-Nr.: 10023 Seite: 1 von 3")
@@ -70,7 +70,7 @@ def test_labelled_identifier_beats_a_postcode_guess():
 def test_street_line_is_found_via_the_postcode_anchor():
     """The street-suffix list is a vocabulary and German street names run out of
     it: "Am Dünenwald 60" ends in "-wald", so the city line was redacted while the
-    street line survived — a half-removed address. Anchoring on a CONFIRMED
+    street line survived - a half-removed address. Anchoring on a CONFIRMED
     "PLZ Stadt" needs no street vocabulary at all."""
     for text, street in (
         ("Anschrift:\n„Oysterhüs“ Am Dünenwald 60, 18551 Glowe", "Am Dünenwald 60"),
@@ -91,29 +91,27 @@ def test_postcode_anchor_does_not_fire_on_document_furniture():
 
 
 def test_identifier_continuation_does_not_bite_the_next_word():
-    """"10023 S" — the S of "Seite" — was captured as part of the identifier.
+    """"10023 S" - the S of "Seite" - was captured as part of the identifier.
     Real multi-token identifiers must keep working."""
     assert [d["value"] for d in detect_safety_net("Kennzeichen B-XY 1234 wurde erfasst.")] == ["B-XY 1234"]
     assert [d["value"] for d in detect_safety_net("Aktenzeichen 12 O 345/24 liegt vor.")] == ["12 O 345/24"]
 
 
 def test_bare_kvnr_spec_vectors():
-    """The check digit implements GKV Anlage 1 (2023-01-02) — anchored to the
+    """The check digit implements GKV Anlage 1 (2023 revision) - anchored to the
     spec's own two worked examples, not to the synthetic generator, so the
     generator and the validator cannot drift into agreeing by construction."""
     from fallback import kvnr_checksum_ok
 
     assert kvnr_checksum_ok("A000500015")  # Hauptversicherter example, PZ 5
     assert kvnr_checksum_ok("C000500021")  # Familienversicherter example, PZ 1
-    # Every OTHER check digit for the same stem must fail.
+    # Every other check digit for the same stem must fail.
     assert [d for d in range(10) if kvnr_checksum_ok(f"A00050001{d}")] == [5]
     assert [d for d in range(10) if kvnr_checksum_ok(f"C00050002{d}")] == [1]
 
 
 def test_bare_kvnr_unlabelled_caught_invalid_ignored():
-    """The 2026-08-14 roadmap entry left the bare KVNR out of the net because
-    "the model already catches it" — the model was deleted 2026-08-23, and
-    re-measured on 2026-09-04 an unlabelled bare KVNR leaked through the whole
+    """Without this rule an unlabelled bare KVNR leaks through the whole
     pipeline. The checksum is what makes the shape safe to match: a random
     letter+9-digit order number passes 1 time in 10, a real KVNR always."""
     got = [d["value"] for d in detect_safety_net("Auf der Karte steht A000500015, die Karte ist neu.")

@@ -5,8 +5,8 @@ import { isChunkLoadError, isOutdated } from "./appVersion";
 /**
  * The banner this drives is the only thing standing between a deploy and a user
  * who keeps testing yesterday's JavaScript (an installed PWA never reloads on
- * its own). So the rule has to be right in BOTH directions: it must notice a
- * new build, and it must never cry wolf — a permanent "new version" bar on a
+ * its own). So the rule has to be right in both directions: it must notice a
+ * new build, and it must never cry wolf - a permanent "new version" bar on a
  * current app would train the user to ignore it.
  */
 describe("isOutdated", () => {
@@ -19,7 +19,7 @@ describe("isOutdated", () => {
     expect(isOutdated("abc123-m1", "  abc123-m1  ")).toBe(false); // whitespace only
   });
 
-  it("stays quiet when the answer is unusable — a hiccup is not an update", () => {
+  it("stays quiet when the answer is unusable: a hiccup is not an update", () => {
     // Offline, a proxy error page, a truncated body: "don't know" must never
     // render as "outdated", or the bar never goes away.
     for (const bad of [null, undefined, "", "   ", 42, {}, []]) {
@@ -36,7 +36,7 @@ describe("isOutdated", () => {
 
 /**
  * Reported from the photo scanner: "Failed to fetch dynamically imported
- * module: …/assets/ocr-BAbKNXTD.js". That is not a broken scanner — it is an
+ * module: .../assets/ocr-BAbKNXTD.js". That is not a broken scanner - it is an
  * instance that outlived its build, asking for a chunk hash the deploy
  * replaced. Recognising it is what turns an alarming dead end into "reload".
  */
@@ -52,7 +52,7 @@ describe("isChunkLoadError", () => {
   });
 
   it("does not swallow unrelated failures", () => {
-    // These must keep their own message — telling someone to reload when the
+    // These must keep their own message - telling someone to reload when the
     // camera was denied is worse than saying nothing.
     for (const msg of [
       "No readable text found in this photo.",

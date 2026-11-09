@@ -4,7 +4,7 @@ import { ScreenDetectionDocs } from "@/components/quon/ScreenDetectionDocs";
 
 /** `?lang=de|en` lets the demo page hand its chosen language over, so a German
  *  reader does not land on an English page. Anything else falls back to the
- *  page default (English — written for strangers, like /demo). */
+ *  page default (English - written for strangers, like /demo). */
 type DocsSearch = { lang?: "de" | "en" };
 
 export const Route = createFileRoute("/docs/detection")({

@@ -3,14 +3,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { BlobIn, PushResponse } from "./api/syncApi";
 
 /**
- * The cross-device chat loss (reported 2026-08-02: phone and laptop each showed
- * chats the other didn't have, 10 seconds apart).
+ * Cross-device chat loss: phone and laptop each show chats the other does not
+ * have, seconds apart.
  *
- * Root cause: a PUSH response reports the user's latest server seq — including
- * everything OTHER devices wrote since our last pull. The pushing device adopted
- * that as its pull cursor, jumping over blobs it had never fetched. Since the
- * cursor only moves forward, those blobs were never seen again: a chat written
- * on the phone silently never reached the laptop.
+ * Cause: a PUSH response reports the user's latest server seq - including
+ * everything other devices wrote since our last pull. A pushing device that
+ * adopts that as its pull cursor jumps over blobs it has never fetched. Since
+ * the cursor only moves forward, those blobs are never seen again: a chat
+ * written on the phone silently never reaches the laptop.
  *
  * The rule this pins: only a pull that actually APPLIED the changes may move the
  * cursor.
@@ -18,7 +18,7 @@ import type { BlobIn, PushResponse } from "./api/syncApi";
 
 /** Server seq of a blob another device wrote while we were editing. */
 const OTHER_DEVICE_SEQ = 41;
-/** What the server reports after OUR push — already past the other device's blob. */
+/** What the server reports after our push - already past the other device's blob. */
 const LATEST_AFTER_PUSH = 42;
 
 const changesCalledWith: number[] = [];
@@ -120,16 +120,16 @@ describe("collectionSync pull cursor", () => {
     sync.start();
     await tick();
 
-    // We are at the cursor the start-up pull left us with — BEHIND the other
+    // We are at the cursor the start-up pull left us with - behind the other
     // device's blob, because it landed after we last looked.
     disk.set("quon_sync_seq_chat_v2", "0");
     applied.length = 0;
 
-    // Our own local edit → debounced push → the reconciling pull.
+    // Our own local edit -> debounced push -> the reconciling pull.
     onChange({ id: "mine", updatedAt: 2000 });
     await new Promise((r) => setTimeout(r, 30));
 
-    // THE GUARANTEE: the reconciling pull asked from BEFORE the other device's
+    // The guarantee: the reconciling pull asked from before the other device's
     // blob, and applied it. Pre-fix the push response (seq 42) had already
     // become the cursor, so this pull asked from 42 and the blob was lost.
     expect(applied.map((i) => i.id)).toContain("from-other-device");

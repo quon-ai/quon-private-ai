@@ -1,26 +1,26 @@
 /**
- * Auto-Memory v1 — mine chat sessions for durable facts, zero-knowledge.
+ * Auto-Memory v1 - mine chat sessions for durable facts, zero-knowledge.
  *
  * The manual "Learn from chats" sweep (LearnFromChatsButton) walks the chat
  * sessions in scope (a project, or the global pool) and, per session:
  *
  *   1. builds a compact plaintext transcript of the messages **newer than the
- *      per-session cursor** — entirely client-side, from the local store;
+ *      per-session cursor** - entirely client-side, from the local store;
  *   2. scrubs it via /scrub (indexed placeholders, honoring the user's
- *      always/never-redact lists) — the relay only ever sees placeholders;
+ *      always/never-redact lists) - the relay only ever sees placeholders;
  *   3. asks the selected chat model (non-streaming relay, `protected: true`)
  *      to extract durable facts as strict JSON, preserving the placeholders;
- *   4. re-hydrates the placeholders LOCALLY with the /scrub entity map — real
+ *   4. re-hydrates the placeholders locally with the /scrub entity map - real
  *      values never leave the device;
- *   5. advances the session's cursor — but ONLY on success. A scrub, relay or
+ *   5. advances the session's cursor - but only on success. A scrub, relay or
  *      parse failure leaves the cursor untouched, so the session is retried on
  *      the next run. Failures never throw into the UI; they are counted and
  *      surfaced softly.
  *
  * Candidates are then deduplicated on-device against the SAME-SCOPE memory
- * (embedding cosine — see the SIM_* thresholds): known facts are dropped,
+ * (embedding cosine - see the SIM_* thresholds): known facts are dropped,
  * near-matches become "update" suggestions, the rest "create". Everything lands
- * in the review queue (memorySuggestionStore) — nothing is written to Memory
+ * in the review queue (memorySuggestionStore) - nothing is written to Memory
  * without explicit user approval in the Memory screen.
  */
 
@@ -50,30 +50,30 @@ import { synonymsOf } from "./search/synonyms";
 import { cosine } from "./search/vector";
 
 // --- dedup thresholds (cosine similarity against same-scope memory) ---------
-/** At or above: the fact is already known — dropped (or, when key-compatible,
- *  auto-merged — see `classifyCandidate`'s "merge" mode). */
+/** At or above: the fact is already known - dropped (or, when key-compatible,
+ *  auto-merged - see `classifyCandidate`'s "merge" mode). */
 export const SIM_SKIP = 0.92;
 /** At or above (but below SIM_SKIP): suggested as an "update" of the match. */
 export const SIM_UPDATE = 0.78;
 /**
- * Redundancy band — MEASURED, not guessed (2026-08-10, real German fact pairs
- * through this very embedder; numbers in HANDOFF §1):
+ * Redundancy band, measured on real German fact pairs through this very
+ * embedder, not guessed:
  *
  *   0.97  "arbeitet bei Elbwerke"     ~ "ist bei Elbwerke angestellt"   same fact
  *   0.95  "wohnt in Berlin"          ~ "Wohnort ist Berlin"           same fact
- *   0.86  "Mietvertrag bis 31.12.26" ~ "Mietverhältnis endet 31. Dez" SAME FACT
+ *   0.86  "Mietvertrag bis 31.12.26" ~ "Mietverhältnis endet 31. Dez" same FACT
  *   0.85  "Elbwerke als Product Owner"~ "arbeitet bei Elbwerke"         overlapping
  *   0.64  "Termin am Dienstag"       ~ "Termin am Donnerstag"         CONTRADICTION
  *   0.52  "arbeitet bei Elbwerke"     ~ "arbeitet bei Siemens"         CONTRADICTION
  *   0.00  unrelated facts
  *
  * Two lessons the numbers force:
- * 1. SIM_SKIP (0.92) misses genuine restatements — the 0.86 pair is one fact
- *    said twice, and the user reported exactly that ("teilredundant").
- * 2. CONTRADICTIONS SIT *BELOW* REDUNDANCY (0.52–0.64). Similarity can
+ * 1. SIM_SKIP (0.92) misses genuine restatements - the 0.86 pair is one fact
+ *    said twice, which the user sees as "teilredundant".
+ * 2. CONTRADICTIONS SIT *below* REDUNDANCY (0.52–0.64). Similarity can
  *    therefore never detect them, and lowering a merge threshold toward them
  *    would start merging facts that disagree. Contradictions are caught by the
- *    KEY mechanism instead (same key, different text → findMemoryConflicts).
+ *    KEY mechanism instead (same key, different text -> findMemoryConflicts).
  *
  * So 0.82 is a reporting/consolidation threshold, comfortably above the
  * contradiction band and below real restatements. Nothing is auto-destroyed at
@@ -90,22 +90,22 @@ export function normalizeKey(key: string | undefined): string {
   return (key ?? "").trim().toLowerCase();
 }
 
-/** True when two NORMALIZED keys should be treated as naming the SAME fact
- *  slot — either literally equal, or linked via the curated synonym clusters
+/** True when two NORMALIZED keys should be treated as naming the same fact
+ *  slot - either literally equal, or linked via the curated synonym clusters
  *  in `./search/synonyms` (e.g. "adresse"/"anschrift"). Both empty (no key at
- *  all) is NOT a match — there's no slot identity to compare. Synonym lookup
+ *  all) is not a match - there's no slot identity to compare. Synonym lookup
  *  is a plain single-word map lookup (see `synonymsOf`), so this stays
- *  precision-safe — no fuzzy/partial matching. */
+ *  precision-safe - no fuzzy/partial matching. */
 export function keysCompatible(a: string, b: string): boolean {
   if (!a || !b) return false;
   if (a === b) return true;
   return synonymsOf(a).includes(b) || synonymsOf(b).includes(a);
 }
 
-/** Sessions with fewer NEW user-authored characters than this are skipped (no
- *  relay call). Their cursor is not advanced — the text still counts next run.
+/** Sessions with fewer new user-authored characters than this are skipped (no
+ *  relay call). Their cursor is not advanced - the text still counts next run.
  *  Calibrated to admit a single fact-bearing sentence (e.g. "Ich nehme 5mg
- *  THC/CBD jede 2. Nacht wegen Schlafproblemen" ≈ 80–110 chars) while still
+ *  THC/CBD jede 2. Nacht wegen Schlafproblemen" ~ 80–110 chars) while still
  *  skipping throwaway one-liners ("ok danke", "und weiter?"). Was 200, which
  *  silently dropped short but valuable health/finance facts (reported). */
 export const MIN_NEW_USER_CHARS = 80;
@@ -142,14 +142,14 @@ Rules:
 export interface TranscriptResult {
   /** "User:"/"Assistant:" lines, double-newline separated; "" when nothing new. */
   text: string;
-  /** Highest message id included — the cursor value on success; null = nothing new. */
+  /** Highest message id included - the cursor value on success; null = nothing new. */
   lastId: number | null;
   /** New user-authored characters (drives the triviality gate). */
   newUserChars: number;
 }
 
 /** Build the compact plaintext transcript of the messages newer than `afterId`
- *  (the persisted cursor). Error bubbles are skipped — they are UI noise, not
+ *  (the persisted cursor). Error bubbles are skipped - they are UI noise, not
  *  conversation. Exported for tests. */
 export function buildTranscript(messages: StoredChatMessage[], afterId?: number): TranscriptResult {
   let lastId: number | null = null;
@@ -175,12 +175,12 @@ export function buildTranscript(messages: StoredChatMessage[], afterId?: number)
 
 /**
  * Parse the model's reply into candidates. Fail-safe: returns null when the
- * reply is not a JSON array (the caller then aborts that session's sweep WITHOUT
+ * reply is not a JSON array (the caller then aborts that session's sweep without
  * advancing its cursor). Tolerates code fences / surrounding prose; entries
  * without a usable `text` are dropped rather than failing the whole reply.
  *
  * The prompt requires `key` for kind:"fact", but a sloppy model reply may omit
- * it anyway — rather than hard-rejecting that entry (losing a real memory), it
+ * it anyway - rather than hard-rejecting that entry (losing a real memory), it
  * is downgraded to kind:"note" (key is optional for notes), so it still reaches
  * the review queue as a usable suggestion.
  */
@@ -213,7 +213,7 @@ export function parseExtractionReply(raw: string): ExtractedCandidate[] | null {
           .filter(Boolean)
           .slice(0, 6)
       : [];
-    // A fact without a key is downgraded to a note rather than dropped — a
+    // A fact without a key is downgraded to a note rather than dropped - a
     // sloppy model reply should still yield a usable (if unlabeled) suggestion.
     const kind: MemoryKind = rec.kind === "note" ? "note" : key ? "fact" : "note";
     out.push({ kind, key, text, tags });
@@ -226,29 +226,29 @@ export type DedupDecision =
   | { mode: "update"; targetId: string }
   | { mode: "skip" }
   /** Exact-dup + key-compatible: the caller auto-executes (create the
-   *  candidate, supersede `targetId`) WITHOUT the review queue — see
+   *  candidate, supersede `targetId`) without the review queue - see
    *  `dedupAndQueue`'s "merge" branch. */
   | { mode: "merge"; targetId: string };
 
 /**
  * Classify a candidate against existing ACTIVE same-scope memory (already
  * filtered to the candidate's scope + the current embedding model + active
- * status by the caller — see `isActiveMemory`).
+ * status by the caller - see `isActiveMemory`).
  *
- * Key-aware path (P5, the highest-leverage lifecycle fix — see
+ * Key-aware path (P5, the highest-leverage lifecycle fix - see
  * memory-lifecycle-p5.md §"Sweep key-awareness"): when the candidate carries
  * a `key` that normalizes/synonym-matches an existing item's key, that item
- * is almost certainly the SAME fact slot, so it is forced into "update" (or
- * "merge", if the text is ALSO near-identical) REGARDLESS of cosine. This is
- * what catches the contradiction a pure vector comparison misses — e.g.
+ * is almost certainly the same fact slot, so it is forced into "update" (or
+ * "merge", if the text is also near-identical) REGARDLESS of cosine. This is
+ * what catches the contradiction a pure vector comparison misses - e.g.
  * "Adresse: Hamburg" (existing) vs. a freshly extracted "Adresse: Berlin"
- * (candidate) can sit at LOW cosine (different city names) yet must never
+ * (candidate) can sit at low cosine (different city names) yet must never
  * both be injected as memory.
  *
  * Falls back to the original cosine-only classification when the candidate
- * has no key, or no existing item shares it: best cosine ≥ SIM_SKIP → skip
- * (known duplicate, no key info to merge against); ≥ SIM_UPDATE → update of
- * the best match; else (or nothing comparable) → create.
+ * has no key, or no existing item shares it: best cosine >= SIM_SKIP -> skip
+ * (known duplicate, no key info to merge against); >= SIM_UPDATE -> update of
+ * the best match; else (or nothing comparable) -> create.
  */
 export function classifyCandidate(
   embedding: number[],
@@ -306,7 +306,7 @@ export function classifyCandidate(
 export interface SweepOptions {
   /** undefined = global chats (no projectId); a project id = that project only. */
   scope: RagScope;
-  /** Provider model slug + connection — resolved by the caller the same way the
+  /** Provider model slug + connection - resolved by the caller the same way the
    *  chat composer resolves its selected model. */
   model: string;
   connectionId?: string;
@@ -319,21 +319,21 @@ export interface SweepOptions {
 export interface SweepResult {
   /** Sessions successfully analyzed (cursor advanced). */
   analyzed: number;
-  /** Sessions whose scrub/relay/parse failed (cursor NOT advanced — retried). */
+  /** Sessions whose scrub/relay/parse failed (cursor not advanced - retried). */
   failed: number;
   /** Suggestions added to the review queue after dedup. */
   suggestions: number;
-  /** Candidates auto-merged directly into Memory WITHOUT the review queue
-   *  (exact-dup + key-compatible — see `classifyCandidate`'s "merge" mode).
+  /** Candidates auto-merged directly into Memory without the review queue
+   *  (exact-dup + key-compatible - see `classifyCandidate`'s "merge" mode).
    *  Reversible: the older item is superseded, never deleted. */
   autoMerged: number;
 }
 
-/** How many in-scope chat sessions have enough NEW user text (past their sweep
- *  cursor) to be worth a "Learn from chats" run — computed purely locally from
- *  the store, NO relay/scrub. Mirrors the exact pending predicate runMemorySweep
+/** How many in-scope chat sessions have enough new user text (past their sweep
+ *  cursor) to be worth a "Learn from chats" run - computed purely locally from
+ *  the store, no relay/scrub. Mirrors the exact pending predicate runMemorySweep
  *  uses, so the count and what a run would actually process can't diverge. Drives
- *  the ambient "N new" discovery badge (learning itself stays one explicit tap —
+ *  the ambient "N new" discovery badge (learning itself stays one explicit tap -
  *  auto-relaying chat content in the background would be a surprise cost on the
  *  user's own AI budget and a privacy default we don't take). */
 export function pendingSweepCount(scope: RagScope): number {
@@ -348,7 +348,7 @@ export function pendingSweepCount(scope: RagScope): number {
 }
 
 /** Run the sweep over every in-scope session with new content. Never throws for
- *  per-session problems — failures are counted in the result instead. */
+ *  per-session problems - failures are counted in the result instead. */
 export async function runMemorySweep(opts: SweepOptions): Promise<SweepResult> {
   const ok = inScope(opts.scope);
   const pending: Array<{ sessionId: string; text: string; lastId: number }> = [];
@@ -369,7 +369,7 @@ export async function runMemorySweep(opts: SweepOptions): Promise<SweepResult> {
     const { sessionId, text, lastId } = pending[i];
     opts.onProgress?.(tr("memory.sweep.analyzing", { n: i + 1, total: pending.length }));
     try {
-      // 1) Scrub on-device rules apply BEFORE anything reaches the provider.
+      // 1) Scrub on-device rules apply before anything reaches the provider.
       const scrub = await scrubText(text, {
         placeholder_style: "indexed",
         always_redact: opts.alwaysRedact,
@@ -383,10 +383,10 @@ export async function runMemorySweep(opts: SweepOptions): Promise<SweepResult> {
       const reply = await chatComplete(turns, opts.model, true, opts.connectionId);
       const parsed = parseExtractionReply(reply.answer);
       if (parsed === null) {
-        failed++; // malformed reply — cursor untouched, retried next run
+        failed++; // malformed reply - cursor untouched, retried next run
         continue;
       }
-      // 3) Re-hydrate locally: placeholder → original value, device-only.
+      // 3) Re-hydrate locally: placeholder -> original value, device-only.
       const map = Object.fromEntries(scrub.entities.map((e) => [e.placeholder, e.value]));
       for (const c of parsed) {
         candidates.push({
@@ -401,7 +401,7 @@ export async function runMemorySweep(opts: SweepOptions): Promise<SweepResult> {
       setSweepCursor(sessionId, lastId);
       analyzed++;
     } catch {
-      failed++; // scrub or relay failure — fail soft, cursor untouched
+      failed++; // scrub or relay failure - fail soft, cursor untouched
     }
   }
 
@@ -420,9 +420,9 @@ export interface ExtractFromTextOptions {
 
 /**
  * Distill durable facts from arbitrary pasted text (the Memory screen's
- * large-paste triage) — the same zero-knowledge pipeline as the chat sweep:
- * scrub on-device → extraction over placeholders only → local re-hydration →
- * dedup against same-scope memory → review queue. Returns how many suggestions
+ * large-paste triage) - the same zero-knowledge pipeline as the chat sweep:
+ * scrub on-device -> extraction over placeholders only -> local re-hydration ->
+ * dedup against same-scope memory -> review queue. Returns how many suggestions
  * were queued. Throws on scrub/relay/parse failure (the dialog surfaces it and
  * the user can retry or save the text as-is instead).
  */
@@ -454,13 +454,13 @@ export async function extractFromText(text: string, opts: ExtractFromTextOptions
 export interface DedupAndQueueResult {
   /** Suggestions added to the review queue. */
   suggestions: number;
-  /** Candidates auto-executed (create + supersede) WITHOUT the review queue —
+  /** Candidates auto-executed (create + supersede) without the review queue -
    *  see `classifyCandidate`'s "merge" mode. */
   autoMerged: number;
 }
 
 /** Dedup candidates against same-scope ACTIVE memory (+ the pending queue and
- *  each other) and add the survivors to the review queue — EXCEPT an exact-dup
+ *  each other) and add the survivors to the review queue - EXCEPT an exact-dup
  *  + key-compatible candidate (`classifyCandidate`'s "merge" mode), which is
  *  auto-executed directly (see `autoMergeCandidate`) and never touches the
  *  queue. `sessionId` is absent for candidates distilled from pasted text. */
@@ -491,7 +491,7 @@ export async function dedupAndQueue(
   try {
     vectors = await embedBatch(candidates.map((c) => c.candidate.text));
   } catch {
-    // Embedder unavailable: still queue (exact-dup-filtered) as "create" — the
+    // Embedder unavailable: still queue (exact-dup-filtered) as "create" - the
     // review step is the safety net, and dropping the sweep's output is worse.
   }
 
@@ -514,19 +514,19 @@ export async function dedupAndQueue(
       if (decision.mode === "merge") {
         // Exact-dup + key-compatible: auto-execute, bypassing the review
         // queue entirely. The candidate (freshly extracted "now") is
-        // definitionally the newer side — keep it, supersede the matched
+        // definitionally the newer side - keep it, supersede the matched
         // existing item (reversible via reviveMemoryItem, never deleted).
         autoMergeCandidate(candidate, decision.targetId, scope, sessionId, docId, vec);
         autoMerged++;
         continue;
       }
 
-      // Near-duplicates the model produced within THIS run. Both sides come
+      // Near-duplicates the model produced within this run. Both sides come
       // from the same source text in the same pass, so consolidating is safe
-      // without asking: keep the MORE INFORMATIVE (longer) variant, so
+      // without asking: keep the more INFORMATIVE (longer) variant, so
       // "arbeitet bei Elbwerke als Product Owner" survives against the bare
-      // "arbeitet bei Elbwerke" (measured 0.85 — below the old 0.92 gate, which
-      // is why both used to be queued).
+      // "arbeitet bei Elbwerke" (measured 0.85 - below the 0.92 SIM_SKIP gate,
+      // so without this step both would be queued).
       const dupIdx = acceptedVecs.findIndex((av) => cosine(vec, av) >= SIM_REDUNDANT);
       if (dupIdx !== -1) {
         if (candidate.text.trim().length > accepted[dupIdx].text.trim().length) {
@@ -601,14 +601,14 @@ function autoMergeCandidate(
 // --- conflicts, near-duplicates, the "attic" (P5) ---------------------------
 
 /** An active same-scope pair sharing a normalized/synonym-linked key but with
- *  DIFFERENT text — an unresolved contradiction (e.g. "Adresse: Hamburg" vs.
+ *  different text - an unresolved contradiction (e.g. "Adresse: Hamburg" vs.
  *  "Adresse: Berlin"), surfaced for a future "Konflikte" UI. */
 export interface KeyConflictPair {
   a: MemoryItem;
   b: MemoryItem;
 }
 
-/** An active same-scope pair whose embeddings are near-identical (cosine ≥
+/** An active same-scope pair whose embeddings are near-identical (cosine >=
  *  SIM_SKIP), surfaced for a future merge-suggestion UI. */
 export interface NearDupPair {
   a: MemoryItem;
@@ -622,15 +622,15 @@ export interface MemoryConflicts {
 }
 
 /**
- * Find unresolved conflicts among ACTIVE same-scope memory — PURE, no
+ * Find unresolved conflicts among ACTIVE same-scope memory - PURE, no
  * network, no mutation (see `autoMergeExactDuplicates` for the executing
  * counterpart). Two independent signals:
  *
  *   - `keyConflicts`: grouped by normalized/synonym-linked key (O(N) grouping
- *     + only within-group pairs compared — cheap even with many items), then
+ *     + only within-group pairs compared - cheap even with many items), then
  *     any two group members with different text are a conflict.
- *   - `nearDuplicates`: a pairwise cosine pass over ALL active, currently-
- *     embedded items (no new embedding calls — just dot products over
+ *   - `nearDuplicates`: a pairwise cosine pass over all active, currently-
+ *     embedded items (no new embedding calls - just dot products over
  *     already-cached vectors, cheap even at O(N²) for the current item
  *     counts this product runs at).
  */
@@ -680,7 +680,7 @@ export function findMemoryConflicts(scope: RagScope): MemoryConflicts {
       // Report from SIM_REDUNDANT so genuine restatements below 0.92 become
       // visible in maintenance (measured: a 0.86 pair is one fact said twice).
       // autoMergeExactDuplicates deliberately re-checks SIM_SKIP before it
-      // supersedes anything — surfacing is not the same as auto-destroying.
+      // supersedes anything - surfacing is not the same as auto-destroying.
       if (score >= SIM_REDUNDANT) nearDuplicates.push({ a, b, cosineScore: score });
     }
   }
@@ -689,20 +689,20 @@ export function findMemoryConflicts(scope: RagScope): MemoryConflicts {
 }
 
 /**
- * The near-duplicate pairs worth SHOWING a human — `nearDuplicates` minus every
+ * The near-duplicate pairs worth SHOWING a human - `nearDuplicates` minus every
  * pair that is already a key conflict.
  *
  * Both signals fire on the same pair all the time: two facts under one key
  * usually also read alike ("Wohnort: Hamburg, Elbchaussee 1" vs "Wohnort:
  * Berlin, Kastanienallee 5" measured at 0.87). Listed twice, the maintenance
- * screen asks the same question in two places with the same buttons — and the
+ * screen asks the same question in two places with the same buttons - and the
  * key conflict is the better question of the two, because a shared key is
  * evidence these are one slot, where similarity is only evidence they sound
  * alike.
  *
- * Deliberately NOT applied inside findMemoryConflicts: `autoMergeExactDuplicates`
+ * Deliberately not applied inside findMemoryConflicts: `autoMergeExactDuplicates`
  * consumes the raw `nearDuplicates` and merges exactly the same-key-different-
- * text pairs this filter removes — filtering at the source would silently turn
+ * text pairs this filter removes - filtering at the source would silently turn
  * auto-merge off.
  */
 export function nearDuplicatesForReview(conflicts: MemoryConflicts): NearDupPair[] {
@@ -712,11 +712,11 @@ export function nearDuplicatesForReview(conflicts: MemoryConflicts): NearDupPair
 
 /**
  * Maintenance-scan auto-merge: for pairs `findMemoryConflicts` flags as near-
- * duplicates (cosine ≥ SIM_SKIP) AND normalized-key-compatible, keep the
- * NEWER (by `updatedAt`) item and supersede the older — deterministic,
+ * duplicates (cosine >= SIM_SKIP) AND normalized-key-compatible, keep the
+ * NEWER (by `updatedAt`) item and supersede the older - deterministic,
  * reversible, no review queue (mirrors the sweep-time "merge" mode in
- * `classifyCandidate`, but for two items that ALREADY both exist). Items
- * without a key (or without a comparable key) are left alone — no key info
+ * `classifyCandidate`, but for two items that already both exist). Items
+ * without a key (or without a comparable key) are left alone - no key info
  * means no confirmed "same slot", so no auto-action. Returns how many pairs
  * were merged. Safe to call repeatedly; a pair already resolved by an earlier
  * merge in the same pass (one side no longer active) is skipped.
@@ -748,9 +748,9 @@ export function autoMergeExactDuplicates(scope: RagScope): number {
 export const ATTIC_AGE_MS = 365 * 24 * 60 * 60 * 1000;
 
 /**
- * Active, non-pinned, same-scope items that haven't been touched — edited,
- * explicitly re-confirmed, OR actually retrieved into a chat's context — in
- * over `ATTIC_AGE_MS`. Pure read; NEVER auto-archives or auto-deletes (the
+ * Active, non-pinned, same-scope items that haven't been touched - edited,
+ * explicitly re-confirmed, OR actually retrieved into a chat's context - in
+ * over `ATTIC_AGE_MS`. Pure read; never auto-archives or auto-deletes (the
  * P5 plan is explicit: decay is a policy choice the user makes, one item at
  * a time, in the future "attic" review UI).
  */

@@ -28,7 +28,7 @@ export function DocumentPicker({
   );
   const [selected, setSelected] = useState<string[]>([]);
 
-  // A reopened picker starts empty — the last message's choice must not carry over.
+  // A reopened picker starts empty - the last message's choice must not carry over.
   useEffect(() => {
     if (open) setSelected([]);
   }, [open]);

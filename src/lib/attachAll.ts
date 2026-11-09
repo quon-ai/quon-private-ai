@@ -3,7 +3,7 @@
  *  whole project's files in a single message.
  *
  *  Budget is distributed fairly ("water-filling"): short documents keep their full
- *  text, and the space they don't need is redistributed to the longer ones — so a
+ *  text, and the space they don't need is redistributed to the longer ones - so a
  *  two-line note never steals room from the 30-page contract next to it.
  */
 

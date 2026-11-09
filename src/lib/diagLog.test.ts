@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { clearDiagLog, diagAppend, getDiagReport } from "./diagLog";
 
-/** Minimal localStorage for the node test env (the module writes synchronously —
+/** Minimal localStorage for the node test env (the module writes synchronously -
  *  that synchronous write is the point: it must survive a process crash). */
 function fakeStorage(): Storage {
   const map = new Map<string, string>();

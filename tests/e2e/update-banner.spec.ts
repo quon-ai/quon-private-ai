@@ -5,12 +5,12 @@ import { login, sharedCreds } from "./helpers/account";
 /**
  * The banner that closes the gap every deploy leaves: a running instance keeps
  * the JavaScript it loaded, and an installed PWA is never reloaded just because
- * we deployed — so the user keeps testing the old build. That once produced a
+ * we deployed - so the user keeps testing the old build. That once produced a
  * bug report for a feature that was already live.
  *
  * Hermetic: /version.json is route-mocked to report a build that isn't the one
  * running. It must never reload on its own (a surprise reload would discard a
- * half-typed message) — the user gets the choice.
+ * half-typed message) - the user gets the choice.
  */
 test("a newer deployed build offers a reload, and only reloads when asked", async ({ page }) => {
   await page.route("**/version.json", (route) =>
@@ -42,7 +42,7 @@ test("a newer deployed build offers a reload, and only reloads when asked", asyn
   });
 });
 
-/** The current build must NOT nag — a permanent bar would train the user to
+/** The current build must not nag - a permanent bar would train the user to
  *  ignore it, which defeats the entire point. */
 test("a matching deployed build shows no banner", async ({ page }) => {
   await login(page, sharedCreds());

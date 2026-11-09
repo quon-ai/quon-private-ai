@@ -16,11 +16,11 @@ const msgs: StoredChatMessage[] = [{ id: 1, role: "user", text: "hi" }];
 
 beforeEach(() => clearChatHistory());
 
-describe("chat ↔ project binding", () => {
+describe("chat <-> project binding", () => {
   it("binds projectId on first save and carries it forward across background saves", () => {
     saveChatSession("c1", msgs, { bump: true, projectId: "p1" });
     expect(getChatSession("c1")?.projectId).toBe("p1");
-    // A background streaming save with no projectId must NOT drop the binding.
+    // A background streaming save with no projectId must not drop the binding.
     const more: StoredChatMessage[] = [...msgs, { id: 2, role: "assistant", text: "yo" }];
     saveChatSession("c1", more, { bump: false });
     expect(getChatSession("c1")?.projectId).toBe("p1");
@@ -74,7 +74,7 @@ describe("chat ↔ project binding", () => {
       updatedAt: 2,
     });
     expect(revived.messages[2]?.unfiltered).toBe(true);
-    // A normal protected/redacted message must NOT be mistaken for an unfiltered one.
+    // A normal protected/redacted message must not be mistaken for an unfiltered one.
     expect(revived.messages[0]?.unfiltered).toBeUndefined();
   });
 });
@@ -87,7 +87,7 @@ describe("resetChatHistory (logout / account-switch local wipe)", () => {
     expect(getAllSessions()).toHaveLength(0);
   });
 
-  it("does NOT fire delete listeners — logout must wipe locally, never tombstone the server", () => {
+  it("does not fire delete listeners: logout must wipe locally, never tombstone the server", () => {
     saveChatSession("c1", msgs);
     const deletes: string[][] = [];
     const off = onSessionDelete((ids) => deletes.push(ids));

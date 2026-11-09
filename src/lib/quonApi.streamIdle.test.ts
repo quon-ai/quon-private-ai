@@ -6,9 +6,9 @@ import { chatStream, STREAM_IDLE_MS, StreamIdleError } from "./quonApi";
 import { isTransportFailure } from "./streamResume";
 
 /**
- * Feedback #85: „Bleibt einfach hängen bei Antwort wird erstellt" — a stream
- * that stays open but delivers nothing must be cut after three missed server
- * heartbeats and handed to the resume path, not wait forever.
+ * „Bleibt einfach hängen bei Antwort wird erstellt": a stream that stays open
+ * but delivers nothing must be cut after three missed server heartbeats and
+ * handed to the resume path, not wait forever.
  */
 afterEach(() => {
   vi.useRealTimers();
@@ -20,7 +20,7 @@ function silentStream(prefix: string, cancelled: { value: boolean }): Response {
   const body = new ReadableStream<Uint8Array>({
     start(controller) {
       if (prefix) controller.enqueue(new TextEncoder().encode(prefix));
-      // …and then nothing, ever.
+      // ...and then nothing, ever.
     },
     cancel() {
       cancelled.value = true;
@@ -29,7 +29,7 @@ function silentStream(prefix: string, cancelled: { value: boolean }): Response {
   return new Response(body, { status: 200, headers: { "content-type": "text/event-stream" } });
 }
 
-describe("chatStream — idle watchdog", () => {
+describe("chatStream: idle watchdog", () => {
   it("cuts a silent leg after STREAM_IDLE_MS as a transport failure (resumable), keeping the offset", async () => {
     const cancelled = { value: false };
     provideHttp({
@@ -71,14 +71,14 @@ describe("chatStream — idle watchdog", () => {
     await vi.advanceTimersByTimeAsync(2);
     const err = await settled;
     expect(err).toBeInstanceOf(StreamIdleError);
-    expect(isTransportFailure(err, false)).toBe(true); // ⇒ resume at `applied`
+    expect(isTransportFailure(err, false)).toBe(true); // => resume at `applied`
     expect(cancelled.value).toBe(true);
     expect(jobId).toBe("j85");
     expect(applied).toBe(1);
     expect(deltas).toEqual(["Hal"]);
   });
 
-  it("a heartbeat comment counts as life — the clock restarts on any bytes", async () => {
+  it("a heartbeat comment counts as life: the clock restarts on any bytes", async () => {
     let controller!: ReadableStreamDefaultController<Uint8Array>;
     const body = new ReadableStream<Uint8Array>({
       start(c) {
@@ -104,6 +104,6 @@ describe("chatStream — idle watchdog", () => {
     controller.enqueue(new TextEncoder().encode(`data: {"done":true}\n\n`));
     controller.close();
     const result = await settled;
-    expect(result).toEqual({ terminal: true }); // 4 × 55 s of silence, never cut
+    expect(result).toEqual({ terminal: true }); // 4 x 55 s of silence, never cut
   });
 });

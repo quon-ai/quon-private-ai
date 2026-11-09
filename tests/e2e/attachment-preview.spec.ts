@@ -3,15 +3,15 @@ import { test, expect, type Locator } from "@playwright/test";
 import { clickSend, login, openChat, reviewCreds, sharedCreds } from "./helpers/account";
 
 /**
- * Issue #72: "im Chat bitte auch das PDF-Preview zum manuellen Prüfen und
- * Schwärzen" — before a staged attachment leaves the device, the user can
- * open it in the real viewer from the composer chip (Filter mode, not just
- * Review), see what the filter finds, and redact by hand.
+ * "Im Chat bitte auch das PDF-Preview zum manuellen Prüfen und Schwärzen":
+ * before a staged attachment leaves the device, the user can open it in the
+ * real viewer from the composer chip (Filter mode, not just Review), see what
+ * the filter finds, and redact by hand.
  *
  * A fresh upload has no library DocItem, so a redaction made there is
- * PER-SEND: it must ride into THIS send's enforced `always_redact` (verified
+ * PER-SEND: it must ride into this send's enforced `always_redact` (verified
  * by scrubText) and the wire must not carry the value. Both are asserted at
- * the request boundary — what actually left, not what the UI claimed.
+ * the request boundary - what actually left, not what the UI claimed.
  *
  * Synthetic value: a made-up case code, not personal data.
  */
@@ -71,16 +71,16 @@ test("a hand-redaction in the staged attachment's preview is enforced on that se
   const staged = page.getByTestId("staged-attachment");
   await expect(staged).toContainText("notiz.txt", { timeout: 60_000 });
 
-  // The chip opens the REAL viewer — in Filter mode, before any send.
+  // The chip opens the real viewer - in Filter mode, before any send.
   await page.getByTestId("attachment-preview").click();
   const viewer = page.getByRole("dialog").filter({ hasText: "notiz.txt" });
   await expect(viewer).toBeVisible({ timeout: 15_000 });
-  // …and says up front what a redaction here is worth: this message only.
+  // ...and says up front what a redaction here is worth: this message only.
   await expect(viewer.getByTestId("attachment-preview-hint")).toBeVisible();
   await expect(viewer.getByText(new RegExp(SECRET))).toBeVisible();
 
   await selectInside(viewer, SECRET);
-  // The button promises the SEND scope, not "always" — a fresh upload has no
+  // The button promises the SEND scope, not "always" - a fresh upload has no
   // document to save on, and the copy must not claim otherwise.
   await page
     .getByRole("button", { name: /In dieser Nachricht schwärzen|Redact in this message/i })
@@ -96,7 +96,7 @@ test("a hand-redaction in the staged attachment's preview is enforced on that se
   await clickSend(page);
   await expect(page.getByText("Alles klar.")).toBeVisible({ timeout: 60_000 });
 
-  // The term reached the scrubber as an ENFORCED always-redact entry…
+  // The term reached the scrubber as an ENFORCED always-redact entry...
   // (`/scrub` carries its options nested: `{ text, options: { always_redact } }`.)
   const enforced = scrubBodies
     .map((b) => {
@@ -109,7 +109,7 @@ test("a hand-redaction in the staged attachment's preview is enforced on that se
     .filter((b) => (b.options?.always_redact ?? []).includes(SECRET));
   expect(scrubBodies.length).toBeGreaterThan(0);
   expect(enforced.length).toBeGreaterThan(0);
-  // …and the wire is clean.
+  // ...and the wire is clean.
   expect(streamBody.length).toBeGreaterThan(0);
   expect(streamBody).not.toContain(SECRET);
 });
@@ -125,7 +125,7 @@ test("a freshly uploaded PDF previews as rendered pages, not just text", async (
   await page.getByTestId("attachment-preview").click();
   const viewer = page.getByRole("dialog").filter({ hasText: "sample.pdf" });
   await expect(viewer).toBeVisible({ timeout: 15_000 });
-  // The Original/Text toggle only exists when the viewer HAS the bytes — the
+  // The Original/Text toggle only exists when the viewer has the bytes - the
   // proof that the composer kept them for a file that has no library item.
   await expect(viewer.getByRole("button", { name: "Original", exact: true })).toBeVisible();
   await expect(viewer.locator("canvas").first()).toBeVisible({ timeout: 30_000 });
@@ -136,11 +136,11 @@ test("a freshly uploaded PDF previews as rendered pages, not just text", async (
 });
 
 /**
- * Review mode, same ad-hoc upload: "Original ansehen & schwärzen" used to be
- * offered only for a single library document. Now every attachment opens, and
- * a per-send redaction chosen in the viewer must be folded into the Review
- * panel's items on close — the attachment's scrub already ran, so a term that
- * only reached `always_redact` would bind nothing on THIS send.
+ * Review mode, same ad-hoc upload: "Original ansehen & schwärzen" opens every
+ * attachment, not only a single library document, and a per-send redaction
+ * chosen in the viewer must be folded into the Review panel's items on close -
+ * the attachment's scrub already ran, so a term that only reached
+ * `always_redact` would bind nothing on this send.
  *
  * Own account (reviewCreds), like document-redact.spec.ts: a Review flag left
  * on the shared account stalls every direct-send spec at the approval panel.

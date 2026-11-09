@@ -6,11 +6,11 @@ as a 409, not crash into a 500.
 clash SELECT and the UPDATE another account can take the target address, so the
 UPDATE hits the ``UNIQUE(users.email)`` constraint. That must be caught and
 returned as the same 409 the (non-racing) clash check already returns, not an
-uncaught ``sqlite3.IntegrityError`` → HTTP 500.
+uncaught ``sqlite3.IntegrityError`` -> HTTP 500.
 
 This test deterministically lands a colliding row in that window via a thin
 connection proxy, so it fails on the current code (500) and passes once the
-endpoint wraps the UPDATE in a try/except mapping IntegrityError → 409.
+endpoint wraps the UPDATE in a try/except mapping IntegrityError -> 409.
 """
 
 from __future__ import annotations
@@ -34,7 +34,7 @@ def _capture_email_change(monkeypatch, captured):
 class _RaceConn:
     """Delegates to a real sqlite3 connection but, the first time it sees the
     confirm's clash-check SELECT, inserts a colliding active user *after* that
-    SELECT has run — reproducing the request→confirm UNIQUE race deterministically.
+    SELECT has run - reproducing the request->confirm UNIQUE race deterministically.
     (sqlite3.Connection.execute is read-only, so we wrap rather than patch it.)"""
 
     _CLASH_SQL = "SELECT 1 FROM users WHERE email=? AND id !="
@@ -66,7 +66,7 @@ def test_change_email_confirm_unique_race_is_409_not_500(quon_client, monkeypatc
     _capture_email_change(monkeypatch, c.captured)
     csrf = make_active_user(c, "racer@x.de")
 
-    # Request the change while "contested@x.de" is free → a token is issued.
+    # Request the change while "contested@x.de" is free -> a token is issued.
     assert (
         c.post(
             "/auth/change-email/request",
@@ -79,7 +79,7 @@ def test_change_email_confirm_unique_race_is_409_not_500(quon_client, monkeypatc
 
     # Wrap the connection so the address gets taken *between* the clash check and
     # the UPDATE. change_email_confirm runs inside db.transaction(), so hook that
-    # (the injected INSERT then lands in the same transaction — the confirm's own
+    # (the injected INSERT then lands in the same transaction - the confirm's own
     # UPDATE still sees it and trips UNIQUE, exactly as a committed racer would).
     orig_transaction = db.transaction
 

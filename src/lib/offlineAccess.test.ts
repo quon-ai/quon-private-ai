@@ -1,5 +1,5 @@
 /** The offline front door: per-account bundles in plain localStorage (readable
- *  before any key exists — see the module header for the honest trade-off).
+ *  before any key exists - see the module header for the honest trade-off).
  *  localStorage is stubbed with a Map, same pattern as bioEnrollment.test.ts. */
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 
@@ -54,7 +54,7 @@ describe("offlineAccess", () => {
     expect(getLastOfflineBundle()?.user.id).toBe("u1");
   });
 
-  it("stores only the minimal profile — never the whole /auth/me response", () => {
+  it("stores only the minimal profile: never the whole /auth/me response", () => {
     // identity_priv_wrapped etc. have no business in plain localStorage.
     saveOfflineBundle({ ...USER, identity_priv_wrapped: "SECRETISH" } as MeResponse, KM);
     expect(store.get("quon_offline_v1")).not.toContain("SECRETISH");
@@ -71,7 +71,7 @@ describe("offlineAccess", () => {
     saveOfflineBundle(USER, KM);
     saveOfflineBio("u1", "cred-1", { wrap_bio: "wb", prf_salt: "ps" });
     expect(getOfflineBundle("u1")?.bio?.credential_id).toBe("cred-1");
-    // A later password unlock refreshes the km — the bio door must survive.
+    // A later password unlock refreshes the km - the bio door must survive.
     saveOfflineBundle(USER, { ...KM, wrap_pw: "rewrapped" });
     const b = getOfflineBundle("u1");
     expect(b?.km.wrap_pw).toBe("rewrapped");

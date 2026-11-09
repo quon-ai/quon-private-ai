@@ -1,16 +1,16 @@
 /**
- * Global text-size preference (feedback #62, item 2 — an iPhone-PWA user found
- * QUON's small text hard to read). Three discrete steps, not a slider —
- * "Standard / Größer / Groß" — set via a root font-size PERCENTAGE.
+ * Global text-size preference: on an iPhone PWA the default text runs small
+ * enough to be hard to read. Three discrete steps, not a slider -
+ * "Standard / Größer / Groß" - set via a root font-size PERCENTAGE.
  *
- * Tailwind v4's type scale (`text-xs`, `text-sm`, …) is rem-based, so scaling
+ * Tailwind v4's type scale (`text-xs`, `text-sm`, ...) is rem-based, so scaling
  * `document.documentElement`'s font-size scales every rem-sized element with
- * it — no per-component changes needed. The handful of hardcoded pixel sizes
- * in the app (`text-[10px]` etc.) do NOT scale; accepted trade-off, most of
+ * it - no per-component changes needed. The handful of hardcoded pixel sizes
+ * in the app (`text-[10px]` etc.) do not scale; accepted trade-off, most of
  * the UI already uses Tailwind's rem scale.
  *
- * Device-local (see quonStore.ts's `fontScale` field docstring) — this reads
- * as a display preference of THIS device, not a synced account setting.
+ * Device-local (see quonStore.ts's `fontScale` field docstring) - this reads
+ * as a display preference of this device, not a synced account setting.
  */
 export type FontScale = "standard" | "larger" | "large";
 

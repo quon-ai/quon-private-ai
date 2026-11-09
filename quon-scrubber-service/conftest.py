@@ -10,16 +10,16 @@ import pytest
 
 sys.path.insert(0, str(Path(__file__).parent.resolve()))
 
-# Settings that the suite REQUIRES but that only exist in the operator's
+# Settings that the suite requires but that only exist in the operator's
 # untracked .env. Without these a clean checkout fails with
-# "QUON_SERVER_SECRET is not configured" — which is what a fresh CI runner is,
-# and what a new contributor's first `pytest` is. Set BEFORE anything imports
+# "QUON_SERVER_SECRET is not configured" - which is what a fresh CI runner is,
+# and what a new contributor's first `pytest` is. Set before anything imports
 # config.py, since pydantic-settings reads the environment at instantiation.
 #
 # `setdefault`, so a real environment always wins; and a deterministic
 # test-only value, so the suite never seals anything under the operator's real
-# secret. (This class of bug was found once before for COOKIE_SECURE and fixed
-# only for that one variable — see HANDOFF 2026-07-19.)
+# secret. The same shape of bug existed once for COOKIE_SECURE and was fixed
+# for that one variable only; this covers every required setting.
 os.environ.setdefault("QUON_SERVER_SECRET", "test-only-not-a-real-secret-0123456789abcdef")
 os.environ.setdefault("APP_BASE_URL", "http://localhost:8000")
 os.environ.setdefault("COOKIE_SECURE", "false")
@@ -90,7 +90,7 @@ def quon_client(monkeypatch, tmp_path):
     db._initialized = False
     db.init_db()
 
-    # /account/usage caches per user in-process — never leak entries across tests.
+    # /account/usage caches per user in-process - never leak entries across tests.
     import account
 
     account._usage_cache.clear()

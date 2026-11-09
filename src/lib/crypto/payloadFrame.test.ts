@@ -4,7 +4,7 @@
  * This is a WIRE FORMAT change on end-to-end-encrypted blobs, so the tests that
  * matter are the compatibility ones: blobs written by clients that predate this
  * must still decrypt, and a v2 blob must never mis-parse into a plausible object
- * on a client that can't read it — it has to fail closed.
+ * on a client that can't read it - it has to fail closed.
  *
  * `encryptBytes`/`decryptBytes` use the same nonce‖secretbox `wrap`/`unwrap` as
  * `encryptJSON`, so they let these tests build a genuine v1 blob (and act as a
@@ -30,7 +30,7 @@ function legacyBlob(value: unknown, key: Uint8Array): string {
   return b64(encryptBytes(utf8(JSON.stringify(value)), key));
 }
 
-/** German-ish, repetitive — the shape real chat JSON has. */
+/** German-ish, repetitive - the shape real chat JSON has. */
 function bulky(n: number) {
   const words = "Vertrag Kündigung Mietverhältnis Frist Betrag [PERSON_1] Rechnung".split(" ");
   let s = "";
@@ -94,7 +94,7 @@ describe("v2 round trip", () => {
 
   it("pads the plaintext into buckets so the length leaks less", () => {
     // Two payloads of noticeably different size must be able to land on the same
-    // ciphertext length — that is the point of padding.
+    // ciphertext length - that is the point of padding.
     const key = KEY();
     const lengths = new Set<number>();
     for (let extra = 0; extra < 400; extra += 40) {
@@ -107,7 +107,7 @@ describe("v2 round trip", () => {
 describe("fail closed", () => {
   it("a v1-only reader rejects a v2 blob rather than mis-parsing it", () => {
     // An un-updated device must get a hard failure (collectionSync skips the
-    // item) — never a partial or plausible-looking object.
+    // item) - never a partial or plausible-looking object.
     const key = KEY();
     const v2 = encryptJSON(bulky(200_000), key);
     expect(() => JSON.parse(new TextDecoder().decode(decryptBytes(fromB64(v2), key)))).toThrow();

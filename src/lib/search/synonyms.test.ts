@@ -24,7 +24,7 @@ describe("synonymsOf", () => {
   });
 
   describe("deliberately rejected clusters stay rejected", () => {
-    it("'Wohnung' (apartment) is NOT connected to 'Adresse' (postal address)", () => {
+    it("'Wohnung' (apartment) is not connected to 'Adresse' (postal address)", () => {
       expect(synonymsOf("wohnung")).toEqual([]);
       expect(synonymsOf("adresse")).not.toContain("wohnung");
     });

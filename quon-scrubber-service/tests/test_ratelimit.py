@@ -7,12 +7,12 @@ from ratelimit import _FixedWindow
 
 def test_window_blocks_over_limit_then_resets():
     lim = _FixedWindow()
-    # 5 allowed within the window…
+    # 5 allowed within the window...
     for _ in range(5):
         assert lim.allow("k", 5, 60, 1000.0) is True
-    # …the 6th in the same window is blocked…
+    # ...the 6th in the same window is blocked...
     assert lim.allow("k", 5, 60, 1000.0) is False
-    # …and the next window starts fresh.
+    # ...and the next window starts fresh.
     assert lim.allow("k", 5, 60, 1061.0) is True
 
 

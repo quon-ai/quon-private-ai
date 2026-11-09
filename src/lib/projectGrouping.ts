@@ -17,7 +17,7 @@ export interface ProjectGroup {
  *
  * - A session whose `projectId` matches a known project joins that group.
  * - A session with no `projectId`, or one referencing an unknown / not-yet-synced
- *   project, falls back to `ungrouped` (shown under "Recents") — never lost.
+ *   project, falls back to `ungrouped` (shown under "Recents") - never lost.
  * - Every project gets a group even with zero chats, so a freshly-created project
  *   is visible immediately.
  * - Input order is preserved within each bucket (callers pass pre-sorted lists).

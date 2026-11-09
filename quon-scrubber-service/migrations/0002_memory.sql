@@ -1,6 +1,6 @@
 -- Migration 0002: Memory module tables
 -- Two memory types: structured facts (key-value) + semantic chunks (vector embeddings).
--- All text content is stored *after* scrubbing — PII never enters these tables in the clear.
+-- All text content is stored *after* scrubbing - PII never enters these tables in the clear.
 
 CREATE TABLE IF NOT EXISTS memory_facts (
     id          TEXT    PRIMARY KEY,

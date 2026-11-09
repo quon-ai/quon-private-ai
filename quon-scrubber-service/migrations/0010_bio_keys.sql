@@ -1,6 +1,6 @@
 -- Biometric-unlock key wraps (WebAuthn PRF), one row per enrolled device
 -- credential. Zero-knowledge: wrap_bio is nonce||secretbox(MasterKey) under a
--- key the CLIENT derives from the authenticator's PRF output — that secret
+-- key the CLIENT derives from the authenticator's PRF output - that secret
 -- lives in the device's secure hardware (Secure Enclave / StrongBox) and is
 -- released only after on-device biometric verification, so this row is useless
 -- to the server or a DB attacker. prf_salt is the public PRF eval input.

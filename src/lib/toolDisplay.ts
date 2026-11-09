@@ -2,7 +2,7 @@
 // It exists so the shared screens compile unchanged; every call is an inert no-op.
 export type TitleKind = "paperless";
 export type TitleResolver = (kind: TitleKind, id: string) => string | undefined;
-/** Turn an unknown tool id into readable words — kept, it is pure and used for MCP ids. */
+/** Turn an unknown tool id into readable words - kept, it is pure and used for MCP ids. */
 export function humanizeToolName(tool: string): string {
   const bare = tool
     .replace(/^mcp__[^_]+__/, "")

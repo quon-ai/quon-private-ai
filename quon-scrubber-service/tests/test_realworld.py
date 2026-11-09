@@ -1,4 +1,4 @@
-"""Real-world prompt eval — the user's own exported Gemini/KI-Modus history.
+"""Real-world prompt eval - the user's own exported Gemini/KI-Modus history.
 
 Opt-in and strictly offline:
 
@@ -9,16 +9,16 @@ Opt-in and strictly offline:
 
 Why this exists: the synthetic corpus is formal-register (invoices, business
 email, tax letters), but all three user-reported PERSON false positives lived
-in casual chat questions. Real prompts are the production register — this eval
+in casual chat questions. Real prompts are the production register - this eval
 runs every one of them through config 1 (NER + regex, ``llm_enrichment=False``,
-ZERO cloud calls) and writes every detection to a private report for human
+zero cloud calls) and writes every detection to a private report for human
 review. Real prompts have no gold labels, so this is primarily an FP-hunting
 harness, plus a growing regression gate:
 
-- Report: ``~/.quon/realworld/REALWORLD_REPORT.md`` — every detection with
-  context, grouped by type. REAL personal data: lives outside the repo, is
+- Report: ``~/.quon/realworld/REALWORLD_REPORT.md`` - every detection with
+  context, grouped by type. Real personal data: lives outside the repo, is
   never printed to stdout (aggregate counts only), never commit it.
-- Ratchet: ``~/.quon/realworld/labels.json`` — reviewed false positives, in
+- Ratchet: ``~/.quon/realworld/labels.json`` - reviewed false positives, in
   two tiers (values matched case-insensitively against detected entity values)::
 
       {
@@ -30,7 +30,7 @@ harness, plus a growing regression gate:
   never-detected-again, so every fixed FP becomes a permanent regression test
   against the real-world data. ``open_false_positives`` is the reviewed
   work-queue: still detected today, flagged in the report and counted in the
-  summary, but not asserted — migrate a value to ``false_positives`` when the
+  summary, but not asserted - migrate a value to ``false_positives`` when the
   detector change that kills it lands (if it resurfaces after that, the suite
   goes red).
 
@@ -38,8 +38,8 @@ The data dir is ``QUON_REALWORLD_DIR`` (default ``~/.quon/realworld``). The
 test SKIPS cleanly when the data file is absent, so CI / other machines and
 the preflight gate are unaffected.
 
-The config-2 (LLM-enriched) comparison mode was removed with the LLM tier on
-2026-08-23; historical numbers live in the archived REALWORLD_REPORT_LLM.md.
+There is no LLM-enriched comparison mode; the deterministic pipeline is the
+only one measured here.
 """
 
 from __future__ import annotations
@@ -63,7 +63,7 @@ from tests.test_api import _scrub
 @pytest.fixture(autouse=True)
 def _bypass_auth():
     """Same dependency-override as test_api's autouse fixture (module-scoped
-    there, so it does NOT apply here automatically): this eval measures
+    there, so it does not apply here automatically): this eval measures
     detection quality, not auth."""
     app.dependency_overrides[_auth.current_active_user] = lambda: _auth.User(
         id="realworld-eval", email="eval@quon.local", status="active", session_id="eval"
@@ -101,28 +101,27 @@ def test_realworld_prompts():
     assert prompts, "prompts.jsonl exists but is empty"
 
     labels_path = _data_dir() / "labels.json"
-    labeled_fps: set[str] = set()  # fixed → asserted
-    open_fps: set[str] = set()  # reviewed, fix pending → tracked only
+    labeled_fps: set[str] = set()  # fixed -> asserted
+    open_fps: set[str] = set()  # reviewed, fix pending -> tracked only
     if labels_path.exists():
         labels = json.loads(labels_path.read_text(encoding="utf-8"))
         labeled_fps = {v.strip().lower() for v in labels.get("false_positives", []) if v.strip()}
         open_fps = {v.strip().lower() for v in labels.get("open_false_positives", []) if v.strip()}
 
-    # Deterministic, local-only — the ONLY pipeline there is since the LLM
-    # extraction tier was removed (2026-08-23). Nothing to toggle off anymore.
+    # Deterministic, local-only - the only pipeline there is.
     rows: list[dict] = []
     for p in prompts:
         res = _scrub(p["text"])
         ents = res.get("entities") or []
         rows.append({"prompt": p, "entities": ents})
 
-    # ---- aggregate stats (the ONLY thing that may reach stdout) ----
+    # ---- aggregate stats (the only thing that may reach stdout) ----
     n = len(rows)
     with_det = [r for r in rows if r["entities"]]
     type_counts: Counter = Counter(e["type"] for r in rows for e in r["entities"])
     src_counts: Counter = Counter(r["prompt"]["source"] for r in rows)
 
-    # ---- private report (real data — file only, never stdout) ----
+    # ---- private report (real data - file only, never stdout) ----
     by_type: dict[str, Counter] = defaultdict(Counter)
     contexts: dict[tuple[str, str], list[str]] = defaultdict(list)
     for r in rows:

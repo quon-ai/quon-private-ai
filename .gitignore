@@ -15,9 +15,6 @@ dist-ssr
 .tanstack/**
 .nitro
 *.local
-# Per-machine Claude Code permission grants: local paths, no value to anyone
-# else. `*.local` above does NOT match this (it ends in .local.json).
-.claude/settings.local.json
 
 # Wrangler / Cloudflare
 .wrangler/
@@ -53,12 +50,9 @@ deploy/.ssh-quon-deploy.pub
 quon-scrubber-service/tests/CORPUS_REPORT_LLM.md
 
 # Self-hosted ONNX Runtime WASM (copied from node_modules by scripts/copy-ort.mjs
-# on predev/prebuild — regenerated, not source; the 12 MB .wasm shouldn't be in git)
+# on predev/prebuild; regenerated, not source; the 12 MB .wasm shouldn't be in git)
 /public/ort/
 /public/version.json
-
-# Private/internal documents (never publish, never serve)
-.private/
 
 # Runtime data (device-local; operator state)
 quon.db
@@ -73,26 +67,19 @@ quon-scrubber-service/tests/reports/2*.md
 # e2e embedding-model mirror (scripts/fetch-e2e-models.mjs)
 tests/e2e/.models/
 
-# Green-preflight stamp (deploy/preflight.sh writes it, .claude/hooks/bash-guard.sh
-# reads it). Machine-local. It MUST stay ignored: the stamp records a fingerprint
-# of the working tree, so a tracked marker would perturb the very thing it measures.
-.claude/.preflight-ok
+# Green-preflight stamp (deploy/preflight.sh writes it, the deploy guard reads
+# it). Machine-local, and it must stay ignored: the stamp records a fingerprint
+# of the working tree, so a tracked marker would perturb the very thing it
+# measures.
+.preflight-ok
 
-# Tauri (native shell) build output — the Rust target dir is huge and generated.
+# Tauri (native shell) build output: the Rust target dir is huge and generated.
 /src-tauri/target/
 /src-tauri/gen/
 
-# Local (non-baseline) eval reports — see quon-scrubber-service/tests/report_paths.py
+# Local (non-baseline) eval reports, see quon-scrubber-service/tests/report_paths.py
 quon-scrubber-service/tests/reports/local/
 
-# Per-session git worktrees (see scripts/session-*.sh). Was excluded only in
-# .git/info/exclude, which is machine-local — so on CI or another machine these
-# dirtied the tree and failed the clean-tree gate.
-/.claude/worktrees/
-
-# Generated per-session facts + scope marker (scripts/session-facts.sh)
-.claude/facts/
-.claude/.session
 # every .env variant except the committed examples
 .env.*
 !.env.example
@@ -100,3 +87,4 @@ quon-scrubber-service/tests/reports/local/
 # key material never belongs in the tree
 *.pem
 *.key
+

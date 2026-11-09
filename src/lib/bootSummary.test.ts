@@ -4,12 +4,11 @@ import type { HeavyWorkPolicy } from "@/lib/deviceClass";
 
 /**
  * The boot summary must stay CONSTRAINED-only. It exists to give a future
- * crash report numbers (#68, #76), but logging it on every ordinary boot
- * would make the diag buffer non-empty for every healthy desktop/Android
- * user — and the feedback dialog reads "empty" as "nothing to report"
- * (tests/e2e/feedback.spec.ts). An earlier version of this function ran
- * unconditionally and broke exactly that contract; this test is the
- * regression lock.
+ * crash report numbers, but logging it on every ordinary boot would make the
+ * diag buffer non-empty for every healthy desktop/Android user - and the
+ * feedback dialog reads "empty" as "nothing to report"
+ * (tests/e2e/feedback.spec.ts). Running it unconditionally breaks exactly
+ * that contract; this test is the lock.
  */
 
 let policy: HeavyWorkPolicy;
@@ -54,7 +53,7 @@ async function fresh() {
 }
 
 describe("logBootSummary", () => {
-  it("a normal-policy boot logs NOTHING — the diag buffer stays empty for a healthy user", async () => {
+  it("a normal-policy boot logs nothing: the diag buffer stays empty for a healthy user", async () => {
     policy = NORMAL;
     const { logBootSummary } = await fresh();
     await logBootSummary();
@@ -70,7 +69,7 @@ describe("logBootSummary", () => {
     expect(appended[0]).toContain("policy=constrained");
   });
 
-  it("safe mode logs it too — that is exactly the case with numbers worth having", async () => {
+  it("safe mode logs it too: that is exactly the case with numbers worth having", async () => {
     policy = SAFE_MODE;
     const { logBootSummary } = await fresh();
     await logBootSummary();

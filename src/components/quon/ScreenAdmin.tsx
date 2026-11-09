@@ -1,5 +1,5 @@
 /**
- * Operator admin screen (/admin) — account + invite management for this
+ * Operator admin screen (/admin) - account + invite management for this
  * instance. Metadata only: the server (and therefore this screen) never sees
  * user content, which stays end-to-end encrypted for admins too.
  *
@@ -470,7 +470,7 @@ export function ScreenAdmin() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Delete confirm — destructive and irrecoverable (ZK: no export, no undo) */}
+      {/* Delete confirm - destructive and irrecoverable (ZK: no export, no undo) */}
       <AlertDialog open={deleteTarget !== null} onOpenChange={(o) => !o && setDeleteTarget(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>

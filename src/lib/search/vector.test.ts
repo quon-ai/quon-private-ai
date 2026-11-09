@@ -46,7 +46,7 @@ describe("topKMulti (max-pool over query clauses)", () => {
 
   it("scores each item by its best-matching query vector", () => {
     const items = [{ id: "x", v: [1, 0] }];
-    // One probe matches x, the other is orthogonal — the match should win.
+    // One probe matches x, the other is orthogonal - the match should win.
     const ranked = topKMulti(
       [
         [0, 1],
@@ -61,7 +61,7 @@ describe("topKMulti (max-pool over query clauses)", () => {
 
   it("recovers a focused clause that the diluted whole-message buries", () => {
     // Memory points along [1,0]. The full message is the average of the on-topic
-    // clause [1,0] and an off-topic clause [0,1] → [0.71,0.71] (cos ≈ 0.71).
+    // clause [1,0] and an off-topic clause [0,1] -> [0.71,0.71] (cos ~ 0.71).
     const memory = [{ id: "m", v: [1, 0] }];
     const full = [Math.SQRT1_2, Math.SQRT1_2];
     const clauseOn = [1, 0];
@@ -75,9 +75,9 @@ describe("topKMulti (max-pool over query clauses)", () => {
     expect(pooled).toBeGreaterThan(diluted);
   });
 
-  it("does not invent matches — unrelated clauses stay low", () => {
+  it("does not invent matches: unrelated clauses stay low", () => {
     const memory = [{ id: "m", v: [1, 0] }];
-    // All probes are orthogonal-ish to the memory → best stays near 0.
+    // All probes are orthogonal-ish to the memory -> best stays near 0.
     const pooled = topKMulti(
       [
         [0, 1],

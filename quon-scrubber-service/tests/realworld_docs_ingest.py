@@ -4,18 +4,18 @@
     QUON_RUN_REALWORLD_DOCS=1 pytest tests/test_realworld_docs.py -q -s
 
 Why documents and not just prompts: ``test_realworld.py`` covers the user's chat
-prompts, which are casual-register and short. Real paperwork is the opposite —
+prompts, which are casual-register and short. Real paperwork is the opposite - 
 long, formal, German, and dense with identifier FORMATS that no synthetic
 generator invents (policy numbers, Steuernummern, Aktenzeichen, meter readings).
-Running the net over 45 such files on 2026-08-19 immediately surfaced that the
-dotted German date, the most common shape in the whole set at 126 occurrences,
-was excluded from PHONE but never DETECTED.
+Running the net over 45 such files immediately surfaced that the dotted German
+date, the most common shape in the whole set at 126 occurrences, was excluded
+from PHONE but never detected.
 
-Output: ``~/.quon/realworld/documents.jsonl`` — one ``{"text", "source",
-"chars", "ocr"}`` record per file. REAL data: it lives outside the repo (the repo
+Output: ``~/.quon/realworld/documents.jsonl`` - one ``{"text", "source",
+"chars", "ocr"}`` record per file. Real data: it lives outside the repo (the repo
 is published by scripts/export-public.sh) and is never printed to stdout.
 
-Scanned PDFs have no text layer and would otherwise be silently skipped — which
+Scanned PDFs have no text layer and would otherwise be silently skipped - which
 loses exactly the register that matters, because OCR mangles the characters
 identifiers are made of (0/O, 1/l, 8/B). They are OCR'd ON-DEVICE via macOS
 Vision when PyObjC is present; elsewhere they are recorded as skipped rather
@@ -63,7 +63,7 @@ def _docx_text(path: Path) -> str:
 
 
 def _ocr_pdf(path: Path, max_pages: int = 12) -> str:
-    """On-device OCR via macOS Vision. Returns "" when unavailable — the caller
+    """On-device OCR via macOS Vision. Returns "" when unavailable - the caller
     records that as a skip, so a machine without Vision reports honest coverage
     instead of pretending the file was empty."""
     try:
@@ -161,7 +161,7 @@ def main(argv: list[str]) -> int:
         for r in records:
             fh.write(json.dumps(r, ensure_ascii=False) + "\n")
 
-    # Counts only — never a filename's content, never a detected value.
+    # Counts only - never a filename's content, never a detected value.
     print(f"ingested {len(records)}/{len(files)} files -> {out}")
     print(f"  via OCR: {ocr_used}")
     print(f"  chars:   {sum(r['chars'] for r in records):,}")

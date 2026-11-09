@@ -1,7 +1,7 @@
-"""Synthetic PII evaluation corpus — value-based, exact ground truth, no real PII.
+"""Synthetic PII evaluation corpus - value-based, exact ground truth, no real PII.
 
 Each case inserts Faker-produced (or format-crafted) values into domain templates,
-so the inserted value IS the gold label — no manual annotation. A fixed seed makes
+so the inserted value is the gold label - no manual annotation. A fixed seed makes
 the corpus reproducible; German and English are generated balanced. Consumed by
 ``tests/test_corpus.py`` (opt-in) to measure leak-rate at scale against config 1
 (NER + regex, the guaranteed floor).
@@ -10,16 +10,16 @@ Design notes:
   - Values are crafted with deliberate FORMAT VARIETY (the hard cases): spaced /
     unspaced / foreign IBANs, many phone formats, German + English amounts, etc.
   - Distractor slots carry public cities/companies, relative dates and capitalised
-    nouns that must NOT be redacted (the over-redaction guard).
-  - Every template names its PII slots (→ must_anonymize) and distractor slots
-    (→ must_not_anonymize), so ground truth falls out of generation.
-  - ALL of the above is FORMAL-register (business/invoice/steuer/medizin/
+    nouns that must not be redacted (the over-redaction guard).
+  - Every template names its PII slots (-> must_anonymize) and distractor slots
+    (-> must_not_anonymize), so ground truth falls out of generation.
+  - all of the above is FORMAL-register (business/invoice/steuer/medizin/
     scheduling/support/credentials templates). ``generate_casual_register_corpus``
-    is a separate, hand-curated slice covering conversational chat register —
+    is a separate, hand-curated slice covering conversational chat register - 
     see its docstring for why this exists (three real production false
     positives that a formal-only corpus could never have caught) and the
     labeling rule for street/place compounds (tracked via ``street_terms``, not
-    ``must_not_anonymize`` — that grading is type-blind, see ``grade_case``).
+    ``must_not_anonymize`` - that grading is type-blind, see ``grade_case``).
 """
 
 from __future__ import annotations
@@ -30,7 +30,7 @@ from faker import Faker
 
 SEED = 20260628
 
-# Foreign / compound names — NER's documented weak spot, tracked as their own slice.
+# Foreign / compound names - NER's documented weak spot, tracked as their own slice.
 FOREIGN_NAMES = [
     "Chinwe Adeyemi", "Nguyen Van Anh", "Aleksandra Kowalska", "Mehmet Yılmaz",
     "Olusegun Okonkwo", "Priya Subramanian", "Wei Zhang", "Fatima Al-Rashid",
@@ -172,12 +172,12 @@ class Gen:
         ])
 
     def _bare_kvnr(self) -> str:
-        """Bare KVNR with a VALID check digit (GKV Anlage 1: letter as two
+        """Bare KVNR with a valid check digit (GKV Anlage 1: letter as two
         digits A=01..Z=26, weights 1,2 alternating from the left, two-digit
         products digit-summed, sum mod 10). The old generator appended nine
-        random digits — a value shape no real card carries, which let the
+        random digits - a value shape no real card carries, which let the
         corpus score a checksum-gated detector as a 90% miss on a class it
-        catches 100% of in the real world. Synthetic values keep the REAL
+        catches 100% of in the real world. Synthetic values keep the real
         shape; the validator itself is anchored to the spec's own worked
         examples in test_fallback.py, so generator and detector cannot drift
         into agreeing by copying each other's bug."""
@@ -293,12 +293,11 @@ TEMPLATES: dict[str, list[dict]] = {
         {"lang": "en", "slice": "medizin", "person": "normal",
          "text": "Patient {person}, member ID {focal}, follow-up {d0}.",
          "d": ["reldate"]},
-        # UNLABELLED (2026-09-04): both original templates put a label word
-        # next to the id, so the labelled-ID rule alone scored 100% and the
-        # corpus was structurally blind to the bare-KVNR gap the 2026-08-14
-        # roadmap entry described. These two carry no label adjacency — only
-        # shape (checksum for the bare form, prefix for the others) can catch
-        # them, which is exactly what the ratchet must exercise.
+        # Unlabelled: the two templates above put a label word next to the id,
+        # so the labelled-ID rule alone scores 100% and the corpus is
+        # structurally blind to a bare KVNR. These two carry no label adjacency
+        # - only shape (checksum for the bare form, prefix for the others) can
+        # catch them, which is exactly what the ratchet must exercise.
         {"lang": "de", "slice": "medizin", "person": "normal",
          "text": "Auf der Gesundheitskarte von {person} steht {focal}.",
          "d": []},
@@ -379,12 +378,12 @@ _CC_TEMPLATES = [
 ]
 
 # --- Casual-register slice ---------------------------------------------------
-# The meta-lesson behind three real user-reported PERSON false positives (all
+# Three real PERSON false positives share one cause (all
 # casual-register German: "Wann einnehmen?", "Ibuprofen Einnahme wann?",
 # "Welcher Supermarkt kommt an den Rehbergplatz in bad kleinfeld"): every
 # template above is FORMAL-register (business/invoice/steuer/medizin/scheduling/
-# support/credentials boilerplate), so casual chat — the actual production
-# register — was invisible to the precision/recall ratchet. All three FPs
+# support/credentials boilerplate), so casual chat - the actual production
+# register - was invisible to the precision/recall ratchet. All three FPs
 # shipped because no eval case looked like a real user question. This slice
 # does not retest the specific fixed strings (those live as point regressions
 # in test_ner.py / test_scrubber.py); it is a broader, scaled STRUCTURAL guard
@@ -392,23 +391,23 @@ _CC_TEMPLATES = [
 # not just the three reported instances.
 #
 # Two halves:
-#   - "casual_negative": no PII at all -> must yield ZERO entities. This is the
+#   - "casual_negative": no PII at all -> must yield zero entities. This is the
 #     FP guard and the majority of the slice.
-#   - "casual_positive": the same casual shapes WITH a real embedded name ->
+#   - "casual_positive": the same casual shapes with a real embedded name ->
 #     the name must still be caught (the recall guard, so a future precision
 #     fix can't silently start dropping real names in this register too).
 #
 # German street/square compounds are deliberately included among the negatives
-# (the exact class that caused FP #3). LABELING RULE (future-proofing): these
-# compounds are recorded in "street_terms", NOT folded into must_not_anonymize.
+# (the exact class behind the third FP above). Labeling rule: these
+# compounds are recorded in "street_terms", not folded into must_not_anonymize.
 # must_not_anonymize is graded type-blind in grade_case (a value counts as a
-# false positive if it is not found in the scrubbed text AT ALL, however it was
-# redacted) — so putting a street name there would assert "must never be
+# false positive if it is not found in the scrubbed text AT all, however it was
+# redacted) - so putting a street name there would assert "must never be
 # redacted at all," which would fight a future ADDRESS entity type wanting to
 # redact exactly this kind of value. "street_terms" instead feeds a dedicated,
 # TYPE-AWARE check (see tests/test_corpus.py's street-term assertion) that reads
 # the real /scrub entity report and only fails if the value was tagged PERSON
-# specifically — any other treatment (kept in clear, or redacted as some future
+# specifically - any other treatment (kept in clear, or redacted as some future
 # non-PERSON type) is fine.
 _CASUAL_NEG_INTERROGATIVE = {
     "de": [
@@ -554,7 +553,7 @@ _CASUAL_NEG_TOPIC = {
         "Let's meet the others right by town hall square",
     ],
 }
-# All-lowercase variants (the no-case-signal path — recall of the negative
+# All-lowercase variants (the no-case-signal path - recall of the negative
 # guard must hold even with zero casing signal, mirroring the reported
 # screenshots which were themselves informally-cased).
 _CASUAL_NEG_LOWERCASE = {
@@ -591,7 +590,7 @@ _CASUAL_NEG_LOWERCASE = {
 # all-lowercase input NER defers PERSON detection to the LLM by design (see
 # ner.detect_ner's case-signal gate), so a lowercase name here would be
 # undetectable in config 1 not because of a regression but because of that
-# documented, intentional behaviour — gating a corpus assertion on it would
+# documented, intentional behaviour - gating a corpus assertion on it would
 # fail the ratchet for the wrong reason. Noted, not included, per the task.
 _CASUAL_POS = [
     {"lang": "de", "text": "Kannst du Anna Müller schnell anrufen", "name": "Anna Müller"},
@@ -656,7 +655,7 @@ def _casual_positive_cases() -> list[dict]:
 
 def generate_casual_register_corpus() -> list[dict]:
     """The full casual-register slice (~150-200 cases, DE/EN balanced),
-    independent of ``target`` — this is a fixed structural guard, not something
+    independent of ``target`` - this is a fixed structural guard, not something
     that should shrink when a caller asks for a smaller sample via
     ``generate_corpus(target=...)``. Returned separately so ``generate_corpus``
     can fold it in at a stable size regardless of the overall corpus target."""
@@ -672,7 +671,7 @@ def generate_casual_register_corpus() -> list[dict]:
 
 
 def _negative_case(g: Gen, lang: str, i: int) -> dict:
-    """A message with NO redactable PII — only public places/companies, a relative
+    """A message with no redactable PII - only public places/companies, a relative
     date and capitalised nouns. Expectation: nothing redacted (over-redaction guard)."""
     city, comp = g.distractor(lang, "city"), g.distractor(lang, "company")
     rel, noun = g.distractor(lang, "reldate"), g.distractor(lang, "noun")
@@ -714,17 +713,17 @@ _GEN_METHOD = {
 }
 
 
-#: Vendor-defined credential prefixes — published, stable formats. A string
+#: Vendor-defined credential prefixes - published, stable formats. A string
 #: carrying one of these announces itself as a secret wherever it appears.
 _MARKED_SECRET_PREFIXES = ("sk-", "pk-", "ghp_", "gho_", "ghu_", "ghs_", "ghr_",
                           "xox", "AKIA", "eyJ")
 
 
 def _secret_is_marked(value: str) -> bool:
-    """Does this secret announce itself — vendor prefix, or NAME=VALUE assignment?
+    """Does this secret announce itself - vendor prefix, or NAME=value assignment?
 
     The scope line for CREDENTIAL (see expectations.Policy). Deliberately a
-    property of the VALUE, not a question about what our detectors manage to
+    property of the value, not a question about what our detectors manage to
     find: an unmarked high-entropy string is undiscoverable by anyone, so
     promising to catch it would be promising to guess.
     """
@@ -771,12 +770,12 @@ def generate_corpus(target: int = 1500, seed: int = SEED) -> list[dict]:
     """Reproducible synthetic corpus of ~``target`` cases, balanced DE/EN, stratified
     so every entity type gets enough instances for tight confidence intervals.
 
-    Always includes the fixed-size casual-register slice (~164 cases —
+    Always includes the fixed-size casual-register slice (~164 cases - 
     ``generate_casual_register_corpus``), a structural guard for the
     conversational register that the formal-template slices below don't touch
     (see its module docstring for the motivating false positives). It is fixed
-    rather than scaled by ``target`` — this is a small, hand-curated battery,
-    not something meant to grow with the corpus — but on a small
+    rather than scaled by ``target`` - this is a small, hand-curated battery,
+    not something meant to grow with the corpus - but on a small
     ``QUON_CORPUS_N`` sample (e.g. the N=300 LLM run) it is capped at ~40% of
     the total so it can't dominate a tiny sample's per-type recall stats.
     """

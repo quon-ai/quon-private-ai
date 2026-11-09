@@ -1,10 +1,10 @@
 /**
  * In-browser document text extraction (zero-knowledge: bytes never leave the
  * device). Mirrors the formats of the backend `DefaultExtractor`:
- *   - PDF  → pdf.js (`pdfjs-dist`)
- *   - DOCX → mammoth
- *   - txt / md / csv / json / log → decoded natively (JSON pretty-printed)
- *   - html / xml → tags stripped via DOMParser
+ *   - PDF  -> pdf.js (`pdfjs-dist`)
+ *   - DOCX -> mammoth
+ *   - txt / md / csv / json / log -> decoded natively (JSON pretty-printed)
+ *   - html / xml -> tags stripped via DOMParser
  *
  * This whole module is heavy (pdf.js + mammoth); the UI imports it lazily
  * (`await import(...)`) only when the user actually uploads a file.
@@ -12,7 +12,7 @@
 
 import mammoth from "mammoth";
 
-// Polyfilled + worker-wired pdf.js — the shared setup also used by the viewer.
+// Polyfilled + worker-wired pdf.js - the shared setup also used by the viewer.
 import { pdfjs } from "./pdfjs";
 import { pageNeedsOcr } from "./pageText";
 
@@ -22,12 +22,12 @@ export interface ExtractResult {
   /** Pages whose text came from the on-device OCR (scanned-PDF fallback). */
   ocrPages?: number;
   /** Pages detected as scans (empty/near-empty text layer) that OCR was asked to
-   *  read — diagnostic for the "scanned PDF won't import" case. */
+   *  read - diagnostic for the "scanned PDF won't import" case. */
   scannedPages?: number;
   /** Set when the on-device OCR engine could not start (model/WASM download
-   *  blocked, e.g. on a flaky mobile connection) — the reason string. When set on
+   *  blocked, e.g. on a flaky mobile connection) - the reason string. When set on
    *  a text-less PDF, the ingest surfaces it instead of a generic error, so a
-   *  device repro reveals WHY the scan didn't read. */
+   *  device repro reveals why the scan didn't read. */
   ocrError?: string;
 }
 
@@ -70,7 +70,7 @@ export async function extractText(file: File): Promise<ExtractResult> {
       try {
         raw = JSON.stringify(JSON.parse(raw), null, 2);
       } catch {
-        /* not valid JSON — index as-is */
+        /* not valid JSON - index as-is */
       }
     }
     return { text: raw };
@@ -91,7 +91,7 @@ export async function extractText(file: File): Promise<ExtractResult> {
 // that module's header for what went wrong when they didn't.
 export { pageNeedsOcr } from "./pageText";
 
-/** Scanned pages are OCRed up to this cap — beyond it we keep whatever the
+/** Scanned pages are OCRed up to this cap - beyond it we keep whatever the
  *  text layer gave (a 300-page scan would otherwise stall the tab). */
 export const MAX_OCR_PAGES = 40;
 
@@ -118,7 +118,7 @@ function waitForVisible(): Promise<void> {
 async function extractPdf(file: File): Promise<ExtractResult> {
   const data = new Uint8Array(await file.arrayBuffer());
   // Keep the loading task so we can dispose it correctly (pdf.js v6 dropped
-  // `destroy()` from the document proxy — cleanup lives on the loading task).
+  // `destroy()` from the document proxy - cleanup lives on the loading task).
   const loadingTask = pdfjs.getDocument({ data });
   try {
     const doc = await loadingTask.promise;
@@ -131,7 +131,7 @@ async function extractPdf(file: File): Promise<ExtractResult> {
     }
 
     // Scanned-PDF fallback (the Paperless-class case): pages with no usable
-    // text layer are rendered and read by the on-device OCR engine — same
+    // text layer are rendered and read by the on-device OCR engine - same
     // ZK story as the photo scan, nothing leaves the device. OCR failures
     // (engine unavailable / blank page) degrade to the text-layer behavior,
     // never fail the whole extraction.
@@ -147,7 +147,7 @@ async function extractPdf(file: File): Promise<ExtractResult> {
         for (const { idx } of scanned) {
           // Chromium stalls image decodes inside pdf.js renders while the tab
           // is HIDDEN (same class as the img.decode() hang the photo path
-          // works around) — if the user switched tabs mid-processing, wait for
+          // works around) - if the user switched tabs mid-processing, wait for
           // visibility instead of wedging the document in "processing".
           await waitForVisible();
           const page = await doc.getPage(idx + 1);
@@ -157,7 +157,7 @@ async function extractPdf(file: File): Promise<ExtractResult> {
           const canvas = document.createElement("canvas");
           canvas.width = Math.ceil(viewport.width);
           canvas.height = Math.ceil(viewport.height);
-          // Belt-and-braces: a page render must never hang the whole ingest —
+          // Belt-and-braces: a page render must never hang the whole ingest -
           // on timeout this page keeps its (empty) text layer and we move on.
           const rendered = await Promise.race([
             page
@@ -174,7 +174,7 @@ async function extractPdf(file: File): Promise<ExtractResult> {
           }
         }
       } catch (e) {
-        // Engine download blocked / WASM unavailable — keep the text layer, but
+        // Engine download blocked / WASM unavailable - keep the text layer, but
         // REMEMBER why so a text-less scan reports the real cause (not a generic
         // "no text"). Common on flaky mobile connections (model tar from CDN).
         ocrError = e instanceof Error ? e.message : String(e);

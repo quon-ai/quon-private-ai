@@ -66,7 +66,7 @@ describe("modelDisplay", () => {
   });
 
   it("never returns an empty name when filters would eat everything", () => {
-    // all-noise part → falls back to the raw tokens
+    // all-noise part -> falls back to the raw tokens
     const d = modelDisplay("qwen/qwen-72b-instruct");
     expect(d.name.length).toBeGreaterThan(0);
   });
@@ -111,8 +111,8 @@ describe("showProviderTag", () => {
   });
 });
 
-describe("image models (#79)", () => {
-  it("keeps 'Image' in the name — it is the capability, not noise", () => {
+describe("image models", () => {
+  it("keeps 'Image' in the name: it is the capability, not noise", () => {
     expect(
       chatModelDisplay({
         id: "openrouter::google/gemini-2.5-flash-image",

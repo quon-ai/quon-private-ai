@@ -1,12 +1,12 @@
 /**
- * Memory maintenance UI (P5) — the single quiet entry point for the lifecycle
+ * Memory maintenance UI (P5) - the single quiet entry point for the lifecycle
  * layer, per the ux-designer concept: the default Memory view stays exactly as
- * calm as before; everything here renders NOTHING unless it has something to
- * say. One conditional "Pflege" row expands inline (accordion — deliberately no
+ * calm as before; everything here renders nothing unless it has something to
+ * say. One conditional "Pflege" row expands inline (accordion - deliberately no
  * dialog, matching the house click-to-expand precedent) into up to three
- * sections in risk order: conflicts → attic ("still current?") → AI tidy-up.
+ * sections in risk order: conflicts -> attic ("still current?") -> AI tidy-up.
  * Every action is reversible (supersede/archive, never delete except the
- * explicit attic delete) and the LLM tidy shows an honest cost line BEFORE
+ * explicit attic delete) and the LLM tidy shows an honest cost line before
  * anything is sent.
  */
 import { useMemo, useState } from "react";
@@ -40,7 +40,7 @@ import { useQuonState } from "@/lib/quonStore";
 const ATTIC_VISIBLE = 5;
 
 /** Coarse, honest cost estimate for the consent line: small completions on the
- *  mistral-small class run well under a cent each — never claim "free". */
+ *  mistral-small class run well under a cent each - never claim "free". */
 function tidyCostLabel(calls: number): string {
   return calls <= 5 ? "0,01 $" : "0,05 $";
 }
@@ -57,10 +57,10 @@ export function MemoryHealthRow({ projectId }: { projectId?: string }) {
   const items = useMemory();
   const [open, setOpen] = useState(false);
   // Recomputed when the store changes (useMemory re-renders us); both scans are
-  // pure over cached vectors — cheap at this product's item counts.
+  // pure over cached vectors - cheap at this product's item counts.
   const { conflicts, nearDuplicates } = useMemo(() => {
     const found = findMemoryConflicts(projectId);
-    // A pair that is already a key conflict is NOT also listed as a duplicate —
+    // A pair that is already a key conflict is not also listed as a duplicate -
     // one pair, one question, asked in the more specific place (see
     // nearDuplicatesForReview).
     return { conflicts: found.keyConflicts, nearDuplicates: nearDuplicatesForReview(found) };
@@ -77,7 +77,7 @@ export function MemoryHealthRow({ projectId }: { projectId?: string }) {
     [items, projectId],
   );
 
-  // Quiet by default: nothing to decide, confirm or tidy → no row at all.
+  // Quiet by default: nothing to decide, confirm or tidy -> no row at all.
   if (
     conflicts.length === 0 &&
     nearDuplicates.length === 0 &&
@@ -180,11 +180,10 @@ function ConflictSection({ conflicts }: { conflicts: KeyConflictPair[] }) {
 }
 
 // --- near-duplicates: the same fact, said twice --------------------------------
-// Reported 2026-08-08 ("teilredundant"). These are pairs above SIM_REDUNDANT but
-// below the auto-merge bar — measurement showed genuine restatements live here
-// (a 0.86 pair is one fact in two wordings), so they are SURFACED for a human
-// decision and never silently merged. Same interaction as a key conflict: tap
-// the version to keep; the other is superseded, never deleted.
+// Pairs above SIM_REDUNDANT but below the auto-merge bar. Genuine restatements
+// live here (a 0.86 pair is one fact in two wordings), so they are surfaced for
+// a human decision and never silently merged. Same interaction as a key
+// conflict: tap the version to keep; the other is superseded, never deleted.
 
 function DuplicateSection({ pairs }: { pairs: NearDupPair[] }) {
   const { t } = useT();
@@ -287,7 +286,7 @@ function AtticSection({ items }: { items: MemoryItem[] }) {
   );
 }
 
-// --- AI tidy-up: consent inline → progress → honest result ---------------------
+// --- AI tidy-up: consent inline -> progress -> honest result ---------------------
 
 type TidyPhase =
   | { step: "idle" }
@@ -302,7 +301,7 @@ function TidySection({ projectId, plan }: { projectId?: string; plan: TidyPlan }
 
   async function go() {
     // 1) Free, deterministic pass first: exact duplicates auto-merge (reversible
-    //    — the older item is archived, never deleted; always REPORTED below).
+    //    - the older item is archived, never deleted; always REPORTED below).
     const autoMerged = autoMergeExactDuplicates(projectId);
     // 2) Re-plan (the auto-merge may have dissolved clusters), then relay.
     const fresh = planTidy(projectId);

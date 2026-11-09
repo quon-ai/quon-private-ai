@@ -3,7 +3,7 @@
 // real timings into the GitHub job summary so the run page states them instead
 // of hiding them behind two API timestamps.
 //
-// Runs as a FINAL job (`needs:` every other job, `if: always()`), not as a step,
+// Runs as a final job (`needs:` every other job, `if: always()`), not as a step,
 // and that placement is the whole point: the 25-minute regression lived in the
 // POST-job cache save, which happens after the last step has already passed. A
 // step-level timer cannot see it. The API's job duration can, because it spans
@@ -11,7 +11,7 @@
 //
 // Usage:
 //   node scripts/ci-duration-ratchet.mjs <run_id>      # needs GH_TOKEN
-//   GITHUB_STEP_SUMMARY=/dev/stdout node … <run_id>    # to eyeball it locally
+//   GITHUB_STEP_SUMMARY=/dev/stdout node ... <run_id>    # to eyeball it locally
 import { appendFileSync, readFileSync } from "node:fs";
 import { budgetFor, fmt, checkTimeoutDrift, timings, verdictFor } from "./ci-budgets.mjs";
 
@@ -75,10 +75,10 @@ for (const job of jobs) {
   if (over) breaches.push(`${job.name} ran ${fmt(runSec)}, over its ${fmt(spec.budget)} budget`);
   // Judge the VERDICT, not the raw conclusion. "superseded" and "never ran" are
   // both reported by GitHub as `cancelled`, and neither says anything about the
-  // code — treating them as failures is how a gate starts crying wolf.
+  // code - treating them as failures is how a gate starts crying wolf.
   if (verdict === "TIMED OUT") failures.push(`${job.name} hit its ${fmt(spec.timeout)} timeout`);
   // `queued`/`in_progress` only show up when this is run BY HAND against a live
-  // run (a documented use — see the header). In the Gate job they cannot occur,
+  // run (a documented use - see the header). In the Gate job they cannot occur,
   // because it `needs:` every job. Reporting them as failures would make the
   // manual invocation lie.
   else if (job.status !== "completed") {
@@ -92,11 +92,10 @@ const drift = checkTimeoutDrift(
   readFileSync(new URL("../.github/workflows/ci.yml", import.meta.url), "utf8"),
 );
 
-// "Nothing failed" is not "everything passed". Observed 2026-08-17 on a run
-// whose four jobs were ALL superseded by a newer push: every verdict was
-// benign, so this job reported SUCCESS — a green Gate against a commit that
-// was never tested at all. Exactly the kind of quiet false assurance the whole
-// file exists to prevent, and it took real data to see it.
+// "Nothing failed" is not "everything passed". When every job of a run is
+// superseded by a newer push, every verdict is benign, and without this count
+// the Gate would report success against a commit that was never tested at
+// all: exactly the quiet false assurance this file exists to prevent.
 const verified = rows.length - skipped.length;
 
 const out = [

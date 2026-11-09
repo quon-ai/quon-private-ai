@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 
 import { login, sharedCreds } from "./helpers/account";
 
-// Real-layout document viewer for Markdown (DocumentViewer → MarkdownOriginal):
+// Real-layout document viewer for Markdown (DocumentViewer -> MarkdownOriginal):
 // a .md doc renders its "Original" view through the Markdown component (a real
 // heading element), while the "Text" toggle shows the raw extracted "# Titel".
 test("a Markdown document renders a heading in Original view and raw text in Text view", async ({
@@ -28,11 +28,11 @@ test("a Markdown document renders a heading in Original view and raw text in Tex
   const viewer = page.getByRole("dialog");
   await expect(viewer).toBeVisible();
 
-  // Original view (the default) renders the "#" line as a real heading element —
-  // NOT raw markdown text.
+  // Original view (the default) renders the "#" line as a real heading element -
+  // Not raw markdown text.
   await expect(viewer.getByRole("heading", { name: heading })).toBeVisible({ timeout: 30_000 });
 
-  // Toggle to Text → the raw extracted markdown ("# …") is shown verbatim.
+  // Toggle to Text -> the raw extracted markdown ("# ...") is shown verbatim.
   await viewer.getByRole("button", { name: "Text", exact: true }).click();
   await expect(viewer.getByText(`# ${heading}`)).toBeVisible();
   await expect(viewer.getByRole("heading", { name: heading })).toHaveCount(0);

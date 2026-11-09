@@ -30,8 +30,8 @@ class UsageResponse(BaseModel):
 
 # Successful live refreshes are cached per user for a few minutes so an open
 # Settings screen (or the chat-mount budget check) can't hammer the OpenRouter
-# management API. In-process only — fine for the single-worker deployment.
-# Fallback responses (upstream outage) are deliberately NOT cached so recovery
+# management API. In-process only - fine for the single-worker deployment.
+# Fallback responses (upstream outage) are deliberately not cached so recovery
 # is picked up on the next request. Admin limit/disable changes invalidate.
 _USAGE_CACHE_TTL_MS = 5 * 60 * 1000
 _USAGE_REFRESH_TIMEOUT_S = 6.0
@@ -42,7 +42,7 @@ _usage_cache: dict[str, tuple[int, UsageResponse]] = {}
 async def account_usage(user: User = Depends(current_active_user)) -> UsageResponse:
     """The user's OpenRouter credit usage. Refreshed live when provisioning is
     enabled (result cached ~5 min); otherwise the stored mirror is returned.
-    Only usage/limit numbers ever leave the server — never the sub-key."""
+    Only usage/limit numbers ever leave the server - never the sub-key."""
     with db.get_conn() as c:
         row = c.execute("SELECT * FROM user_or_keys WHERE user_id=?", (user.id,)).fetchone()
     if row is None:

@@ -34,7 +34,7 @@ describe("tokenizeQuery", () => {
   });
 });
 
-describe("searchChatSessions — matching", () => {
+describe("searchChatSessions: matching", () => {
   it("matches case-insensitive substrings in message text", () => {
     const hits = searchChatSessions(
       [session("a", "Trip", [msg("user", "Flug nach Lissabon buchen")])],
@@ -69,7 +69,7 @@ describe("searchChatSessions — matching", () => {
   });
 });
 
-describe("searchChatSessions — AND tokens (per message)", () => {
+describe("searchChatSessions: AND tokens (per message)", () => {
   it("requires all tokens within a single message", () => {
     const split = session("split", "Chat", [
       msg("user", "invoice due"),
@@ -89,7 +89,7 @@ describe("searchChatSessions — AND tokens (per message)", () => {
   });
 });
 
-describe("searchChatSessions — ranking", () => {
+describe("searchChatSessions: ranking", () => {
   it("puts title matches first, then sorts by recency", () => {
     const hits = searchChatSessions(
       [
@@ -109,7 +109,7 @@ describe("searchChatSessions — ranking", () => {
   });
 });
 
-describe("searchChatSessions — snippets", () => {
+describe("searchChatSessions: snippets", () => {
   it("extracts a window around the match with aligned highlight ranges", () => {
     const long = `${"x".repeat(100)} the secret keyword sits here ${"y".repeat(100)}`;
     const [hit] = searchChatSessions([session("a", "Chat", [msg("user", long)])], "keyword");
@@ -148,7 +148,7 @@ describe("searchChatSessions — snippets", () => {
   });
 });
 
-describe("searchChatSessions — error bubbles", () => {
+describe("searchChatSessions: error bubbles", () => {
   it("skips error messages entirely", () => {
     const hits = searchChatSessions(
       [session("a", "Chat", [msg("assistant", "Scrubber unreachable", { isError: true })])],

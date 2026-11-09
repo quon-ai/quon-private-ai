@@ -70,7 +70,7 @@ def test_account_usage_reports_remaining(provisioning_client):
 
 
 def test_account_usage_not_provisioned(quon_client):
-    """Self-host / provisioning-off: no user_or_keys row → provisioned:false and
+    """Self-host / provisioning-off: no user_or_keys row -> provisioned:false and
     no numbers, so the frontend hides the budget UI entirely."""
     make_active_user(quon_client, "np@x.de")
     u = quon_client.get("/account/usage").json()
@@ -98,7 +98,7 @@ def test_account_usage_updates_mirror_and_caches(provisioning_client):
 
     second = c.get("/account/usage").json()
     assert second == first
-    assert c._prov_state["gets"] == 1  # cache hit — no second upstream call
+    assert c._prov_state["gets"] == 1  # cache hit - no second upstream call
 
     c.post(
         f"/admin/users/{uid}/or-limit",
@@ -183,7 +183,7 @@ def test_admin_limit_requires_token(provisioning_client):
 
 def test_byok_self_host_activates_without_subkey(quon_client):
     """With provisioning disabled (default fixture), verify activates the account
-    and no sub-key row is created — the relay falls back to the global BYOK key."""
+    and no sub-key row is created - the relay falls back to the global BYOK key."""
     import db
     import openrouter_provisioning as prov
 

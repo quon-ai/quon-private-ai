@@ -13,9 +13,9 @@ import { test, expect } from "@playwright/test";
  * needed, so no dependency on the shared account's stored language).
  *
  * The default is read from the source file rather than imported: features.ts
- * pulls in icon components, and a spec must not load app code into Node. The
- * public build's first CI run failed on exactly this spec (2026-11-03) because
- * it had the German default hard-coded.
+ * pulls in icon components, and a spec must not load app code into Node. It
+ * is read rather than hard-coded because the two builds differ: a spec that
+ * assumes German fails on the public build.
  */
 const DEFAULT_LANG = (/DEFAULT_LANG: Lang = "(de|en)"/.exec(
   readFileSync(join(process.cwd(), "src/lib/features.ts"), "utf8"),

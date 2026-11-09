@@ -56,7 +56,7 @@ const server = createServer(async (req, res) => {
     let response;
 
     // Static-first for GET/HEAD: any real file under dist/client (hashed
-    // /assets/*, /favicon.svg, the self-hosted /ort/* ONNX runtime, …) is served
+    // /assets/*, /favicon.svg, the self-hosted /ort/* ONNX runtime, ...) is served
     // directly; everything else (SSR routes) falls through to the app handler.
     // `new URL` already normalizes away `..`, so serveStatic can't escape the root.
     response = method === "GET" || method === "HEAD" ? await serveStatic(url.pathname) : null;

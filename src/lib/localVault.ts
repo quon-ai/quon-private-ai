@@ -1,5 +1,5 @@
 /**
- * Local vault — encrypts this device's caches (localStorage / IndexedDB) at rest.
+ * Local vault - encrypts this device's caches (localStorage / IndexedDB) at rest.
  *
  * The server has always only seen ciphertext (zero-knowledge sync); this closes
  * the *device* side: chat history, Memory/Documents/Projects and preferences
@@ -8,12 +8,12 @@
  * different browser profile account can't read them. The Master Key itself lives
  * only in memory/sessionStorage (see quonCrypto.persistMasterKey).
  *
- * The cache key is set on unlock (authStore.setMasterKey → deriveLocalCacheKey)
+ * The cache key is set on unlock (authStore.setMasterKey -> deriveLocalCacheKey)
  * and cleared on logout. Before the key exists nothing is read from or written
- * to disk — stores start empty and hydrate as soon as the key arrives; writes
+ * to disk - stores start empty and hydrate as soon as the key arrives; writes
  * without a key are skipped (fail soft; the server sync stays the durable copy).
  *
- * Sealed values are tagged with the `enc1:` / `{enc1: …}` envelope so legacy
+ * Sealed values are tagged with the `enc1:` / `{enc1: ...}` envelope so legacy
  * plaintext caches are recognized, loaded once, and re-written sealed (migration).
  */
 
@@ -34,7 +34,7 @@ export function setLocalCacheKey(key: Uint8Array): void {
 }
 
 /** Drop the cache key (logout / account switch). In-flight waiters stay pending
- *  until the next unlock — a locked/anonymous app never reads the caches. */
+ *  until the next unlock - a locked/anonymous app never reads the caches. */
 export function clearLocalCacheKey(): void {
   cacheKey = null;
 }
@@ -50,7 +50,7 @@ export function whenLocalCacheKey(): Promise<void> {
 }
 
 /** Seal a value for local persistence: `enc1:<base64(secretbox)>`, or null when
- *  no key is available (caller must then skip the write — never store plaintext). */
+ *  no key is available (caller must then skip the write - never store plaintext). */
 export function sealLocal(value: unknown): string | null {
   if (!cacheKey) return null;
   try {
@@ -77,9 +77,9 @@ export function openLocal<T>(raw: string): T | null {
 }
 
 /** Binary siblings of sealLocal/openLocal, for payloads that are raw bytes
- *  (locally cached document originals). Same contract — no key → no plaintext
- *  write, wrong key / tampered → null — but without the JSON+base64 detour,
- *  which would ~2.5× the memory for multi-megabyte files. */
+ *  (locally cached document originals). Same contract - no key -> no plaintext
+ *  write, wrong key / tampered -> null - but without the JSON+base64 detour,
+ *  which would ~2.5x the memory for multi-megabyte files. */
 export function sealLocalBytes(bytes: Uint8Array): Uint8Array | null {
   if (!cacheKey) return null;
   try {

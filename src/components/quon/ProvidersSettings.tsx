@@ -1,10 +1,10 @@
 /**
- * Settings → Providers & models.
+ * Settings -> Providers & models.
  *
  * Lists every chat provider connection: the built-in OpenRouter plus any
  * user-added OpenAI-compatible providers (BYOK). For each, pick which models
  * appear in the chat dropdown (load the provider's catalog or type ids). Keys are
- * write-only — sent to the gateway, never returned.
+ * write-only - sent to the gateway, never returned.
  */
 import { useState } from "react";
 import { Check, Cloud, Eye, EyeOff, Loader2, Plus, RefreshCw, Trash2, X } from "lucide-react";

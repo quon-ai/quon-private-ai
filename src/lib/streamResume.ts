@@ -12,7 +12,7 @@ import { QuonError, StreamPayloadError } from "./quonApi";
 
 /**
  * True when an error looks like the connection broke rather than the request
- * being rejected. Only these are worth resuming — a provider error, a 4xx/5xx
+ * being rejected. Only these are worth resuming - a provider error, a 4xx/5xx
  * or a rejected payload is a real answer about the request and must surface.
  *
  * QuonError carries the HTTP status when there was a response; a fetch that
@@ -21,16 +21,16 @@ import { QuonError, StreamPayloadError } from "./quonApi";
  * network-failure shape.
  */
 export function isTransportFailure(err: unknown, ownAbort = true): boolean {
-  // An `{error}` event in the stream body is the provider's answer — it has no
+  // An `{error}` event in the stream body is the provider's answer - it has no
   // HTTP status (the stream was 200), so it would otherwise pass as a dropped
-  // socket and be resumed into "Verbindung verloren" (#84).
+  // socket and be resumed into "Verbindung verloren".
   if (err instanceof StreamPayloadError) return false;
   if (err instanceof QuonError) return err.status === undefined;
   if (err instanceof DOMException && err.name === "AbortError") {
     // An abort is only "not worth resuming" when WE aborted (the user pressed
     // stop). A mobile OS tearing down an in-flight request of a backgrounded
     // tab surfaces as an AbortError too, and that is precisely the case the job
-    // buffer exists for — treating it as final threw the answer away while the
+    // buffer exists for - treating it as final threw the answer away while the
     // server had already finished writing it.
     return !ownAbort;
   }
@@ -39,7 +39,7 @@ export function isTransportFailure(err: unknown, ownAbort = true): boolean {
 
 /**
  * Resolve once the document is visible (immediately if it already is), so a
- * reconnect is not attempted while the tab is still frozen/hidden — that
+ * reconnect is not attempted while the tab is still frozen/hidden - that
  * attempt would just fail again and burn a retry. Also resolves if the run is
  * aborted, so the caller can bail promptly.
  */

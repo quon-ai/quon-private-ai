@@ -27,8 +27,8 @@ test("PII never leaves the device in clear; the answer re-hydrates locally", asy
     .fill("Schreib eine Mail an kontakt@example.com");
   await clickSend(page);
 
-  // Wait for the re-hydrated answer — that proves the full flow ran: scrub →
-  // (mocked) relay → local re-hydration of [EMAIL_1] back to the real address.
+  // Wait for the re-hydrated answer - that proves the full flow ran: scrub ->
+  // (mocked) relay -> local re-hydration of [EMAIL_1] back to the real address.
   await expect(page.getByText("Klar, ich schreibe an kontakt@example.com.")).toBeVisible({
     timeout: 20_000,
   });
@@ -36,10 +36,10 @@ test("PII never leaves the device in clear; the answer re-hydrates locally", asy
   // The user bubble flags that the email was redacted.
   await expect(page.getByText(/items? redacted/)).toBeVisible();
 
-  // THE GUARANTEE: the real address never went over the wire — only the placeholder.
+  // The guarantee: the real address never went over the wire - only the placeholder.
   expect(outgoing).toContain("[EMAIL_1]");
   expect(outgoing).not.toContain("kontakt@example.com");
-  // Web search rides along by default (agentic server tool — the model
+  // Web search rides along by default (agentic server tool - the model
   // decides when to actually search; only the scrubbed text is ever used).
   expect(outgoing).toContain('"web_search":true');
 });

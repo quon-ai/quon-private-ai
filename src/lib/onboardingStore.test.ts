@@ -17,7 +17,7 @@ import { getQuonState, quon } from "./quonStore";
 
 beforeEach(() => {
   sessionStorage.clear();
-  // Reset to the safe "already seen" defaults an existing account would have —
+  // Reset to the safe "already seen" defaults an existing account would have -
   // mirrors quonStore's own defaults, since resetState() isn't exported for tests.
   quon.setOnboardingStep("done");
   quon.setOnboardingSeen(true);
@@ -52,7 +52,7 @@ describe("eligibility bridge (verify -> unlock, possibly different tabs)", () =>
   });
 
   it("verify and unlock in different tabs: no marker present -> fails closed to no onboarding", () => {
-    // Nothing captured in this "tab" — armIfEligible must be a no-op.
+    // Nothing captured in this "tab" - armIfEligible must be a no-op.
     armIfEligible();
     expect(getQuonState().onboardingStep).toBe("done");
     expect(getQuonState().onboardingSeen).toBe(true);
@@ -66,7 +66,7 @@ describe("step state machine", () => {
     expect(getQuonState().onboardingStep).toBe(1);
 
     quon.setOnboardingStep(2);
-    advanceOnboardingFromIntro(); // not step 0 — no-op
+    advanceOnboardingFromIntro(); // not step 0 - no-op
     expect(getQuonState().onboardingStep).toBe(2);
   });
 
@@ -92,7 +92,7 @@ describe("step state machine", () => {
   });
 
   it("skipToOnboardingTeaser jumps 0 -> 2 and marks seen (the no-PII-first-send edge case)", () => {
-    // A step-1 callout with "0 redacted" would have nothing to point at — ScreenChat
+    // A step-1 callout with "0 redacted" would have nothing to point at - ScreenChat
     // calls this instead of advanceOnboardingFromIntro when the first send redacted
     // nothing, so the flow can't get stranded at an invisible step 1.
     quon.setOnboardingStep(0);

@@ -14,7 +14,7 @@ import { clickSend, login, openChat, sharedCreds } from "./helpers/account";
  * kept agreeing with me because it encoded the same assumptions as the code.
  *
  * So this samples the real DOM through a real send. /scrub is mocked with a
- * fixed per-piece delay — that costs no provider credit and, more importantly,
+ * fixed per-piece delay - that costs no provider credit and, more importantly,
  * makes the wave structure deterministic, so the assertions below are about the
  * INDICATOR and not about provider variance.
  *
@@ -49,15 +49,15 @@ async function sampleIndicator(page: Page, forMs: number): Promise<Sample[]> {
   const t0 = Date.now();
   while (Date.now() - t0 < forMs) {
     const s = await page.evaluate(() => {
-      // ⚠️ Read the two spans SEPARATELY, never one blob of text.
+      // Read the two spans separately, never one blob of text.
       //
       // The first version regex-matched percent and estimate out of the same
       // innerText, and the estimate pattern happily matched the digits of "35%".
       // So the "no zero estimate" and "no oscillation" assertions were silently
-      // re-testing the percentage and passed vacuously — the exact wrong-assert
+      // re-testing the percentage and passed vacuously - the exact wrong-assert
       // failure this suite is supposed to catch.
       //
-      // The row is: <div …tabular-nums><span>{percent}%</span><span>{eta}</span></div>
+      // The row is: <div ...tabular-nums><span>{percent}%</span><span>{eta}</span></div>
       const row = Array.from(document.querySelectorAll<HTMLElement>("div.tabular-nums")).find(
         (d) => d.children.length === 2 && /%/.test((d.children[0] as HTMLElement).innerText),
       );
@@ -118,7 +118,7 @@ test("the scrub indicator never lies: monotonic bar, no zero estimate, no oscill
   await login(page, sharedCreds());
   await openChat(page);
 
-  // ~138k chars → ~17 pieces of 8k → 3 waves at concurrency 6, matching the
+  // ~138k chars -> ~17 pieces of 8k -> 3 waves at concurrency 6, matching the
   // 12/17-document sends that were reported.
   const text = Array.from({ length: 23 }, (_, i) => syntheticDoc(i + 1)).join("\n");
   await page.setInputFiles('input[type="file"]', {
@@ -146,7 +146,7 @@ test("the scrub indicator never lies: monotonic bar, no zero estimate, no oscill
     .join("\n");
   const report = `pieces=${scrubCalls} pieceMs=${PIECE_MS}\n\n${table}`;
   await testInfo.attach("indicator-timeline.txt", { body: report, contentType: "text/plain" });
-  // The default local reporter is `list`, which DISCARDS attachments — so the
+  // The default local reporter is `list`, which DISCARDS attachments - so the
   // timeline also goes to a file, otherwise the one artefact worth reading is
   // silently thrown away.
   if (process.env.QUON_INDICATOR_LOG) writeFileSync(process.env.QUON_INDICATOR_LOG, report);
@@ -162,13 +162,13 @@ test("the scrub indicator never lies: monotonic bar, no zero estimate, no oscill
   }
 
   // 2) The elapsed clock only counts up. This replaced a remaining-time estimate
-  //    that wandered in both directions: reported as 20s → 40s → 1:00 → 25s, and
-  //    measured by THIS spec at ~10s → ~15s → ~10s even with a fully
+  //    that wandered in both directions: reported as 20s -> 40s -> 1:00 -> 25s, and
+  //    measured by this spec at ~10s -> ~15s -> ~10s even with a fully
   //    deterministic per-piece latency. A number that moves both ways gives the
   //    reader nothing to act on.
   //
-  //    ⚠️ The earlier version of this assertion only checked for a rise AFTER a
-  //    fall, so the 10s→15s rise (which came first) passed silently. Assert
+  //    The earlier version of this assertion only checked for a rise after a
+  //    fall, so the 10s->15s rise (which came first) passed silently. Assert
   //    monotonicity over the whole sequence instead.
   const secs = samples
     .map((s) => {
@@ -184,7 +184,7 @@ test("the scrub indicator never lies: monotonic bar, no zero estimate, no oscill
   }
 
   // 3) A false "Scrubber offline" must not appear during our own scrub. /scrub is
-  //    mocked here, so the backend is idle — if this ever fires with a mock, the
+  //    mocked here, so the backend is idle - if this ever fires with a mock, the
   //    cause is client-side, which is worth knowing.
   const offline = samples.find((s) => s.offline);
   expect(offline, `false offline at ${offline?.ms}ms`).toBeUndefined();
@@ -195,15 +195,15 @@ test("a stalled piece says so instead of looking like a dead UI", async ({ page 
 
   // Reported as "hängt komplett ohne Fehler, der Timer zählt einfach weiter
   // hoch". It was not a hang: the per-request timeout is 180s and there are 3
-  // attempts, so ONE unresponsive piece stalls the send for ~9 minutes behind a
-  // ticking clock. Here the FIRST piece fails once, so the retry path runs.
+  // attempts, so one unresponsive piece stalls the send for ~9 minutes behind a
+  // ticking clock. Here the first piece fails once, so the retry path runs.
   const PIECE_MS = 800;
   let failed = false;
   await page.route("**/scrub", async (route) => {
     const reqText =
       (JSON.parse(route.request().postData() ?? "{}") as { text?: string }).text ?? "";
-    // ⚠️ Abort only an ATTACHMENT piece. The wave scrubs the typed message and
-    // the attachment concurrently, and the message path has NO retry — it fails
+    // Abort only an ATTACHMENT piece. The wave scrubs the typed message and
+    // the attachment concurrently, and the message path has no retry - it fails
     // the send closed. Aborting "the first request" therefore raced: locally an
     // attachment piece arrived first and the retry notice appeared; on the
     // loaded CI runner the MESSAGE arrived first, the send died, and the spec
@@ -253,7 +253,7 @@ test("a stalled piece says so instead of looking like a dead UI", async ({ page 
     .fill("Vergleiche die Angebote");
   await clickSend(page);
 
-  // THE assertion: the user is told a section didn't respond and is being
+  // The assertion: the user is told a section didn't respond and is being
   // retried. Before this, the same situation showed nothing at all.
   await expect(page.getByText(/didn't respond|antwortet nicht/i)).toBeVisible({
     timeout: 60_000,
@@ -263,7 +263,7 @@ test("a stalled piece says so instead of looking like a dead UI", async ({ page 
     contentType: "text/plain",
   });
 
-  // …and the send still completes once the retry succeeds (fail-closed intact,
+  // ...and the send still completes once the retry succeeds (fail-closed intact,
   // not fail-stuck).
   await expect(page.getByText("Vergleich folgt.")).toBeVisible({ timeout: 120_000 });
 });

@@ -17,7 +17,7 @@ const PIXEL =
   "Mozilla/5.0 (Linux; Android 16; Pixel 10 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36";
 
 describe("isIosDevice / isConstrainedDevice", () => {
-  it("every iPhone browser is iOS WebKit — Safari and Chrome alike (#68, #76)", () => {
+  it("every iPhone browser is iOS WebKit, Safari and Chrome alike", () => {
     expect(isIosDevice({ ua: IPHONE_SAFARI })).toBe(true);
     expect(isIosDevice({ ua: IPHONE_CHROME })).toBe(true);
     expect(isConstrainedDevice({ ua: IPHONE_SAFARI })).toBe(true);
@@ -34,7 +34,7 @@ describe("isIosDevice / isConstrainedDevice", () => {
     expect(isConstrainedDevice({ ua: MAC_CHROME })).toBe(false);
   });
 
-  it("a low-memory Android reports deviceMemory ≤ 4 and is constrained; a flagship is not", () => {
+  it("a low-memory Android reports deviceMemory <= 4 and is constrained; a flagship is not", () => {
     expect(isConstrainedDevice({ ua: PIXEL, deviceMemory: 4 })).toBe(true);
     expect(isConstrainedDevice({ ua: PIXEL, deviceMemory: 8 })).toBe(false);
   });
@@ -61,14 +61,14 @@ describe("heavyWorkPolicy", () => {
     expect(p.backgroundReembed).toBe(false);
     expect(p.embedBatchSize).toBeLessThan(16);
     expect(p.releaseEmbedderIdleMs).toBeGreaterThan(0);
-    // Uploads still happen — but not for the files that need ~3× their size in RAM.
+    // Uploads still happen - but not for the files that need ~3x their size in RAM.
     expect(p.backgroundOriginalsUpload).toBe(true);
     expect(p.maxAutoUploadBytes).toBeLessThan(50 * 1024 * 1024);
     expect(p.reason).toBe("constrained");
     expect(p.sequentialIngest).toBe(true);
   });
 
-  it("a crash loop puts ANY device into safe mode: no optional heavy work at all", () => {
+  it("a crash loop puts any device into safe mode: no optional heavy work at all", () => {
     for (const constrained of [false, true]) {
       const p = heavyWorkPolicy(constrained, CRASH_LOOP_SAFE_MODE_AT);
       expect(p.prewarmEmbedder).toBe(false);
@@ -76,7 +76,7 @@ describe("heavyWorkPolicy", () => {
       expect(p.backgroundOriginalsUpload).toBe(false);
       expect(p.reason).toBe("safe-mode");
     }
-    // One short crash is not a loop — could be the user force-closing the tab.
+    // One short crash is not a loop - could be the user force-closing the tab.
     expect(heavyWorkPolicy(false, CRASH_LOOP_SAFE_MODE_AT - 1).reason).toBe("normal");
   });
 });

@@ -3,11 +3,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { BlobIn, PushResponse } from "./api/syncApi";
 
 /**
- * Feedback #88, the timing hole: the engine waits for the local database
- * before its first pull, but only for a bounded time. On a slow device the
- * database opens AFTER that first pull went out with the stale cursor — the
- * reset then lands on an engine that has already asked. The reset must
- * therefore make every running engine pull again from 0.
+ * The timing hole in the evicted-cache reset: the engine waits for the local
+ * database before its first pull, but only for a bounded time. On a slow
+ * device the database opens after that first pull went out with the stale
+ * cursor - the reset then lands on an engine that has already asked. The
+ * reset must therefore make every running engine pull again from 0.
  */
 const changesCalledWith: number[] = [];
 
@@ -63,7 +63,7 @@ beforeEach(() => {
   changesCalledWith.length = 0;
 });
 
-describe("collectionSync — a cursor reset after the first pull", () => {
+describe("collectionSync: a cursor reset after the first pull", () => {
   it("pulls again from 0 instead of trusting the pull that already went out with the stale cursor", async () => {
     disk.set(`${SYNC_CURSOR_PREFIX}projects_v2`, "52130"); // survived the eviction
     const engine = createCollectionSync<Item>({
@@ -73,7 +73,7 @@ describe("collectionSync — a cursor reset after the first pull", () => {
     });
     engine.start();
     await new Promise((r) => setTimeout(r, 0));
-    expect(changesCalledWith).toEqual([52130]); // the stale first pull — too early to know
+    expect(changesCalledWith).toEqual([52130]); // the stale first pull - too early to know
 
     resetAllSyncCursors(); // the database opened: it was new
     await new Promise((r) => setTimeout(r, 0));

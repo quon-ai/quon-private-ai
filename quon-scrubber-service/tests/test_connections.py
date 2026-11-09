@@ -48,13 +48,13 @@ def test_resolve_for_chat_routes_per_connection(monkeypatch):
         "get_custom_connection",
         lambda cid: {"id": "c1", "base_url": "https://x/v1", "api_key": "sk"} if cid == "c1" else None,
     )
-    # OpenRouter → per-user resolved key
+    # OpenRouter -> per-user resolved key
     assert connections.resolve_for_chat("openrouter", "u1") == (settings_store.settings.openrouter_base_url, "ork")
-    # default (None) → OpenRouter
+    # default (None) -> OpenRouter
     assert connections.resolve_for_chat(None, "u1")[1] == "ork"
-    # no user + provisioning → no key
+    # no user + provisioning -> no key
     assert connections.resolve_for_chat("openrouter", None) is None
-    # custom → its own base_url + key
+    # custom -> its own base_url + key
     assert connections.resolve_for_chat("c1", None) == ("https://x/v1", "sk")
     # unknown connection
     assert connections.resolve_for_chat("nope", None) is None
@@ -89,7 +89,7 @@ def test_openrouter_models_dedupe(monkeypatch, tmp_path):
     assert settings_store.get_openrouter_models() == ["a", "b"]
 
 
-# --- Image generation (#79): which models get the picker badge + `image_output` ---
+# --- Image generation: which models get the picker badge + `image_output` ---------
 
 
 def test_image_output_follows_openrouters_naming_convention():

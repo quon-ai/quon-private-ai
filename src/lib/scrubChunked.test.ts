@@ -24,7 +24,7 @@ describe("splitForScrub", () => {
     expect(splitForScrub("", 100)).toEqual([]);
   });
 
-  it("pieces concatenate back to EXACTLY the original", () => {
+  it("pieces concatenate back to exactly the original", () => {
     const text = Array.from({ length: 50 }, (_, i) => `Absatz ${i} mit etwas Text.\n\n`).join("");
     const pieces = splitForScrub(text, 200);
     expect(pieces.length).toBeGreaterThan(1);
@@ -49,7 +49,7 @@ describe("splitForScrub", () => {
 });
 
 describe("mergeScrubPieces (value-aware placeholder namespace)", () => {
-  it("collapses the SAME value across pieces to one placeholder", () => {
+  it("collapses the same value across pieces to one placeholder", () => {
     const a = res("Vertrag mit [PERSON_1].", [ent("PERSON", "Anna Müller", "[PERSON_1]")]);
     const b = res("Auch [PERSON_1] unterschreibt.", [ent("PERSON", "Anna Müller", "[PERSON_1]")]);
     const merged = mergeScrubPieces([a, b]);
@@ -58,7 +58,7 @@ describe("mergeScrubPieces (value-aware placeholder namespace)", () => {
     expect(merged.entities[0].value).toBe("Anna Müller");
   });
 
-  it("keeps DIFFERENT values that share a local placeholder distinct", () => {
+  it("keeps different values that share a local placeholder distinct", () => {
     // Each piece independently numbered [PERSON_1]; different people.
     const a = res("[PERSON_1] zahlt.", [ent("PERSON", "Anna Müller", "[PERSON_1]")]);
     const b = res("[PERSON_1] auch.", [ent("PERSON", "Thomas Kapferer", "[PERSON_1]")]);
@@ -111,7 +111,7 @@ describe("scrubLarge", () => {
     }));
     const out = await scrubLarge(big);
     expect(scrubText.mock.calls.length).toBeGreaterThan(1); // it split
-    // Anna is the same everywhere → exactly one entity after merge
+    // Anna is the same everywhere -> exactly one entity after merge
     expect(out.entities).toHaveLength(1);
     expect(out.entities[0].placeholder).toBe("[PERSON_1]");
   });
@@ -162,9 +162,9 @@ describe("scrubLarge", () => {
   });
 });
 
-describe("scrubLarge progress (feedback #57)", () => {
-  /** The indexing had a progress bar while the scrub — the core of the
-   *  service — sat behind a static label. The callback contract: fires once
+describe("scrubLarge progress", () => {
+  /** The indexing had a progress bar while the scrub - the core of the
+   *  service - sat behind a static label. The callback contract: fires once
    *  per finished piece with a growing `done`, total = piece count, and (1,1)
    *  for the single-call path so callers need no size special-case. */
   it("reports every piece of a large scrub, ending at (total, total)", async () => {
@@ -197,9 +197,9 @@ describe("scrubLarge progress (feedback #57)", () => {
 describe("a stalled piece is reported, not swallowed", () => {
   // The report was "hängt komplett ohne Fehler, der Timer zählt weiter hoch".
   // It was not a hang: the per-request timeout is 180s and there are 3 attempts,
-  // so ONE unresponsive piece stalls a send for ~9 minutes with nothing on screen
+  // so one unresponsive piece stalls a send for ~9 minutes with nothing on screen
   // but a ticking clock. Measured on the documents that triggered it: ~150k chars
-  // → 19 pieces → 4 waves, 18 done (99%) and one retrying. Nothing distinguished
+  // -> 19 pieces -> 4 waves, 18 done (99%) and one retrying. Nothing distinguished
   // that from a dead UI, so it has to be said out loud.
   const ok = () => ({ scrubbed: "clean", entities: [], metadata: { fallback_mode: false } });
 
@@ -216,7 +216,7 @@ describe("a stalled piece is reported, not swallowed", () => {
       seen.push({ attempt: info.attempt, attempts: info.attempts }),
     );
 
-    // Two failures → two reports, numbered so the UI can say "2 of 3", "3 of 3".
+    // Two failures -> two reports, numbered so the UI can say "2 of 3", "3 of 3".
     expect(seen).toEqual([
       { attempt: 2, attempts: 3 },
       { attempt: 3, attempts: 3 },
@@ -230,7 +230,7 @@ describe("a stalled piece is reported, not swallowed", () => {
     expect(onRetry).not.toHaveBeenCalled();
   });
 
-  it("still throws once the attempts are exhausted — fail-closed preserved", async () => {
+  it("still throws once the attempts are exhausted: fail-closed preserved", async () => {
     scrubText.mockRejectedValue(new Error("timed out"));
     const onRetry = vi.fn();
     await expect(scrubLarge("short text", undefined, undefined, onRetry)).rejects.toThrow();
@@ -250,7 +250,7 @@ describe("a stalled piece is reported, not swallowed", () => {
     expect(onRetry).toHaveBeenCalledTimes(1);
   });
 
-  it("passes the error along so a caller can log WHY it stalled", async () => {
+  it("passes the error along so a caller can log why it stalled", async () => {
     const boom = new Error("/scrub timed out after 180s");
     let first = true;
     scrubText.mockImplementation(async () => {

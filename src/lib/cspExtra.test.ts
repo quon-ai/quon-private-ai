@@ -51,7 +51,7 @@ describe("cspExtraFromCookieHeader", () => {
     expect(cspExtraFromCookieHeader(h)).toBe("https://paperless.example.com");
   });
 
-  it("drops malformed values silently — a bad cookie must never break delivery", () => {
+  it("drops malformed values silently: a bad cookie must never break delivery", () => {
     expect(cspExtraFromCookieHeader(`${CSP_EXTRA_COOKIE}=javascript%3Aalert(1)`)).toBeNull();
     expect(cspExtraFromCookieHeader(`${CSP_EXTRA_COOKIE}=%E0%A4%A`)).toBeNull(); // bad escape
     expect(cspExtraFromCookieHeader(null)).toBeNull();
@@ -69,7 +69,7 @@ describe("setCspExtraCookie (browser side)", () => {
         return jar;
       },
       set cookie(v: string) {
-        jar = v; // last write wins — enough to assert the written attributes
+        jar = v; // last write wins - enough to assert the written attributes
       },
     });
     vi.stubGlobal("location", { protocol: "https:" });

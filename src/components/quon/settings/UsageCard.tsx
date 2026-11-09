@@ -1,5 +1,5 @@
 /**
- * "Included AI budget" card — shows how much of the account's capped OpenRouter
+ * "Included AI budget" card - shows how much of the account's capped OpenRouter
  * sub-key budget is used (hosted deployments only). Renders nothing when the
  * account isn't provisioned (self-host / BYOK) or the fetch fails, so the
  * Providers tab is unchanged on those deployments.
@@ -26,7 +26,7 @@ export function UsageCard() {
         if (!cancelled) setUsage(u);
       })
       .catch(() => {
-        /* not signed in / unreachable → keep the card hidden */
+        /* not signed in / unreachable -> keep the card hidden */
       });
     return () => {
       cancelled = true;

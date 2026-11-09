@@ -1,38 +1,38 @@
 /**
- * Chunked, parallel scrubbing for LARGE inputs (the "attach all documents" /
+ * Chunked, parallel scrubbing for large inputs (the "attach all documents" /
  * compare-several-contracts case). A single /scrub over a 50k blob makes the
- * backend fan out ~5 sequential-ish cloud-LLM chunks in ONE HTTP request; behind
+ * backend fan out ~5 sequential-ish cloud-LLM chunks in one HTTP request; behind
  * Cloudflare's ~100s edge timeout on a non-streamed response that request tips
  * over and the whole send fails closed ("nothing sent"). Splitting the text into
  * pieces that each cost ~1 cloud chunk and scrubbing them as PARALLEL, short
  * /scrub requests keeps every request well under the edge limit and makes the
  * wall-time the slowest piece instead of the sum.
  *
- * The pieces are merged back into ONE self-consistent scrub result with a
+ * The pieces are merged back into one self-consistent scrub result with a
  * VALUE-AWARE placeholder namespace: the same person/IBAN/amount appearing in
- * several documents collapses to the SAME placeholder, so the model sees a
+ * several documents collapses to the same placeholder, so the model sees a
  * coherent set of entities across the documents (essential for "compare these
  * five offers"). Fail-closed: if any piece can't be scrubbed, the whole thing
- * throws, exactly like the single-call path — the caller never sends partial or
+ * throws, exactly like the single-call path - the caller never sends partial or
  * unscrubbed text.
  */
 
 import { scrubText, type Entity, type ScrubOptions, type ScrubResult } from "@/lib/quonApi";
 
 /** Per-piece target size. Kept below the backend's cloud chunk (12000) so each
- *  piece is a single LLM round-trip — fast, and never near the edge timeout. */
+ *  piece is a single LLM round-trip - fast, and never near the edge timeout. */
 export const SCRUB_PIECE_CHARS = 8000;
 /** Above this total we split; at or below it a single /scrub is fine. */
 export const SCRUB_SPLIT_THRESHOLD = 12000;
-/** Max concurrent /scrub requests. Measured on the live stack (2026-08-08,
- *  25×8k pieces = a 200k attachment, numbers in HANDOFF §1): BEFORE the
- *  backend attached OpenRouter throughput-routing to the PII calls, raising
- *  this made things WORSE (one underlying provider queued per key: 3→78s,
- *  6→116s). WITH routing, 6 is the knee: 3→82s, 6→54s, 10→105s (collapses
- *  again). Don't change this without re-measuring both legs. */
+/** Max concurrent /scrub requests. Measured on the live stack with 25x8k
+ *  pieces (a 200k attachment): without OpenRouter throughput-routing on the
+ *  PII calls, raising this makes things worse (one underlying provider queued
+ *  per key: 3->78s, 6->116s). With routing, 6 is the knee: 3->82s, 6->54s,
+ *  10->105s (collapses again). Don't change this without re-measuring both
+ *  legs. */
 export const SCRUB_CONCURRENCY = 6;
 /** Told when a piece failed and is about to be retried. `attempt` is the number
- *  of the attempt ABOUT to run (2 = first retry), so it reads as "2 of 3". */
+ *  of the attempt about to run (2 = first retry), so it reads as "2 of 3". */
 export type ScrubRetryReporter = (info: {
   attempt: number;
   attempts: number;
@@ -41,11 +41,11 @@ export type ScrubRetryReporter = (info: {
 
 /** Per-piece retry attempts. Splitting a big attachment into N pieces means N
  *  chances for a TRANSIENT failure (a mobile-network blip, an OpenRouter
- *  rate-limit on the user's sub-key, an edge hiccup) — and fail-closed means one
+ *  rate-limit on the user's sub-key, an edge hiccup) - and fail-closed means one
  *  failed piece aborts the whole send. Retrying each piece a few times with
  *  backoff turns those transient failures into success instead of a dead send.
- *  (The backend already degrades LLM→NER internally and returns 200, so a piece
- *  only rejects on a real network/timeout/5xx — exactly what retry recovers.) */
+ *  (The backend already degrades LLM->NER internally and returns 200, so a piece
+ *  only rejects on a real network/timeout/5xx - exactly what retry recovers.) */
 const SCRUB_PIECE_ATTEMPTS = 3;
 
 async function scrubPieceWithRetry(
@@ -61,13 +61,12 @@ async function scrubPieceWithRetry(
     } catch (e) {
       lastErr = e;
       if (i < attempts - 1) {
-        // ⚠️ Report it. A piece that times out and retries used to be completely
-        // silent: with a 180s per-request timeout and 3 attempts, ONE bad piece
-        // stalls a send for ~9 minutes showing nothing but a ticking clock. A
-        // user reported exactly that as "hangs with no error" — and they were
-        // right to, because nothing distinguished it from a dead UI.
+        // Report it. A piece that times out and retries silently, with a 180s
+        // per-request timeout and 3 attempts, stalls a send for ~9 minutes
+        // showing nothing but a ticking clock - to the user that is "hangs with
+        // no error", indistinguishable from a dead UI.
         onRetry?.({ attempt: i + 2, attempts, error: e });
-        // Backoff: 400ms, 800ms, … — long enough to clear a rate-limit window /
+        // Backoff: 400ms, 800ms, ... - long enough to clear a rate-limit window /
         // a brief network stall without making the whole send feel stuck.
         await new Promise((res) => setTimeout(res, 400 * 2 ** i));
       }
@@ -79,7 +78,7 @@ async function scrubPieceWithRetry(
 /**
  * Greedily pack `text` into pieces of at most `maxChars`, preferring paragraph
  * (blank-line) then line boundaries so entities aren't split across a cut. The
- * pieces concatenate back to EXACTLY the original text (boundaries are kept with
+ * pieces concatenate back to exactly the original text (boundaries are kept with
  * the preceding piece), so re-joining the scrubbed pieces reproduces the full
  * scrubbed text. A single atom longer than `maxChars` is hard-sliced. Exported
  * for testing.
@@ -142,7 +141,7 @@ const placeholderRe = /\[([A-ZÄÖÜ_]+)_(\d+)\]/g;
 /**
  * Fold several independently-scrubbed pieces into one result with a shared,
  * value-aware placeholder namespace. Within each piece, every local placeholder
- * `[TYPE_n]` is rewritten to a GLOBAL `[TYPE_k]`, where the same (type, value)
+ * `[TYPE_n]` is rewritten to a global `[TYPE_k]`, where the same (type, value)
  * always maps to the same global placeholder across pieces. Returns the joined
  * scrubbed text + the de-duplicated entity list. Exported for testing.
  */
@@ -176,7 +175,7 @@ export function mergeScrubPieces(pieces: Array<Pick<ScrubResult, "scrubbed" | "e
     return piece.scrubbed.replace(placeholderRe, (match, type: string) => {
       const info = localToValue.get(match);
       // A placeholder with no matching entity (shouldn't happen) is left as-is,
-      // but never leaks a value — it's already a placeholder.
+      // but never leaks a value - it's already a placeholder.
       if (!info) return match;
       return globalFor(info.type ?? type, info.value, info.confidence);
     });
@@ -194,13 +193,13 @@ export function mergeScrubPieces(pieces: Array<Pick<ScrubResult, "scrubbed" | "e
 export async function scrubLarge(
   text: string,
   options?: ScrubOptions,
-  /** Called after each finished piece with (done, total). Feedback #57 was
-   *  blunt about why this exists: the document INDEXING had a progress bar
-   *  while "der verdammte Kern dieses Service" — the scrub — sat behind a
-   *  static label for up to a minute on a 200k attachment. total is 1 for the
-   *  single-call path so callers need no size-based special case. */
+  /** Called after each finished piece with (done, total). Why it exists: the
+   *  document INDEXING has a progress bar, and "der verdammte Kern dieses
+   *  Service" - the scrub - must not sit behind a static label for up to a
+   *  minute on a 200k attachment. total is 1 for the single-call path so
+   *  callers need no size-based special case. */
   onProgress?: (done: number, total: number) => void,
-  /** Surfaces a stalled piece to the UI — see scrubPieceWithRetry. */
+  /** Surfaces a stalled piece to the UI - see scrubPieceWithRetry. */
   onRetry?: ScrubRetryReporter,
 ): Promise<Pick<ScrubResult, "scrubbed" | "entities"> & { fallbackMode: boolean }> {
   if (text.length <= SCRUB_SPLIT_THRESHOLD) {

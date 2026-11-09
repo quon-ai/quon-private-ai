@@ -34,7 +34,7 @@ describe("prefs sync (the E2E `prefs` blob)", () => {
     expect(seen[0].updatedAt).toBeGreaterThan(0);
   });
 
-  it("a device-local change (redactedTotal) does NOT touch the prefs blob", () => {
+  it("a device-local change (redactedTotal) does not touch the prefs blob", () => {
     const seen: PrefsItem[] = [];
     const off = onPrefsChange((it) => seen.push(it));
     quon.addRedacted(3); // redactedTotal is not synced
@@ -104,8 +104,8 @@ describe("prefs sync (the E2E `prefs` blob)", () => {
     const item = getPrefsItem() as PrefsItem & { azureDevOpsConnection?: unknown };
     expect(item.azureDevOpsConnection).toBeUndefined();
     expect(item.prefsSchemaVersion).toBe(2);
-    // …and the cleaned blob is PUSHED. A migration is outside `set`, so nothing
-    // fires a listener and the server would keep the last blob it was given —
+    // ...and the cleaned blob is PUSHED. A migration is outside `set`, so nothing
+    // fires a listener and the server would keep the last blob it was given -
     // the one still holding the PAT. This echo is the deliberate exception to
     // the no-echo rule asserted above: a credential removal must propagate.
     expect(echoed).toHaveLength(1);
@@ -116,9 +116,9 @@ describe("prefs sync (the E2E `prefs` blob)", () => {
   });
 
   it("v2 does not re-run v1: an account already on v1 keeps FINANCIAL_AMOUNT if it re-enabled it", () => {
-    // v1 turned FINANCIAL_AMOUNT redaction OFF once, and its own doc comment
+    // v1 turned FINANCIAL_AMOUNT redaction off once, and its own doc comment
     // promises it never runs again. A single shared version guard would have
-    // broken that promise the moment v2 was added — re-disabling the type for
+    // broken that promise the moment v2 was added - re-disabling the type for
     // everyone who had deliberately switched it back on.
     applyRemotePrefs({
       id: "prefs",
@@ -138,8 +138,8 @@ describe("prefs sync (the E2E `prefs` blob)", () => {
     expect(item.prefsSchemaVersion).toBe(2);
   });
 
-  it("propagates an explicit Dropbox disconnect: a newer blob WITHOUT the connection clears it", () => {
-    // Device A connects Dropbox → the connection rides the E2E prefs blob here.
+  it("propagates an explicit Dropbox disconnect: a newer blob without the connection clears it", () => {
+    // Device A connects Dropbox -> the connection rides the E2E prefs blob here.
     applyRemotePrefs({
       id: "prefs",
       protectionLevel: "none",
@@ -152,7 +152,7 @@ describe("prefs sync (the E2E `prefs` blob)", () => {
       updatedAt: 1000,
     });
     expect(getPrefsItem().dropboxConnection).toEqual({ refreshToken: "rt", path: "/Docs" });
-    // Device A disconnects → pushes a NEWER blob that omits the connection.
+    // Device A disconnects -> pushes a NEWER blob that omits the connection.
     // Regression: `?? state` used to pin the stale connection, so a disconnect on
     // one device never reached the others.
     applyRemotePrefs({
@@ -163,7 +163,7 @@ describe("prefs sync (the E2E `prefs` blob)", () => {
       useMemoryContext: true,
       alwaysRedact: [],
       neverRedact: [],
-      updatedAt: 2000, // newer → wins, and the absent connection now clears it
+      updatedAt: 2000, // newer -> wins, and the absent connection now clears it
     });
     expect(getPrefsItem().dropboxConnection).toBeUndefined();
   });
@@ -181,8 +181,8 @@ describe("prefs sync (the E2E `prefs` blob)", () => {
     expect(getPrefsItem().updatedAt).toBeGreaterThan(0);
   });
 
-  it("propagates an explicit Paperless disconnect: a newer blob WITHOUT the connection clears it", () => {
-    // Device A connects Paperless → the connection rides the E2E prefs blob here.
+  it("propagates an explicit Paperless disconnect: a newer blob without the connection clears it", () => {
+    // Device A connects Paperless -> the connection rides the E2E prefs blob here.
     applyRemotePrefs({
       id: "prefs",
       protectionLevel: "none",
@@ -198,7 +198,7 @@ describe("prefs sync (the E2E `prefs` blob)", () => {
       baseUrl: "https://dms.example.com",
       token: "tok",
     });
-    // Device A disconnects → pushes a NEWER blob that omits the connection.
+    // Device A disconnects -> pushes a NEWER blob that omits the connection.
     // Regression (same class as the Dropbox `?? state` bug): the absent field
     // must HARD-apply, or a disconnect on one device never reaches the others.
     applyRemotePrefs({
@@ -209,13 +209,13 @@ describe("prefs sync (the E2E `prefs` blob)", () => {
       useMemoryContext: true,
       alwaysRedact: [],
       neverRedact: [],
-      updatedAt: 2000, // newer → wins, and the absent connection now clears it
+      updatedAt: 2000, // newer -> wins, and the absent connection now clears it
     });
     expect(getPrefsItem().paperlessConnection).toBeUndefined();
   });
 
-  it("correctActiveModel changes the model WITHOUT bumping the clock or pushing", () => {
-    // A system correction (invalid id → first valid) must not out-timestamp the
+  it("correctActiveModel changes the model without bumping the clock or pushing", () => {
+    // A system correction (invalid id -> first valid) must not out-timestamp the
     // real choice arriving from the server, so it neither bumps updatedAt nor
     // fires a push. Regression for the fresh-device 'default wins over server' bug.
     const seen: PrefsItem[] = [];
@@ -228,7 +228,7 @@ describe("prefs sync (the E2E `prefs` blob)", () => {
   });
 
   it("applyRemotePrefs ignores an older-or-equal blob (never regresses a local edit)", () => {
-    quon.setActiveModel("openrouter::openai/gpt-4o"); // local edit → updatedAt ≈ now
+    quon.setActiveModel("openrouter::openai/gpt-4o"); // local edit -> updatedAt ~ now
     applyRemotePrefs({
       id: "prefs",
       protectionLevel: "none",
@@ -243,7 +243,7 @@ describe("prefs sync (the E2E `prefs` blob)", () => {
   });
 });
 
-describe("sweep-cursor sync (P5 — key-wise MAX-merge, independent of the whole-blob LWW gate)", () => {
+describe("sweep-cursor sync (P5: key-wise MAX-merge, independent of the whole-blob LWW gate)", () => {
   const basePrefs = (overrides: Partial<PrefsItem>): PrefsItem => ({
     id: "prefs",
     protectionLevel: "none",
@@ -268,26 +268,26 @@ describe("sweep-cursor sync (P5 — key-wise MAX-merge, independent of the whole
     applyRemotePrefs(
       basePrefs({ sweepCursors: { s1: 9 }, updatedAt: localTs - 100 }), // OLDER blob overall
     );
-    expect(getSweepCursor("s1")).toBe(9); // still merges — the cursor's own value is newer
-    // The rest of the (older, otherwise-stale) blob must NOT have been adopted.
+    expect(getSweepCursor("s1")).toBe(9); // still merges - the cursor's own value is newer
+    // The rest of the (older, otherwise-stale) blob must not have been adopted.
     expect(getPrefsItem().activeModelId).not.toBe("m");
   });
 
-  it("an OLDER remote cursor for the SAME session can never rewind a newer local advance", () => {
+  it("an OLDER remote cursor for the same session can never rewind a newer local advance", () => {
     setSweepCursor("s1", 20);
     const localTs = getPrefsItem().updatedAt;
     applyRemotePrefs(basePrefs({ sweepCursors: { s1: 5 }, updatedAt: localTs + 1000 }));
-    expect(getSweepCursor("s1")).toBe(20); // NOT rewound to 5
+    expect(getSweepCursor("s1")).toBe(20); // Not rewound to 5
   });
 
-  it("key-wise merge: a remote blob's cursor for a DIFFERENT session doesn't touch existing ones", () => {
+  it("key-wise merge: a remote blob's cursor for a different session doesn't touch existing ones", () => {
     setSweepCursor("s1", 5);
     applyRemotePrefs(basePrefs({ sweepCursors: { s2: 3 }, updatedAt: Date.now() + 60_000 }));
     expect(getSweepCursor("s1")).toBe(5);
     expect(getSweepCursor("s2")).toBe(3);
   });
 
-  it("an old blob with NO sweepCursors field at all does not wipe local cursors", () => {
+  it("an old blob with no sweepCursors field at all does not wipe local cursors", () => {
     setSweepCursor("s1", 5);
     applyRemotePrefs(basePrefs({ updatedAt: Date.now() + 60_000 })); // no sweepCursors key
     expect(getSweepCursor("s1")).toBe(5);
@@ -301,7 +301,7 @@ describe("sweep-cursor sync (P5 — key-wise MAX-merge, independent of the whole
 });
 
 describe("redact lists are grow-only across devices", () => {
-  // `prefs` is ONE blob with whole-blob last-write-wins, so two devices each
+  // `prefs` is one blob with whole-blob last-write-wins, so two devices each
   // adding a term used to mean one was silently dropped. For alwaysRedact that
   // is a FAIL-OPEN: a value the user explicitly asked to redact quietly stops
   // being redacted. A redact list is a grow-only set, so it unions.
@@ -309,7 +309,7 @@ describe("redact lists are grow-only across devices", () => {
     ({ id: "prefs", updatedAt: 1000, ...over }) as PrefsItem;
 
   it("unions a newer blob's list with the local one instead of replacing it", () => {
-    quon.setAlwaysRedact(["Kundennummer 48213"]); // added on THIS device
+    quon.setAlwaysRedact(["Kundennummer 48213"]); // added on this device
     applyRemotePrefs(base({ updatedAt: Date.now() + 5000, alwaysRedact: ["Anna Muster"] }));
 
     const list = getPrefsItem().alwaysRedact ?? [];
@@ -320,7 +320,7 @@ describe("redact lists are grow-only across devices", () => {
   it("adopts a term even from a blob that is otherwise STALE", () => {
     // The other device added a redaction but has an older clock for the rest of
     // the blob. Losing the term because some unrelated field is stale is exactly
-    // the fail-open — same reasoning as sweepCursors.
+    // the fail-open - same reasoning as sweepCursors.
     quon.setAlwaysRedact(["local"]);
     const localClock = getPrefsItem().updatedAt;
     applyRemotePrefs(base({ updatedAt: localClock - 1, alwaysRedact: ["from-old-device"] }));
@@ -331,7 +331,7 @@ describe("redact lists are grow-only across devices", () => {
   });
 
   it("de-dups case-insensitively and keeps the local spelling", () => {
-    // Matching is case-insensitive anyway, so two spellings are one term — and
+    // Matching is case-insensitive anyway, so two spellings are one term - and
     // the user's own capitalisation should not be overwritten by another device.
     quon.setAlwaysRedact(["Anna Muster"]);
     applyRemotePrefs(base({ updatedAt: Date.now() + 5000, alwaysRedact: ["anna muster"] }));
@@ -345,7 +345,7 @@ describe("redact lists are grow-only across devices", () => {
   });
 
   it("does not fire a change or bump the clock when the union adds nothing", () => {
-    // A pull that changes nothing must not echo back — that would ping-pong.
+    // A pull that changes nothing must not echo back - that would ping-pong.
     quon.setAlwaysRedact(["Anna Muster"]);
     const before = getPrefsItem().updatedAt;
     const seen: PrefsItem[] = [];
@@ -382,7 +382,7 @@ describe("FINANCIAL_AMOUNT default (prefs migration v1)", () => {
   });
 
   it("never re-runs against someone who switched amounts back ON", () => {
-    // The migration turns redaction OFF, so running it twice would silently undo
+    // The migration turns redaction off, so running it twice would silently undo
     // a deliberate choice. The marker syncs with the blob precisely so a SECOND
     // DEVICE cannot re-apply it. This is the test that matters.
     resetState();

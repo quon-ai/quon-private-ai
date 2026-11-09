@@ -15,7 +15,7 @@ test("model picker shows friendly names, not raw slugs", async ({ page }) => {
   // a dropdown menu). Its trigger already shows a friendly value, never a slug.
   const picker = page.getByRole("combobox").first();
   await expect(picker).toBeVisible({ timeout: 30_000 });
-  await expect(picker).not.toContainText("/"); // no "openrouter/…" / "anthropic/…"
+  await expect(picker).not.toContainText("/"); // no "openrouter/..." / "anthropic/..."
 
   await picker.click();
 

@@ -193,20 +193,18 @@ const ATTACHMENT_PREAMBLE =
   "THIS one to answer when relevant. Keep any [PLACEHOLDER] tokens exactly as written.";
 
 /** Cap injected attachment text so prompts stay within the model context window.
- *  Raised 50k → 200k (user request 2026-08-08: "Alle Dokumente … passend gekürzt"
- *  on 4 real documents). Why this is safe: scrubLarge always splits >12k into
- *  parallel 8k pieces (each far below the backend's per-request max_text_length),
- *  the relay's ChatTurn has no length cap, the answer is streamed SSE (no
- *  Cloudflare 100s buffer risk), and 200k chars ≈ 50-60k tokens — inside every
- *  catalog model's context window. Measured 2026-08-08 (numbers in HANDOFF §1):
- *  scrub wall-time and provider first-token/chunks at this size. */
+ *  200k is safe because scrubLarge always splits >12k into parallel 8k pieces
+ *  (each far below the backend's per-request max_text_length), the relay's
+ *  ChatTurn has no length cap, the answer is streamed SSE (no Cloudflare 100s
+ *  buffer risk), and 200k chars ~ 50-60k tokens - inside every catalog model's
+ *  context window. Anything smaller shortens real multi-document attachments. */
 const ATTACHMENT_CHAR_BUDGET = 200_000;
 
 type Settled<T> = { ok: true; value: T } | { ok: false; error: unknown };
 
-/** Await-safe wrapper for a parallel wave: a rejection becomes a VALUE, so a
+/** Await-safe wrapper for a parallel wave: a rejection becomes a value, so a
  *  source that fails while its siblings are still in flight can't surface as an
- *  unhandled rejection — and the caller still decides per source whether to
+ *  unhandled rejection - and the caller still decides per source whether to
  *  degrade silently (context, instruction) or fail closed (attachment, message). */
 function settled<T>(p: Promise<T>): Promise<Settled<T>> {
   return p.then(
@@ -221,11 +219,11 @@ type RagThread = {
   entities?: Entity[];
 };
 
-/** What QUON's filter removed from ONE tool result before it re-entered the
+/** What QUON's filter removed from one tool result before it re-entered the
  *  relay. Grouped per call (in call order) rather than summed, because the
- *  question a user actually has is "what did it take out of THAT document" —
+ *  question a user actually has is "what did it take out of that document" -
  *  a single total across seven Paperless reads answers nobody. `tool` is the
- *  already-localized friendly name, matching the "⚙ …" marker in the answer. */
+ *  already-localized friendly name, matching the "..." marker in the answer.*/
 type ToolRedaction = { tool: string; entities: Entity[] };
 
 interface ChatMessage {
@@ -239,19 +237,19 @@ interface ChatMessage {
   fallbackMode?: boolean;
   /** user only: why the AI enrichment was skipped (when fallbackMode) */
   skipReason?: string | null;
-  /** user only: input had no case signal — NER names were deferred to the LLM */
+  /** user only: input had no case signal - NER names were deferred to the LLM */
   lowCaseSignal?: boolean;
   /** user only: false if the message left the device unprotected */
   protected?: boolean;
-  /** user only: sent via "Resend without filter" — /scrub was skipped for this ONE
+  /** user only: sent via "Resend without filter" - /scrub was skipped for this one
    *  turn (see unfilteredResend.ts). Distinct from `protected: false`, which also
-   *  covers protection level "None" for the whole chat — this is a one-shot,
+   *  covers protection level "None" for the whole chat - this is a one-shot,
    *  per-message bypass and must render its own chip, never the same one. */
   unfiltered?: boolean;
   /** assistant only: true if this bubble is a provider error */
   isError?: boolean;
   /** assistant only: true when the stream was cut off mid-answer (network drop,
-   *  backend restart…) — `text`/`rawText` keep the partial answer that had
+   *  backend restart...) - `text`/`rawText` keep the partial answer that had
    *  already arrived rather than being replaced by an error string; the bubble
    *  renders a small trailing note and still offers Retry. Mutually exclusive
    *  with `isError` (a message that got zero tokens still becomes a plain error
@@ -262,21 +260,21 @@ interface ChatMessage {
   rawText?: string;
   /** assistant only: friendly label of the model that produced this answer
    *  (e.g. "Claude Sonnet"), captured at send time. Shown as a small footer so
-   *  the user can tell which model replied — and a restored chat keeps the
-   *  label of the model that ACTUALLY answered, even if the picker has since
+   *  the user can tell which model replied - and a restored chat keeps the
+   *  label of the model that actually answered, even if the picker has since
    *  changed. Absent on old chats / the intro bubble. */
   model?: string;
-  /** assistant only: the model's streamed reasoning ("thinking"), re-hydrated —
+  /** assistant only: the model's streamed reasoning ("thinking"), re-hydrated -
    *  shown in a collapsible panel. Absent for non-reasoning models / old chats. */
   reasoning?: string;
-  /** assistant only: pictures the model generated (#79) — REFERENCES only; the
+  /** assistant only: pictures the model generated - references only; the
    *  bytes live in the sealed local store / the originals sync collection
    *  (chat/generatedImages.ts), never in this synced chat blob. */
   images?: GeneratedImageRef[];
   /** assistant only: indices of detected artifacts the user dismissed ("I don't
    *  want this in my documents"). Artifacts are re-DETECTED from the answer text
    *  on every render, so a dismissal has to be remembered on the message itself
-   *  (persists + syncs with the chat) — local component state would resurrect the
+   *  (persists + syncs with the chat) - local component state would resurrect the
    *  card on reload. */
   dismissedArtifacts?: number[];
   /** assistant only: web pages the model cited (web search on). Shown as a
@@ -287,17 +285,17 @@ interface ChatMessage {
    *  message (fail-closed), but until this existed the redaction was invisible:
    *  the user bubble's pill only ever summed the TYPED turn plus its
    *  attachment/RAG/instruction, so a chat that pulled seven Paperless documents
-   *  through the filter still reported "no personal data found" — true of the
+   *  through the filter still reported "no personal data found" - true of the
    *  four words typed, and badly misleading about the exchange.
    *  Persisted (and walked by rebuildRefs) because it is also the only record of
-   *  those placeholder→value pairs: without it a restored chat re-sends the
+   *  those placeholder->value pairs: without it a restored chat re-sends the
    *  assistant's `rawText` and the follow-up answer comes back with bare
    *  [PERSON_7] tokens nothing can re-hydrate. */
   toolRedactions?: ToolRedaction[];
   /** user only: Memory/Document context retrieved + injected for this turn (RAG). */
   rag?: RagThread;
   /** user only: Context was ON and there was in-scope Memory/Documents, retrieval
-   *  ran, but nothing cleared the relevance gate — so no context was injected.
+   *  ran, but nothing cleared the relevance gate - so no context was injected.
    *  Drives an honest "nothing matched" note (the absence signal that would have
    *  told the income-bug user their memory simply wasn't used). Distinct from the
    *  chip's absence, which also covers "context off" / "no saved data". */
@@ -324,13 +322,13 @@ function getIntroMessage(t: I18n["t"]): ChatMessage {
 
 // Onboarding step 0 (guided-doing, see onboardingStore.ts): a second assistant
 // turn inviting a real message with a name + email, so the first redaction the
-// user sees is their own — not a canned example. Rendered inline below (not a
+// user sees is their own - not a canned example. Rendered inline below (not a
 // module-level ChatMessage, since its text needs the live translator) with a
-// synthetic id of -1 — reserved (never issued by nextMessageId, which starts
+// synthetic id of -1 - reserved (never issued by nextMessageId, which starts
 // at 1) so it never collides with a real message. Purely additive: the
 // composer stays fully usable, nothing is required.
 
-// Monotonic, module-level message-id counter. MUST be globally unique and never reset
+// Monotonic, module-level message-id counter. Must be globally unique and never reset
 // or go backward: message ids are React keys and the target of streamed setMessages
 // updates, so a reused id across chats/navigation makes one bubble's reply overwrite
 // another's (the "all answers show the last answer" bug). Restoring a chat only ever
@@ -354,7 +352,7 @@ function getReasoningOptions(
 
 // Included-AI-budget hint: when the account's capped OpenRouter budget is this
 // far gone, a dismissible one-liner appears above the composer (checked once per
-// chat mount; the backend caches the lookup). Dismissal is per browser session —
+// chat mount; the backend caches the lookup). Dismissal is per browser session -
 // the hint returns next session, not on every render/navigation.
 const BUDGET_HINT_THRESHOLD = 0.8;
 const BUDGET_HINT_DISMISSED_KEY = "quon-budget-hint-dismissed";
@@ -365,10 +363,10 @@ const BUDGET_HINT_DISMISSED_KEY = "quon-budget-hint-dismissed";
 type LoadingPhase = "" | "scrubbing" | "searching" | "generating";
 
 // Progress of the send-path scrub WAVE (attachment pieces + rag/instruction/
-// message — see scrubWaveTotal in scrubProgressEta.ts). `done`/`total`/
+// message - see scrubWaveTotal in scrubProgressEta.ts). `done`/`total`/
 // `updatedAt` describe the whole wave (drives the bar + %, so it moves as
-// soon as ANY unit finishes); `attachDone`/`attachTotal`/`attachUpdatedAt`
-// describe the attachment pieces ALONE (drives the ETA — attachment pieces
+// soon as any unit finishes); `attachDone`/`attachTotal`/`attachUpdatedAt`
+// describe the attachment pieces alone (drives the ETA - attachment pieces
 // are the dominant, representative cost of a long wait; the fast rag/
 // instruction/message units would otherwise skew an early rate estimate
 // wildly optimistic). `startedAt` anchors both to the same clock origin.
@@ -382,25 +380,25 @@ interface ScrubWaveState {
   attachUpdatedAt: number;
   startedAt: number;
   /** Already-localized attachment label ("10 documents" / "All documents (12
-   *  files)") — names the scale of what's being protected in the shimmer line. */
+   *  files)") - names the scale of what's being protected in the shimmer line. */
   attachmentLabel: string;
-  /** Total attachment characters — drives the small-scrub time estimate. */
+  /** Total attachment characters - drives the small-scrub time estimate. */
   attachChars: number;
   /** Set once a piece has failed and is being retried. A stalled piece was
    *  otherwise invisible: the per-request timeout is 180s and there are 3
-   *  attempts, so ONE bad piece stalls a send ~9 minutes behind nothing but a
-   *  ticking clock — reported as "hangs with no error". */
+   *  attempts, so one bad piece stalls a send ~9 minutes behind nothing but a
+   *  ticking clock - reported as "hangs with no error". */
   retry?: { attempt: number; attempts: number };
 }
 
 // The "waiting" bubble. QUON already sets a meaningful phase for each pipeline
 // step (scrubbing PII, searching memory, generating the reply), so we map the
-// phase to a matching icon instead of a generic spinner — the wait narrates
+// phase to a matching icon instead of a generic spinner - the wait narrates
 // what's happening (and highlights the privacy step). The label text shimmers
 // (.quon-shimmer in styles.css) so it reads as working, not stalled.
 //
 // When a multi-part attachment scrub is in flight (feedback: a 200k-char / 10
-// document attachment takes 50-60s — a bare "(7/25)" fraction read as "no
+// document attachment takes 50-60s - a bare "(7/25)" fraction read as "no
 // indicator"), this also renders a live percentage + ETA that keep moving
 // between the sparse real onProgress ticks (scrubProgressEta.ts), so the bar
 // never looks stalled during a burst gap.
@@ -427,7 +425,7 @@ function LoadingIndicator({
 
   // Belt and braces on monotonicity. The maths is designed not to reverse, but
   // the wave mixes attachment pieces with the fast message/rag/instruction units,
-  // and those land unevenly — so a computed dip is conceivable. A bar that goes
+  // and those land unevenly - so a computed dip is conceivable. A bar that goes
   // backward is the single worst thing this indicator can do (it reads as a bug
   // and destroys trust in the number), so clamp to the high-water mark.
   const maxPercent = useRef(0);
@@ -440,18 +438,18 @@ function LoadingIndicator({
   let label = t("chat.loadingGenerating");
   let fraction: number | null = null;
   if (phase === "scrubbing") {
-    Icon = ShieldCheck; // scrubbing PII — the trust moment
+    Icon = ShieldCheck; // scrubbing PII - the trust moment
     tone = "text-quon-green";
     if (progress) {
       label = t("chat.loadingScrubbingAttachment", { name: progress.attachmentLabel });
-      // Small scrubs (≤SCRUB_CONCURRENCY pieces) land in one burst — there is
+      // Small scrubs (<=SCRUB_CONCURRENCY pieces) land in one burst - there is
       // no intermediate truth to interpolate, and the interpolator's percent
-      // here was fabrication (it sat at "97%" for 26s once, which is why this
-      // branch used to show a pulse and only the clock). The size-based
-      // estimate is honest about being an estimate: driven by the real char
-      // count and a measured throughput floor, ~95% at the expected duration,
-      // capped at 97, and never below the real piece ticks. Big scrubs keep
-      // the tick-driven interpolation — there the ticks ARE the truth.
+      // here would be fabrication (a bar that sits at "97%" for half a minute
+      // with nothing behind it). The size-based estimate is honest about being
+      // an estimate: driven by the real char count and a measured throughput
+      // floor, ~95% at the expected duration, capped at 97, and never below
+      // the real piece ticks. Big scrubs keep the tick-driven interpolation -
+      // there the ticks are the truth.
       fraction =
         progress.attachTotal > SCRUB_CONCURRENCY
           ? interpolateScrubFraction(
@@ -483,7 +481,7 @@ function LoadingIndicator({
     percent = Math.max(percent, maxPercent.current);
     maxPercent.current = percent;
   }
-  // A bar that flashes up and vanishes is worse than no bar — and this is what
+  // A bar that flashes up and vanishes is worse than no bar - and this is what
   // keeps the indicator correct at any scrubber speed: point /scrub at a faster
   // endpoint and a quick scrub simply never renders one.
   const revealed = progress !== null && shouldRevealProgress(progress.startedAt, now);
@@ -513,14 +511,14 @@ function LoadingIndicator({
             className="flex flex-col gap-1"
             title={t("chat.loadingScrubbingCount", { done: progress.done, total: progress.total })}
           >
-            {/* ⚠️ A percentage is only shown when there is real granularity to
-                back it — MORE THAN ONE WAVE of pieces, not merely more than one
-                piece. Pieces land SCRUB_CONCURRENCY at a time, so a ≤6-piece
+            {/* A percentage is only shown when there is real granularity to
+                back it - more than one WAVE of pieces, not merely more than one
+                piece. Pieces land SCRUB_CONCURRENCY at a time, so a <=6-piece
                 scrub is a single burst with no intermediate truth, and the
                 interpolated percent is fabrication: a real 2-piece send sat at
                 "97%" from second 10 to second 36 ((1 + 0.95 creep) / 2), which
                 discredits every number this bar ever shows. Indeterminate pulse
-                + the elapsed clock is what we actually know there. */}
+                + the elapsed clock is what we actually know there.*/}
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-quon-surface-2">
               <div
                 className="h-full rounded-full bg-quon-green transition-[width] duration-200 ease-linear"
@@ -537,7 +535,7 @@ function LoadingIndicator({
               <span>{`${percent}%`}</span>
               <span>
                 {/* Elapsed, not remaining. A predicted duration wandered in both
-                    directions on every tuning we tried — see formatElapsed. */}
+                    directions on every tuning we tried - see formatElapsed. */}
                 {t("chat.loadingScrubbingElapsed", {
                   time: formatElapsed(now - progress.startedAt),
                 })}
@@ -551,7 +549,7 @@ function LoadingIndicator({
 }
 
 /** Friendly display name for a tool: a proper label for the known first-party
- *  tools, else the humanized id (`import_dropbox_document` → "Import dropbox
+ *  tools, else the humanized id (`import_dropbox_document` -> "Import dropbox
  *  document") so the consent card never shows raw function-name plumbing. */
 const KNOWN_TOOL_NAME_KEY: Record<string, MessageKey> = {
   create_agent: "chat.tool.create_agent",
@@ -586,8 +584,8 @@ interface ToolConsentItem {
   serverId: string;
   tool: string;
   argsDisplay: string;
-  /** First-party WRITE tool (save_memory/save_document/…): per-action consent
-   *  only — the dialog hides "always allow" and shows the content prominently. */
+  /** First-party write tool (save_memory/save_document/...): per-action consent
+   *  only - the dialog hides "always allow" and shows the content prominently. */
   write?: boolean;
 }
 
@@ -628,28 +626,27 @@ export function ScreenChat() {
   const readyDocs = useDocuments().filter(
     (d) => d.status === "ready" && (scope ? d.projectId === scope : true),
   );
-  // Context toggle appears when there's ANY injectable context: in-scope memory,
+  // Context toggle appears when there's any injectable context: in-scope memory,
   // OR a pinned document (pinned docs are auto-context; unpinned docs are attached
   // explicitly via the paperclip, so they don't drive the toggle).
   const hasContextData = memItems.some(inCurrentScope) || readyDocs.some((d) => d.pinned);
   const [models, setModels] = useState<ChatModel[]>(CHAT_MODELS);
-  // Whether the REAL catalog (getModels) has loaded. Until then `models` is the
+  // Whether the real catalog (getModels) has loaded. Until then `models` is the
   // bundled CHAT_MODELS placeholder, whose ids ("openai/gpt-4o") differ from the
   // catalog's connection-scoped ids ("openrouter::openai/gpt-4o"). The
-  // invalid-model reset below must NOT run against the placeholder, or it would
+  // invalid-model reset below must not run against the placeholder, or it would
   // clobber a restored/valid selection with the default on every reload.
   const [modelsLoaded, setModelsLoaded] = useState(false);
   // The catalog fetch has FINISHED (either way). Distinct from modelsLoaded so the
   // dashboard handoff below knows the difference between "still loading" and
   // "offline, the real catalog will never arrive".
   const [modelsSettled, setModelsSettled] = useState(false);
-  // Composer draft survives a reload/crash. Real-world report (issue #36,
-  // 2026-08-10): the native webview restarts wipe in-progress text — "musste
-  // ich neu schreiben". sessionStorage: per-tab, cleared when the tab truly
-  // closes, no sync, no cross-account bleed (cleared on logout with the rest
-  // of sessionStorage). Written on change (a crash never fires unload
-  // handlers, so write-on-change is the only reliable timing); cleared by the
-  // ordinary send/reset paths via setInput("").
+  // Composer draft survives a reload/crash: the native webview restarts and
+  // wipes in-progress text otherwise. sessionStorage: per-tab, cleared when
+  // the tab truly closes, no sync, no cross-account bleed (cleared on logout
+  // with the rest of sessionStorage). Written on change (a crash never fires
+  // unload handlers, so write-on-change is the only reliable timing); cleared
+  // by the ordinary send/reset paths via setInput("").
   const [input, setInputRaw] = useState<string>(() => {
     try {
       return sessionStorage.getItem("quon_draft_v1") ?? "";
@@ -664,7 +661,7 @@ export function ScreenChat() {
         if (next) sessionStorage.setItem("quon_draft_v1", next);
         else sessionStorage.removeItem("quon_draft_v1");
       } catch {
-        /* private mode / quota — draft just doesn't survive, as before */
+        /* private mode / quota - draft just doesn't survive, as before */
       }
       return next;
     });
@@ -672,11 +669,10 @@ export function ScreenChat() {
   const [messages, setMessages] = useState<ChatMessage[]>(() => [getIntroMessage(t)]);
   const [loading, setLoading] = useState(false);
   const [loadingPhase, setLoadingPhase] = useState<LoadingPhase>("");
-  // Progress of the send-path scrub WAVE (feedback #57: indexing had a
-  // progress bar, the core of the service did not; follow-up feedback: the
-  // fraction-only bar was too weak a signal for a 50-60s attachment wait).
-  // null while there's no multi-piece attachment scrub — small scrubs finish
-  // before a bar helps, same "total > 1" intent as before.
+  // Progress of the send-path scrub wave. A 50-60 s attachment scrub needs a
+  // visible signal, and a fraction alone is too weak. null while there's no
+  // multi-piece attachment scrub (total > 1) - small scrubs finish before a
+  // bar helps.
   const [scrubProgress, setScrubProgress] = useState<ScrubWaveState | null>(null);
   // Default to the re-hydrated / original view so answers read naturally.
   const [showOriginal, setShowOriginal] = useState(true);
@@ -692,7 +688,7 @@ export function ScreenChat() {
   const [streamingId, setStreamingId] = useState<number | null>(null);
   // A document attached to the next message (extracted text, before scrubbing).
   // `source: "paperless"` marks an EPHEMERAL live-source attachment (fetched on
-  // demand, never stored in QUON) — drives the honesty label on the chip.
+  // demand, never stored in QUON) - drives the honesty label on the chip.
   const [attachment, setAttachment] = useState<{
     name: string;
     text: string;
@@ -700,18 +696,18 @@ export function ScreenChat() {
     combined?: boolean;
     source?: "paperless";
     /** Library DocItem ids behind this attachment. Absent for ad-hoc uploads
-     *  and Paperless — durable per-document redactions only exist for library
+     *  and Paperless - durable per-document redactions only exist for library
      *  documents, and the ids are what lets the send merge their saved terms. */
     docIds?: string[];
     /** Fresh upload only: mime + the file's bytes, kept so "Prüfen & schwärzen"
-     *  (#72) can render the real PDF/DOCX pages before the send — a fresh
-     *  upload has no DocItem and no cached original to fall back on. Only
-     *  formats the viewer renders from bytes are kept (keepUploadBytes). */
+     *  can render the real PDF/DOCX pages before the send - a fresh upload
+     *  has no DocItem and no cached original to fall back on. Only formats
+     *  the viewer renders from bytes are kept (keepUploadBytes). */
     mime?: string;
     bytes?: Uint8Array;
     /** Per-send hand-redactions made in the preview of an AD-HOC attachment
      *  (fresh upload / Paperless / combined). Merged into this send's enforced
-     *  `always_redact` — verified by scrubText — and remembered nowhere. */
+     *  `always_redact` - verified by scrubText - and remembered nowhere. */
     redactTerms?: string[];
   } | null>(null);
   const [attaching, setAttaching] = useState(false);
@@ -722,18 +718,16 @@ export function ScreenChat() {
   const [reviewViewerDoc, setReviewViewerDoc] = useState<DocItem | null>(null);
   const [previewAdhoc, setPreviewAdhoc] = useState<AdhocDocument | null>(null);
   const [paperlessPickerOpen, setPaperlessPickerOpen] = useState(false);
-  // Whether Paperless is configured (gates the paperclip entry). REACTIVE via
-  // the store, not read-once: since the connection moved into the synced prefs
-  // blob (2026-07-31) the store hydrates asynchronously after a full page load
-  // — a read-once at mount raced that hydration and hid the entry until the
-  // next remount (caught by the paperless e2e). The old "avoid re-decrypting
-  // the sealed config per render" rationale is obsolete: this is a plain store
-  // field now, and useQuonState is already subscribed above.
+  // Whether Paperless is configured (gates the paperclip entry). Reactive via
+  // the store, not read-once: the connection lives in the synced prefs blob,
+  // which hydrates asynchronously after a full page load - a read-once at
+  // mount races that hydration and hides the entry until the next remount.
+  // It is a plain store field, and useQuonState is already subscribed above.
   const paperlessConfigured = Boolean(paperlessConnection?.baseUrl && paperlessConnection.token);
-  // Photo waiting in the scan-review dialog (paperclip → "Scan a photo").
+  // Photo waiting in the scan-review dialog (paperclip -> "Scan a photo").
   // Photos waiting for the OCR review dialog. Several screenshots are the
   // normal case ("hier sind drei Belege"), so they are reviewed one after the
-  // other and staged as ONE attachment at the end. `total` drives the "Foto 2
+  // other and staged as one attachment at the end. `total` drives the "Foto 2
   // von 5" chip; it resets once the queue drains.
   const [scanQueue, setScanQueue] = useState<{ files: File[]; total: number }>({
     files: [],
@@ -744,25 +738,25 @@ export function ScreenChat() {
   /** "Take all": the rest of the batch is accepted without a review stop. */
   const [autoAcceptScans, setAutoAcceptScans] = useState(false);
   // Per-chat reasoning override: null = use the global default (quon.reasoningEffort).
-  // Ephemeral (never persisted) and reset when the shown chat changes — a deliberate
+  // Ephemeral (never persisted) and reset when the shown chat changes - a deliberate
   // per-message knob, not a stored setting. Effective effort = override ?? default.
   const [chatEffortOverride, setChatEffortOverride] = useState<ReasoningEffort | null>(null);
   // Per-chat protection/model overrides, seeded from a project's chat defaults
   // (see projectChatDefaults.ts). null = use the global default (quonStore's
-  // protectionLevel/activeModelId, same as Settings/dashboard). Fixes report #3
-  // (2026-07-15 UX walkthrough): opening a project chat used to call
-  // quon.setProtectionLevel/setActiveModel directly, silently flipping the
-  // GLOBAL protection level (and model) for every other chat, Settings and the
-  // dashboard. Same ephemeral/reset-on-chat-switch treatment as chatEffortOverride
-  // above. Effective value = override ?? global (see effectiveProtectionLevel /
-  // effectiveModelId below); a non-project chat never gets an override, so it
-  // keeps writing the global store exactly as before (see setProtection/setModel).
+  // protectionLevel/activeModelId, same as Settings/dashboard). An override,
+  // not a write to quon.setProtectionLevel/setActiveModel: that would silently
+  // flip the Global protection level (and model) for every other chat,
+  // Settings and the dashboard. Same ephemeral/reset-on-chat-switch treatment
+  // as chatEffortOverride above. Effective value = override ?? global (see
+  // effectiveProtectionLevel / effectiveModelId below); a non-project chat
+  // never gets an override, so it keeps writing the global store (see
+  // setProtection/setModel).
   const [chatProtectionOverride, setChatProtectionOverride] = useState<ProtectionLevel | null>(
     null,
   );
   const [chatModelOverride, setChatModelOverride] = useState<string | null>(null);
   const [chatDisabledTypesOverride, setChatDisabledTypesOverride] = useState<string[] | null>(null);
-  // What THIS chat actually behaves as — the per-chat override, if any, else the
+  // What this chat actually behaves as - the per-chat override, if any, else the
   // global default. Every read of "the protection level" / "the model" below
   // must go through these, never the raw `protectionLevel`/`activeModelId` from
   // the global store, so a project chat's seed is visible without ever having
@@ -772,9 +766,9 @@ export function ScreenChat() {
   const effectiveDisabledTypes = chatDisabledTypesOverride ?? disabledEntityTypes;
   const reviewBeforeSend = isReviewed(effectiveProtectionLevel);
   const filterActive = isProtected(effectiveProtectionLevel);
-  // Change the protection level / model for THIS chat: while an override is
+  // Change the protection level / model for this chat: while an override is
   // active (a project chat past its seed), edits stay local to the override;
-  // otherwise (no override — the pre-existing behavior for a non-project chat)
+  // otherwise (no override - the pre-existing behavior for a non-project chat)
   // they write the global store exactly as before.
   function setProtection(level: ProtectionLevel) {
     if (chatProtectionOverride != null) setChatProtectionOverride(level);
@@ -790,7 +784,7 @@ export function ScreenChat() {
   // (scanInputRef stays capture-free for picking an existing gallery photo).
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  // Cancel an in-flight send: a flag so the scrub→send chain bails before committing
+  // Cancel an in-flight send: a flag so the scrub->send chain bails before committing
   // (the stream abort goes through the chatRunner registry, keyed by session, so it
   // survives navigation). inFlightOriginal restores the prompt to the box on stop.
   const cancelledRef = useRef(false);
@@ -801,7 +795,7 @@ export function ScreenChat() {
   const { status, health } = useQuonHealth();
   // EU routing (strict): OpenRouter refuses the web-search plugin on the EU
   // domain, so the toggle is hidden and a send never asks for it. Read from
-  // the health poll the app already runs (retried every 30 s) — a separate
+  // the health poll the app already runs (retried every 30 s) - a separate
   // timed fetch left the toggle in place on a slow runner.
   const webSearchAvailable = health?.web_search_available !== false;
   const [pendingReview, setPendingReview] = useState<{
@@ -814,7 +808,7 @@ export function ScreenChat() {
     // Reviewable context sources: the scrubbed base text plus per-hit items the
     // user can un-redact, mirroring the typed-message `items` above.
     rag?: { base: string; sources: RagSource[]; items: ReviewItem[] };
-    /** Retrieval ran but matched nothing (mirrors ChatMessage.contextEmpty) —
+    /** Retrieval ran but matched nothing (mirrors ChatMessage.contextEmpty) -
      *  carried through review so the sent message keeps the honest signal. */
     contextEmpty?: boolean;
     attachment?: {
@@ -823,7 +817,7 @@ export function ScreenChat() {
       truncated?: boolean;
       combined?: boolean;
       items: ReviewItem[];
-      /** Library doc ids — durable redaction saves to these; absent (ad-hoc
+      /** Library doc ids - durable redaction saves to these; absent (ad-hoc
        *  upload / Paperless) hides the "Immer schwärzen" action entirely. */
       docIds?: string[];
     };
@@ -832,11 +826,11 @@ export function ScreenChat() {
 
   const lastUserMsg = [...messages].reverse().find((m) => m.role === "user");
   // Onboarding step 0: only on a genuinely fresh, never-sent chat (a session is
-  // only ever persisted once it has more than the intro bubble — see the save
-  // effect below — so a restored chat always has length >= 2 here).
+  // only ever persisted once it has more than the intro bubble - see the save
+  // effect below - so a restored chat always has length >= 2 here).
   const showOnboardingIntro = onboardingStep === 0 && messages.length === 1;
   // Step 1's callout points at the badge for the message that just taught the
-  // lesson — the first one with something actually redacted, not necessarily
+  // lesson - the first one with something actually redacted, not necessarily
   // literally the latest message (a quick empty/whitespace send wouldn't count
   // since send() no-ops on blank input).
   const showOnboardingCallout =
@@ -848,9 +842,9 @@ export function ScreenChat() {
       (lastUserMsg.instruction?.entities?.length ?? 0) >
       0;
   // Stable so memoized UserBubbles don't all re-render on every streamed token
-  // (the redaction detail's original↔anonymized toggle is global, as before).
+  // (the redaction detail's original<->anonymized toggle is global, as before).
   const toggleShowOriginal = useCallback(() => setShowOriginal((v) => !v), []);
-  // Whether the review panel is showing at all — flips only on open/close, NOT on
+  // Whether the review panel is showing at all - flips only on open/close, not on
   // every in-panel edit (toggle / manual redaction), so those edits don't retrigger
   // the auto-scroll effect and yank the view.
   const reviewOpen = pendingReview != null;
@@ -858,11 +852,11 @@ export function ScreenChat() {
   const modelLabel = selectedModel ? chatModelDisplay(selectedModel).name : effectiveModelId;
   // The session currently shown. `null` = a fresh chat not yet persisted.
   const activeIdRef = useRef<string | null>(null);
-  // Session id from the URL we could NOT find in the (possibly still-decrypting)
-  // history — remembered so the fallback "new chat" reset runs only once per id.
+  // Session id from the URL we could not find in the (possibly still-decrypting)
+  // history - remembered so the fallback "new chat" reset runs only once per id.
   const missingIdRef = useRef<string | null>(null);
   // Auto-scroll: keep the latest message in view as the conversation grows and
-  // while an answer streams in — unless the user has scrolled up to read history.
+  // while an answer streams in - unless the user has scrolled up to read history.
   const scrollRef = useRef<HTMLDivElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const stickToBottom = useRef(true);
@@ -905,7 +899,7 @@ export function ScreenChat() {
   }
 
   // Present a context source's scrubbed entities (attachment / RAG) as reviewable
-  // items — kept redacted by default, so Review mode can un-redact individual hits
+  // items - kept redacted by default, so Review mode can un-redact individual hits
   // exactly like it does for the typed message.
   function entitiesToItems(entities: Entity[] = []): ReviewItem[] {
     return entities.map((e) => ({
@@ -935,13 +929,13 @@ export function ScreenChat() {
   // Retrieve relevant Memory/Document context for a query and (when protection is
   // on) scrub it so only placeholders leave the device. Best-effort: any failure
   // returns no context rather than blocking the message.
-  /** Retrieval only — everything this does is on-device, so it decides WHAT the
+  /** Retrieval only - everything this does is on-device, so it decides what the
    *  context scrub will send without spending a round trip. */
   async function prepareRag(
     query: string,
   ): Promise<{ combined: string; sources: RagThread["sources"] } | undefined> {
     // Context = pinned documents (always) + relevance-retrieved memory. Gated by
-    // the Context toggle; runs if EITHER source has something in scope.
+    // the Context toggle; runs if either source has something in scope.
     if (!useMemoryContext || !hasInjectableContext(scope)) return undefined;
     // Pinned docs first (the user's explicit "always use this"), then memory.
     const pinned = pinnedDocContext(scope);
@@ -953,7 +947,7 @@ export function ScreenChat() {
         memText = retrieved.text;
         sources = [...pinned.sources, ...retrieved.sources];
       } catch {
-        /* memory retrieval failed — pinned docs may still carry context */
+        /* memory retrieval failed - pinned docs may still carry context */
       }
     }
     const combined = [pinned.text, memText].filter(Boolean).join("\n\n");
@@ -968,7 +962,7 @@ export function ScreenChat() {
     try {
       ctx = await scrubText(prep.combined, scrubOptions());
     } catch {
-      return undefined; // can't scrub the context → don't send it
+      return undefined; // can't scrub the context -> don't send it
     }
     const ri = reindex(ctx.scrubbed, ctx.entities);
     return { context: ri.scrubbed, sources: prep.sources, entities: ri.entities };
@@ -976,7 +970,7 @@ export function ScreenChat() {
 
   // Resolve the active project's instruction and (when protection is on) scrub it
   // through the same path as RAG context, so only placeholders leave the device.
-  // Fail closed: if it can't be scrubbed, inject nothing. Empty/no project → none.
+  // Fail closed: if it can't be scrubbed, inject nothing. Empty/no project -> none.
   function projectInstruction(): string | undefined {
     return scope ? getProject(scope)?.instructions?.trim() || undefined : undefined;
   }
@@ -1041,9 +1035,9 @@ export function ScreenChat() {
     });
   }
 
-  // The batch is finished: turn whatever survived review into ONE attachment.
+  // The batch is finished: turn whatever survived review into one attachment.
   // Several screenshots share the budget through the same water-filling as a
-  // multi-document pick, so the message stays one turn — and walks the
+  // multi-document pick, so the message stays one turn - and walks the
   // identical scrub-before-send path.
   useEffect(() => {
     if (scanQueue.files.length > 0) return;
@@ -1073,7 +1067,7 @@ export function ScreenChat() {
   }, [scanQueue.files.length]);
 
   // Stage already-indexed documents (from the Documents store) as the next
-  // message's attachment — same path as a fresh upload, just no extraction needed.
+  // message's attachment - same path as a fresh upload, just no extraction needed.
   // Several picked at once are combined under one shared budget, exactly like
   // "attach all documents"; from here on a single doc and a batch are the same thing.
   function stageDocuments(
@@ -1089,7 +1083,7 @@ export function ScreenChat() {
       setSendError(emptyError);
       return;
     }
-    // A single document keeps its plain text (no "=== Document: … ===" header) —
+    // A single document keeps its plain text (no "=== Document: ... ===" header) -
     // combining is only meaningful once there is more than one file to separate.
     if (docs.length === 1) {
       const clean = docs[0].text;
@@ -1117,7 +1111,7 @@ export function ScreenChat() {
     );
   }
 
-  // Stage ALL in-scope ready documents as one combined attachment (e.g. "compare
+  // Stage all in-scope ready documents as one combined attachment (e.g. "compare
   // these offers").
   function handleAttachAllDocs() {
     stageDocuments(readyDocs, t("chat.errorNoReadableDocs"), (count) =>
@@ -1134,10 +1128,10 @@ export function ScreenChat() {
     if (!protect) return { name, text, truncated, combined };
     // Large attachments (esp. "attach all documents" / comparing several
     // contracts) are split and scrubbed as PARALLEL, short /scrub requests, then
-    // merged value-aware — a single long /scrub over the whole blob would run the
+    // merged value-aware - a single long /scrub over the whole blob would run the
     // backend's cloud-LLM chunks in one request and tip over Cloudflare's ~100s
-    // edge timeout → the send failing closed. See scrubChunked.ts. Fail-closed is
-    // preserved (any piece failing throws → send() aborts).
+    // edge timeout -> the send failing closed. See scrubChunked.ts. Fail-closed is
+    // preserved (any piece failing throws -> send() aborts).
     const ctx = await scrubLarge(text, scrubOptions());
     const ri = reindex(ctx.scrubbed, ctx.entities);
     return { name, text: ri.scrubbed, entities: ri.entities, truncated, combined };
@@ -1165,7 +1159,7 @@ export function ScreenChat() {
   }, []);
 
   // One budget check per chat mount (no polling; the backend caches ~5 min):
-  // surface the hint when the included AI budget is ≥80% used. Silently shows
+  // surface the hint when the included AI budget is >=80% used. Silently shows
   // nothing when the account isn't provisioned (self-host / BYOK), the fetch
   // fails, or the hint was dismissed this session.
   useEffect(() => {
@@ -1178,25 +1172,25 @@ export function ScreenChat() {
         if (frac >= BUDGET_HINT_THRESHOLD) setBudgetHintPct(Math.round(frac * 100));
       })
       .catch(() => {
-        /* no hint on failure — never block or clutter the chat */
+        /* no hint on failure - never block or clutter the chat */
       });
     return () => {
       cancelled = true;
     };
   }, []);
 
-  // Keep a valid model selected: if THIS chat's effective id isn't an enabled
+  // Keep a valid model selected: if this chat's effective id isn't an enabled
   // option (e.g. a legacy pre-connection id, or its provider key was removed),
   // pick the first enabled model so the picker is never stuck on an unusable
   // choice. Goes through setModel so it corrects the override (a project's
   // default model disabled after the fact) rather than the global default.
   useEffect(() => {
-    // Only judge validity against the REAL catalog — never the bundled
+    // Only judge validity against the real catalog - never the bundled
     // placeholder (see modelsLoaded), else a reload clobbers the saved model.
     // Pure decision extracted to lib/modelSelection for direct unit testing.
     const next = correctedModelId(modelsLoaded, models, effectiveModelId);
     if (!next) return;
-    // This is a CORRECTION (invalid id → first valid), not a user choice: use the
+    // This is a CORRECTION (invalid id -> first valid), not a user choice: use the
     // non-bumping path so it doesn't out-timestamp the real choice arriving from
     // the server's E2E prefs blob on a fresh device.
     if (chatModelOverride != null) setChatModelOverride(next);
@@ -1217,7 +1211,7 @@ export function ScreenChat() {
   // Prime the MCP tool cache off the send path, so a send is a synchronous
   // cache hit (no /mcp/servers round-trip between the outgoing scrub and relay).
   // Also pre-warm the on-device embedder when in-scope memory exists: retrieval
-  // WILL need it on the first send, and paying the WASM init inside sendMessage
+  // Will need it on the first send, and paying the WASM init inside sendMessage
   // (esp. WebKit, single-threaded) added seconds between Send and the bubble.
   useEffect(() => {
     if (QUON_ENABLED) warmChatTools();
@@ -1240,7 +1234,7 @@ export function ScreenChat() {
   }, [input]);
 
   // Follow the conversation: scroll to the newest content whenever messages
-  // change (new turn, streamed token) or the review panel first appears — but
+  // change (new turn, streamed token) or the review panel first appears - but
   // only while the user is anchored to the bottom (see onConversationScroll).
   // Keyed on `reviewOpen` (not the pendingReview object) so redacting/toggling
   // inside the panel doesn't scroll the view.
@@ -1267,7 +1261,7 @@ export function ScreenChat() {
     };
     for (const m of msgs) if (m.id > maxId) maxId = m.id;
     // Which fields carry placeholders lives in chatPersist.ts, next to the
-    // projection that has to keep them — see rehydrationEntities.
+    // projection that has to keep them - see rehydrationEntities.
     for (const e of rehydrationEntities(msgs)) register(e);
     nextMessageId = Math.max(nextMessageId, maxId + 1);
   }
@@ -1286,11 +1280,11 @@ export function ScreenChat() {
   // a session on the first message (so a live stream is never clobbered).
   // `chatHistory` is a dependency because the store hydrates asynchronously (the
   // encrypted cache opens only after unlock): a session that isn't found yet may
-  // simply not have decrypted — don't latch, retry when the history lands.
+  // simply not have decrypted - don't latch, retry when the history lands.
   // finalizeSend's self-navigation (?c=<new id>) races the chatHistory emit from
-  // saveChatSession: the store emit re-renders BEFORE the router propagates the new
+  // saveChatSession: the store emit re-renders before the router propagates the new
   // URL, so the session effect fires once more with the STALE pre-send URL (no ?c=).
-  // Treating that tick as "New chat" nulls activeIdRef and resets the messages — the
+  // Treating that tick as "New chat" nulls activeIdRef and resets the messages - the
   // freshly appended assistant bubble is wiped, the restore that follows loads the
   // pre-reply snapshot, and the streamed answer maps onto an array that no longer
   // contains it: it silently disappears (the vanishing-answer bug). finalizeSend
@@ -1302,8 +1296,8 @@ export function ScreenChat() {
     const target = sessionParam ?? null;
     const pending = pendingSelfNavRef.current;
     if (pending) {
-      // The user pressed "+" AFTER this send's self-navigation was issued: the
-      // no-?c= tick is then a REAL new chat, not the stale pre-send tick — and
+      // The user pressed "+" after this send's self-navigation was issued: the
+      // no-?c= tick is then a real new chat, not the stale pre-send tick - and
       // if the self-nav's ?c= commit still lands afterwards (the router can
       // commit it seconds late under load), it must be treated as stale and
       // healed back to /chat instead of restoring the old session under the
@@ -1316,14 +1310,14 @@ export function ScreenChat() {
         return;
       }
       if (target === pending.id || Date.now() - pending.ts > 2000) {
-        pendingSelfNavRef.current = null; // landed (or expired) — normal handling below
+        pendingSelfNavRef.current = null; // landed (or expired) - normal handling below
       } else if (!target && activeIdRef.current === pending.id && !explicitNewChat) {
-        return; // stale pre-send tick — the ?c= navigation lands on the next run
+        return; // stale pre-send tick - the ?c= navigation lands on the next run
       } else if (!target && explicitNewChat) {
         // Keep the marker ARMED (the late ?c= commit may still arrive and must
         // be recognized above) and fall through to the new-chat reset below.
       } else {
-        pendingSelfNavRef.current = null; // navigated somewhere else — marker is moot
+        pendingSelfNavRef.current = null; // navigated somewhere else - marker is moot
       }
     }
     if (target === activeIdRef.current) return;
@@ -1331,7 +1325,7 @@ export function ScreenChat() {
       const session = getChatSession(target);
       if (session && session.messages.length) {
         activeIdRef.current = target;
-        // Per-chat knobs are ephemeral — reset on chat switch (the seeding effect
+        // Per-chat knobs are ephemeral - reset on chat switch (the seeding effect
         // below re-applies them for the newly-shown chat, if it's a project chat).
         setChatEffortOverride(null);
         setChatProtectionOverride(null);
@@ -1352,8 +1346,8 @@ export function ScreenChat() {
         return;
       }
       // Unknown (or not-yet-decrypted) session: show a fresh chat once, but keep
-      // the effect armed — if the session appears on a later history emit, the
-      // restore above runs then. Un-latch so a send meanwhile starts a NEW
+      // the effect armed - if the session appears on a later history emit, the
+      // restore above runs then. Un-latch so a send meanwhile starts a new
       // session instead of overwriting the one we couldn't load.
       if (missingIdRef.current !== target) {
         missingIdRef.current = target;
@@ -1373,26 +1367,26 @@ export function ScreenChat() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionParam, chatHistory]);
 
-  // Seed per-project chat defaults (model / protection / reasoning effort) ONCE per
-  // chat opened/created in a project scope. Keyed on the *logical* chat — the session
-  // id, or the ?p= target for a fresh chat — so the seed never fights later manual
-  // per-chat changes, and the self-navigation after the first send (?p=… → ?c=…,
-  // pre-marked in finalizeSend) doesn't re-seed. Runs AFTER the session effect above,
+  // Seed per-project chat defaults (model / protection / reasoning effort) once per
+  // chat opened/created in a project scope. Keyed on the *logical* chat - the session
+  // id, or the ?p= target for a fresh chat - so the seed never fights later manual
+  // per-chat changes, and the self-navigation after the first send (?p=... -> ?c=...,
+  // pre-marked in finalizeSend) doesn't re-seed. Runs after the session effect above,
   // so the effort seed wins over its reset-to-null on chat switch. An existing chat
   // whose history hasn't decrypted yet stays unseeded and retries on the next emit.
-  // Applied via `applyProjectChatSeed`, which only ever writes the LOCAL override
+  // Applied via `applyProjectChatSeed`, which only ever writes the local override
   // state below (setChatProtectionOverride/setChatModelOverride/setChatEffortOverride)
-  // — see projectChatDefaults.ts for why that function can never reach the global
+  // - see projectChatDefaults.ts for why that function can never reach the global
   // quon.setProtectionLevel/setActiveModel setters.
   const seededChatKeyRef = useRef<string | null>(null);
   // A default model that wasn't an enabled option yet (the /models fetch is async):
-  // applied when the list lands — unless the user picked a model in the meantime.
+  // applied when the list lands - unless the user picked a model in the meantime.
   const pendingModelSeedRef = useRef<{ modelId: string; modelAtSeed: string } | null>(null);
   useEffect(() => {
     const chatKey = sessionParam ?? `new:${projectParam ?? ""}`;
     if (seededChatKeyRef.current === chatKey) return;
     const session = sessionParam ? getChatSession(sessionParam) : undefined;
-    if (sessionParam && !session) return; // not decrypted yet — retry on history emit
+    if (sessionParam && !session) return; // not decrypted yet - retry on history emit
     seededChatKeyRef.current = chatKey;
     pendingModelSeedRef.current = null;
     const projId = sessionParam ? session?.projectId : projectParam;
@@ -1413,9 +1407,9 @@ export function ScreenChat() {
   }, [sessionParam, projectParam, chatHistory, models]);
 
   // Apply a deferred project-default model once it becomes an enabled option. A
-  // manual pick since the seed (effectiveModelId moved) cancels it — defaults only
+  // manual pick since the seed (effectiveModelId moved) cancels it - defaults only
   // seed, they never override the user. Sets the OVERRIDE, same as an immediate
-  // seed above — never the global default.
+  // seed above - never the global default.
   useEffect(() => {
     const pending = pendingModelSeedRef.current;
     if (!pending) return;
@@ -1431,7 +1425,7 @@ export function ScreenChat() {
 
   // Persist the conversation on every change (covers streamed assistant tokens),
   // but only once a session exists and there is more than the intro bubble.
-  // `bump: false` keeps the recents order stable — opening a chat or watching it
+  // `bump: false` keeps the recents order stable - opening a chat or watching it
   // stream must not reshuffle the list; only sending a prompt (finalizeSend) does.
   useEffect(() => {
     const id = activeIdRef.current;
@@ -1439,13 +1433,13 @@ export function ScreenChat() {
     saveChatSession(id, messages, { bump: false });
   }, [messages]);
 
-  // --- MCP tool consent (the gate before ANY tool executes) -----------------
+  // --- MCP tool consent (the gate before any tool executes) -----------------
   // runChat awaits this promise; the dialog resolves it. If the user navigated
-  // away (dialog can't render), the request auto-declines — fail-closed.
+  // away (dialog can't render), the request auto-declines - fail-closed.
   const [toolConsent, setToolConsent] = useState<{
     items: ToolConsentItem[];
-    /** Untrusted content (an MCP tool result) entered THIS run before a write
-     *  was proposed — the dialog shows a provenance warning (injection guard). */
+    /** Untrusted content (an MCP tool result) entered this run before a write
+     *  was proposed - the dialog shows a provenance warning (injection guard). */
     untrusted: boolean;
     resolve: (r: { approved: boolean; always: boolean }) => void;
   } | null>(null);
@@ -1478,17 +1472,17 @@ export function ScreenChat() {
     // (persona / standing rules), then retrieved Memory context. Both are already
     // scrubbed when protection is on, so the provider only sees placeholders.
     const lastUser = [...convo].reverse().find((m) => m.role === "user");
-    // The project instruction is STANDING context — persona and rules for the
-    // whole chat — so it belongs at the head.
+    // The project instruction is STANDING context - persona and rules for the
+    // whole chat - so it belongs at the head.
     const head: ChatTurn[] = [];
     if (lastUser?.instruction?.text)
       head.push({
         role: "system",
         content: `${INSTRUCTION_PREAMBLE}\n\n${lastUser.instruction.text}`,
       });
-    // The attachment and the retrieved context belong to THIS turn, and say so
-    // in their preambles — so they are spliced next to that turn, not at the
-    // head where the model reads them as belonging to the first message (#74).
+    // The attachment and the retrieved context belong to this turn, and say so
+    // in their preambles - so they are spliced next to that turn, not at the
+    // head where the model reads them as belonging to the first message.
     const turnContext: ChatTurn[] = [];
     if (lastUser?.attachment?.text)
       turnContext.push({
@@ -1503,7 +1497,7 @@ export function ScreenChat() {
     // placeholders that don't exist and ends up inventing them in its reply.
     const hasPlaceholders = Object.keys(rehydrationMap).length > 0;
     const id = nextMessageId++;
-    // The model that answers THIS turn — captured now so the footer + a restored
+    // The model that answers this turn - captured now so the footer + a restored
     // chat keep it even if the picker changes later (runChat closes over this
     // render's modelLabel).
     const answeringModel = modelLabel;
@@ -1515,8 +1509,8 @@ export function ScreenChat() {
     const selected = models.find((m) => m.id === effectiveModelId);
     const modelSlug = selected?.model || effectiveModelId;
     const connectionId = selected?.connection_id;
-    // Image generation (#79): only image-capable models get `image_output`;
-    // they also get NO tools — the image models reject function calling.
+    // Image generation: only image-capable models get `image_output`;
+    // they also get no tools - the image models reject function calling.
     const imageOutput = !!selected?.image_output;
     // Effective reasoning budget for this send: the per-chat override wins, else the
     // global default. "off" is sent as-is and dropped in the API layer.
@@ -1528,16 +1522,16 @@ export function ScreenChat() {
     // Declared out here (not in the stream's try block) because `persist` below
     // closes over it: every save of this assistant message, including the
     // partial-answer and error paths, must carry the redactions collected so far
-    // — they are the only record of those placeholder→value pairs.
+    // - they are the only record of those placeholder->value pairs.
     const toolRedactions: ToolRedaction[] = [];
     /** Spread into every setMessages patch for this bubble, so the live message
-     *  carries exactly what `persist` writes — otherwise the redaction footer
+     *  carries exactly what `persist` writes - otherwise the redaction footer
      *  would only appear after a reload. */
     const redactionsPatch = () =>
       toolRedactions.length ? { toolRedactions: [...toolRedactions] } : {};
 
     // Persist the reply to its session as it streams (throttled) so navigating away
-    // never loses it — saveChatSession is module-level and runs regardless of mount.
+    // never loses it - saveChatSession is module-level and runs regardless of mount.
     let lastSave = 0;
     const persist = (
       text: string,
@@ -1563,8 +1557,8 @@ export function ScreenChat() {
     };
 
     let raw = "";
-    // Generated images (#79): references collected as they arrive; the bytes
-    // go to the sealed store first, then upload in the background — when the
+    // Generated images: references collected as they arrive; the bytes
+    // go to the sealed store first, then upload in the background - when the
     // upload lands, the persisted reference learns its chunkCount so other
     // devices can fetch it.
     const images: GeneratedImageRef[] = [];
@@ -1586,7 +1580,7 @@ export function ScreenChat() {
       });
     };
     try {
-      // MCP tools ([] when none configured — chat behaves exactly as before).
+      // MCP tools ([] when none configured - chat behaves exactly as before).
       const toolDefs = QUON_ENABLED && !imageOutput ? await getChatToolDefs() : [];
       let turns: ChatTurn[] = history;
       const MAX_TOOL_ROUNDS = 4;
@@ -1596,7 +1590,7 @@ export function ScreenChat() {
         raw += delta;
         const rehydrated = applyPlaceholders(raw, rehydrationMap);
         if (isActive()) {
-          if (first) setLoadingPhase(""); // first token arrived — drop the spinner
+          if (first) setLoadingPhase(""); // first token arrived - drop the spinner
           setMessages((c) =>
             c.map((m) => (m.id === id ? { ...m, text: rehydrated, rawText: raw } : m)),
           );
@@ -1610,7 +1604,7 @@ export function ScreenChat() {
 
       // Reasoning ("thinking") tokens stream separately (reasoning models). We
       // re-hydrate them like the answer (they reference placeholders, not real
-      // values) and show them in a collapsible panel — never mixed into the
+      // values) and show them in a collapsible panel - never mixed into the
       // answer. Live-only for v1 (not persisted): the thinking matters most
       // during the wait, and it can be long.
       let reasoningRaw = "";
@@ -1636,17 +1630,17 @@ export function ScreenChat() {
       };
 
       // Injection guard: flips true once content from an UNTRUSTED source (an
-      // MCP tool result, or a first-party tool with provenance "external" —
+      // MCP tool result, or a first-party tool with provenance "external" -
       // Paperless) has entered this run's context. A write proposed afterwards
       // gets a provenance warning on its consent card. First-party reads over
-      // the user's OWN store are trusted and don't flip it.
+      // the user's own store are trusted and don't flip it.
       let untrustedThisRun = false;
 
       for (let round = 0; ; round++) {
         const roundStart = raw.length;
         // Re-evaluated every round after the first: the previous round's tool
-        // call can open a gate (pick_folder → list/read/import_folder_file).
-        // First-party only, no I/O — see refreshFirstPartyToolDefs.
+        // call can open a gate (pick_folder -> list/read/import_folder_file).
+        // First-party only, no I/O - see refreshFirstPartyToolDefs.
         const roundDefs =
           round > 0 && toolDefs.length ? refreshFirstPartyToolDefs(toolDefs) : toolDefs;
         let pendingCalls: StreamToolCall[] = [];
@@ -1691,7 +1685,7 @@ export function ScreenChat() {
           finished = leg.terminal;
         } catch (streamErr) {
           // A payload error (provider refused, budget gone) is a real answer and
-          // is marked terminal — only a broken pipe is worth reconnecting.
+          // is marked terminal - only a broken pipe is worth reconnecting.
           const ownAbort = controller.signal.aborted;
           diagAppend(
             `stream leg ended: job=${jobId ? "yes" : "NONE"} applied=${applied} ` +
@@ -1701,12 +1695,12 @@ export function ScreenChat() {
           if (!jobId || ownAbort || !isTransportFailure(streamErr, ownAbort)) throw streamErr;
         }
 
-        // Not finished ⇒ the socket died mid-answer (mobile backgrounding). The
+        // Not finished => the socket died mid-answer (mobile backgrounding). The
         // server kept generating into its job buffer, so re-attach at exactly
-        // the events we applied. Note a cut SSE usually just STOPS — no
-        // exception — which is why `terminal` drives this, not the catch above.
+        // the events we applied. Note a cut SSE usually just STOPS - no
+        // exception - which is why `terminal` drives this, not the catch above.
         for (let attempt = 0; !finished && jobId; attempt++) {
-          await whenVisible(controller.signal); // frozen tab → wait for the return
+          await whenVisible(controller.signal); // frozen tab -> wait for the return
           if (controller.signal.aborted) break;
           // Coming back from the background, the radio is often still
           // re-associating: an immediate retry fails and burns the budget in
@@ -1743,7 +1737,7 @@ export function ScreenChat() {
             if (!isTransportFailure(resumeErr, controller.signal.aborted)) throw resumeErr;
           }
         }
-        // Still unfinished after the reconnect budget → surface the honest
+        // Still unfinished after the reconnect budget -> surface the honest
         // "connection lost" bubble (classifyStreamError's keepPartial path).
         if (!finished && !controller.signal.aborted && !pendingCalls.length) {
           throw new QuonError(t("chat.connectionLost"));
@@ -1751,7 +1745,7 @@ export function ScreenChat() {
         if (!pendingCalls.length || round >= MAX_TOOL_ROUNDS) break;
 
         // --- consent gate (always-allow list can pre-approve; first-party
-        //     WRITE tools are structurally excluded from it — see chatTools) --
+        //     Write tools are structurally excluded from it - see chatTools) --
         const items: ToolConsentItem[] = pendingCalls.map((c) => {
           const quon = parseQuonToolName(c.name);
           const parsed = quon ? null : parseToolName(c.name);
@@ -1759,9 +1753,9 @@ export function ScreenChat() {
             id: c.id,
             serverId: quon ? QUON_TOOL_SERVER_ID : (parsed?.serverId ?? "?"),
             tool: quon?.tool ?? parsed?.tool ?? c.name,
-            // Arguments are shown REHYDRATED — the user must see what would
+            // Arguments are shown REHYDRATED - the user must see what would
             // actually be sent/written, not placeholder soup. For writes the
-            // arguments ARE the payload, so this doubles as the content preview.
+            // arguments are the payload, so this doubles as the content preview.
             argsDisplay: applyPlaceholders(c.arguments || "{}", rehydrationMap),
             write: quon?.trust === "write",
           };
@@ -1771,7 +1765,7 @@ export function ScreenChat() {
           ? { approved: true, always: false }
           : isActive()
             ? await requestToolConsent(items, untrustedThisRun)
-            : { approved: false, always: false }; // backgrounded → fail-closed
+            : { approved: false, always: false }; // backgrounded -> fail-closed
         if (decision.approved && decision.always)
           for (const i of items) rememberAlwaysAllow(i.serverId, i.tool);
 
@@ -1795,13 +1789,13 @@ export function ScreenChat() {
           } else {
             if (isActive()) setLoadingPhase("generating");
             const toolLabel = friendlyToolName(quon?.tool ?? parsed?.tool ?? "", t);
-            // The marker is written BEFORE the call so an erroring tool still
+            // The marker is written before the call so an erroring tool still
             // gets one, then rewritten below once the redaction count is known.
             // Safe because nothing else appends to `raw` in between: this round's
             // stream leg has already finished (`finished`/`pendingCalls` above),
             // so `onDelta` cannot fire, and calls are executed one at a time.
             // The length check makes that an assertion rather than an assumption
-            // — if it ever stops holding, the count is dropped, not misattached.
+            // - if it ever stops holding, the count is dropped, not misattached.
             const markerAt = raw.length;
             const marker = (n: number) =>
               `\n\n> ⚙ ${toolLabel}${n > 0 ? ` · ${t("chat.toolRedactedInline", { count: n })}` : ""}\n\n`;
@@ -1815,7 +1809,7 @@ export function ScreenChat() {
               // First-party tools run in-browser over the user's own decrypted
               // data; MCP tools go to the user's external server. An MCP
               // result is UNTRUSTED content entering this run (injection
-              // guard) — and so is a first-party tool whose content comes from
+              // guard) - and so is a first-party tool whose content comes from
               // a live external source (provenance "external", e.g. Paperless).
               let resultText: string;
               if (quon) {
@@ -1826,13 +1820,13 @@ export function ScreenChat() {
                 untrustedThisRun = true;
               }
               if (QUON_ENABLED && filterActive) {
-                // ZK: the result may contain fresh PII — scrub before it
-                // re-enters the relay. Fail-CLOSED: unreachable filter ⇒ the
+                // ZK: the result may contain fresh PII - scrub before it
+                // re-enters the relay. Fail-CLOSED: unreachable filter => the
                 // result is withheld from the provider, never sent raw.
                 // scrubLarge (not scrubText): a full-document tool result
-                // (read_paperless_document, up to 50k) in ONE /scrub request
+                // (read_paperless_document, up to 50k) in one /scrub request
                 // would tip over Cloudflare's ~100s edge timeout and fail the
-                // whole result closed — same reason attachments chunk.
+                // whole result closed - same reason attachments chunk.
                 try {
                   // scrubOptions(), not a hand-rolled copy: the redaction
                   // policy is the enforcement channel, and two sources of truth
@@ -1842,7 +1836,7 @@ export function ScreenChat() {
                   const merged = mergeScrubbedResult(sr, rehydrationMap);
                   Object.assign(rehydrationMap, merged.additions);
                   resultForModel = merged.text;
-                  // merged.entities, NOT merged.additions: additions is only what
+                  // merged.entities, not merged.additions: additions is only what
                   // the map still lacked, so a value the user had already
                   // mentioned would go unreported even though it was redacted
                   // out of this document too.
@@ -1880,16 +1874,15 @@ export function ScreenChat() {
         );
       persist(finalText, raw || undefined, false);
     } catch (err) {
-      if (controller.signal.aborted) return; // user stopped — stopGeneration cleaned up
-      // Report #5 (session expiry mislabeled): a 401 here means the app's session
-      // is gone, not that the model provider errored — the global 401 hook
-      // (authStore, via quonApi.ts) is already sending the app to the sign-in
-      // screen; this is just the label for a bubble rendered in that instant.
-      // Report #8 (partial answer discarded): a genuine mid-stream failure with
-      // tokens already on screen must keep them — see classifyStreamError.
+      if (controller.signal.aborted) return; // user stopped - stopGeneration cleaned up
+      // A 401 here means the app's session is gone, not that the model
+      // provider errored - the global 401 hook (authStore, via quonApi.ts) is
+      // already sending the app to the sign-in screen; this is just the label
+      // for a bubble rendered in that instant. A genuine mid-stream failure
+      // with tokens already on screen must keep them - see classifyStreamError.
       // Localize the provider detail before it's baked into the wrapped
-      // "⚠️ Model provider error — {detail}" string (classifyStreamError itself
-      // stays English/untranslated — it's outside this pass's file scope).
+      // "Model provider error - {detail}" string (classifyStreamError itself
+      // is not localized).
       diagAppend(
         `stream FAILED — ${err instanceof Error ? `${err.name}: ${err.message.slice(0, 120)}` : String(err).slice(0, 120)} ` +
           `partial=${raw.length} unauthorized=${isUnauthorizedError(err)} online=${navigator.onLine} visibility=${document.visibilityState}`,
@@ -1917,8 +1910,8 @@ export function ScreenChat() {
           );
         persist(rehydrated, raw, false, true);
       } else {
-        // classifyStreamError's own "Session expired — sign in to continue." literal
-        // is outside this pass's file scope (streamError.ts) — use the shared,
+        // classifyStreamError's own "Session expired - sign in to continue." literal
+        // is outside this pass's file scope (streamError.ts) - use the shared,
         // already-localized catalog string for that case instead; the provider-error
         // wrapper already carries the translated detail from above.
         const errText = isUnauthorizedError(err) ? t("errors.sessionExpired") : decision.errorText!;
@@ -1971,7 +1964,7 @@ export function ScreenChat() {
     attachment?: ChatMessage["attachment"],
     unfiltered?: boolean,
   ) {
-    // Cancelled during the scrub/retrieve phase → don't commit the turn.
+    // Cancelled during the scrub/retrieve phase -> don't commit the turn.
     if (cancelledRef.current) {
       cancelledRef.current = false;
       return;
@@ -1982,7 +1975,7 @@ export function ScreenChat() {
     commitRehydration(items);
     // Commit the kept-redacted context placeholders here (deferred from build time),
     // so a cancelled review leaves no stale mappings and an un-redacted document/RAG
-    // hit — already gone from the sent text — is never re-hydrated.
+    // hit - already gone from the sent text - is never re-hydrated.
     for (const e of rag?.entities ?? []) rehydration.current[e.placeholder] = e.value;
     for (const e of instruction?.entities ?? []) rehydration.current[e.placeholder] = e.value;
     for (const e of attachment?.entities ?? []) rehydration.current[e.placeholder] = e.value;
@@ -1999,15 +1992,15 @@ export function ScreenChat() {
       (attachment?.entities?.length ?? 0) +
       (rag?.entities?.length ?? 0) +
       (instruction?.entities?.length ?? 0);
-    // Count everything redacted before sending — the typed message AND the
+    // Count everything redacted before sending - the typed message AND the
     // attachment, RAG context and project instruction (else a PDF with 24 redacted
     // values shows "0 redacted").
     quon.addRedacted(totalRedacted);
-    // Onboarding step 0: ANY message sent from the fresh empty-chat intro
-    // advances the flow — content doesn't matter, only that the user tried it.
+    // Onboarding step 0: any message sent from the fresh empty-chat intro
+    // advances the flow - content doesn't matter, only that the user tried it.
     // But step 1's callout needs something to point at: if this particular send
     // had nothing redacted (e.g. the user typed something with no PII), there is
-    // nothing for it to show and it would never render — skip straight to the
+    // nothing for it to show and it would never render - skip straight to the
     // step-2 teaser instead of leaving the flow stuck at an invisible step 1.
     if (showOnboardingIntro) {
       if (totalRedacted > 0) advanceOnboardingFromIntro();
@@ -2044,7 +2037,7 @@ export function ScreenChat() {
     if (!id) {
       id = createChatSessionId();
       activeIdRef.current = id;
-      // Mark the self-navigation BEFORE navigate(): see pendingSelfNavRef above.
+      // Mark the self-navigation before navigate(): see pendingSelfNavRef above.
       pendingSelfNavRef.current = { id, ts: Date.now() };
       // Same logical chat, new URL: pre-mark it as seeded so the project-defaults
       // effect doesn't re-apply over changes the user made before the first send.
@@ -2059,7 +2052,7 @@ export function ScreenChat() {
 
   // Dismiss a detected artifact card ("I don't want this in my documents").
   // Recorded on the MESSAGE (not component state) because artifacts are
-  // re-detected from the answer text on every render — the card would otherwise
+  // re-detected from the answer text on every render - the card would otherwise
   // reappear on reload. The `messages` effect persists + syncs it.
   const dismissArtifact = useCallback((messageId: number, index: number) => {
     setMessages((c) =>
@@ -2073,10 +2066,10 @@ export function ScreenChat() {
 
   // Re-send the conversation after a provider error (or an interrupted stream):
   // drop the broken bubble(s) and replay the relay with the already-scrubbed
-  // history. No re-scrub, no new user turn — the failed request is simply
+  // history. No re-scrub, no new user turn - the failed request is simply
   // attempted again (e.g. after a rate limit passed, a key was fixed in
   // Settings, or the connection came back). Also drops any `streamInterrupted`
-  // bubble — that message kept its partial (now-superseded) text on screen and
+  // bubble - that message kept its partial (now-superseded) text on screen and
   // persisted, but a retry regenerates the answer from scratch, not from where
   // it was cut off.
   function retryAfterError() {
@@ -2092,12 +2085,12 @@ export function ScreenChat() {
     void runChat(convo);
   }
 
-  // "Resend without filter" (see unfilteredResend.ts): append `original` — the
-  // AFFECTED message's pre-scrub text — as a brand-new user turn that skips /scrub
+  // "Resend without filter" (see unfilteredResend.ts): append `original` - the
+  // AFFECTED message's pre-scrub text - as a brand-new user turn that skips /scrub
   // entirely. Reuses finalizeSend so this gets the same session bookkeeping as any
   // other send (new message id, recents bump, persistence); the only difference is
   // the payload shape (no entities, protected: false, unfiltered: true) and that no
-  // attachment/RAG/instruction is re-attached — a bare-text resend by design, to
+  // attachment/RAG/instruction is re-attached - a bare-text resend by design, to
   // keep the exposure of this bypass minimal. Always appends at the END of the
   // conversation; it never edits the original (garbled) turn or its answer.
   function resendWithoutFilter(original: string) {
@@ -2129,7 +2122,7 @@ export function ScreenChat() {
     // Scrub only when QUON is enabled AND the protection slider is Filter or Review.
     const protect = QUON_ENABLED && filterActive;
     const willRetrieve = useMemoryContext && hasInjectableContext(scope);
-    // #68 breadcrumb — shape of the send, never its content.
+    // Diagnostics breadcrumb - shape of the send, never its content.
     diagAppend(
       `send: protect=${protect} chars=${original.length} attach=${attachment?.text.length ?? 0} ` +
         `online=${navigator.onLine} visibility=${document.visibilityState}`,
@@ -2163,25 +2156,25 @@ export function ScreenChat() {
     setLoadingPhase(willRetrieve ? "searching" : "scrubbing");
     setSendError(null);
 
-    // On-device prep first: retrieval and the project instruction decide WHAT has
+    // On-device prep first: retrieval and the project instruction decide what has
     // to be scrubbed without spending a round trip.
     const ragPrep = await prepareRag(original);
     const instructionRaw = projectInstruction();
 
     setLoadingPhase("scrubbing");
-    // ONE parallel wave. Context, project instruction, attachment and the typed
+    // One parallel wave. Context, project instruction, attachment and the typed
     // message are independent inputs, so their /scrub round trips overlap instead
-    // of queueing — each costs a network hop plus the backend's cloud-LLM pass
+    // of queueing - each costs a network hop plus the backend's cloud-LLM pass
     // (~0.3–1.2 s measured), and doing four in sequence was most of the delay
     // before the model even started answering.
     // The user's global policy PLUS every saved per-document redaction that
-    // could flow into this send: the attached documents' terms, and — when
-    // context retrieval is on — the terms of every in-scope ready document
+    // could flow into this send: the attached documents' terms, and - when
+    // context retrieval is on - the terms of every in-scope ready document
     // (retrieved snippets carry no doc ids, so the union over the scope is the
     // fail-SAFE direction: worst case a term is redacted in a send that didn't
     // quote its document, which is over-redaction, never a leak). scrubText
     // verifies `always_redact` afterwards, so these are enforced, not hoped.
-    // …plus the hand-redactions made in the staged attachment's preview (#72):
+    // ...plus the hand-redactions made in the staged attachment's preview:
     // per-send, so they live on the attachment, not in any store.
     const docTerms = mergeRedactTerms(
       collectRedactTerms([
@@ -2195,16 +2188,16 @@ export function ScreenChat() {
       ? { ...baseOpts, always_redact: [...baseOpts.always_redact, ...docTerms] }
       : baseOpts;
 
-    // Progress tracking for the WHOLE wave (feedback: a 200k-char / 10-doc
+    // Progress tracking for the whole wave (feedback: a 200k-char / 10-doc
     // attachment takes 50-60s, and a bare attachment-only "(7/25)" fraction
     // missed the rag/instruction/message units running concurrently in the
     // same wave). Gate stays exactly the old intent: only bother when the
-    // attachment itself needs splitting — a sub-threshold scrub finishes
-    // before any bar could inform anyone. splitForScrub is the SAME pure
+    // attachment itself needs splitting - a sub-threshold scrub finishes
+    // before any bar could inform anyone. splitForScrub is the same pure
     // split scrubLarge uses internally, computed up front (cheap, no network)
     // so the total is known at t=0 instead of only after the first piece lands.
     const attachPieceCount = attachment ? splitForScrub(attachment.text).length : 0;
-    // ANY attachment tracks — not just a multi-piece one. The old `> 1` gate
+    // Any attachment tracks - not just a multi-piece one. The old `> 1` gate
     // meant a single document at or under the 12k split threshold got no
     // progress at all, though its one /scrub call can still take 10s+ (and up
     // to the 180s timeout when a piece stalls). The gate predates the 2s reveal
@@ -2238,7 +2231,7 @@ export function ScreenChat() {
       });
     };
     // Marks one non-attachment unit (rag/instruction/message) as finished,
-    // success or failure alike — the wave's fail-closed handling happens
+    // success or failure alike - the wave's fail-closed handling happens
     // later from the awaited results, this is presentation-only bookkeeping.
     const markFastUnitDone = () => {
       waveDone += 1;
@@ -2246,7 +2239,7 @@ export function ScreenChat() {
       pushWaveProgress();
     };
     setScrubProgress(null); // reset any stale progress from a prior send
-    pushWaveProgress(); // no-op unless trackWave — seeds the bar at (0, waveTotal)
+    pushWaveProgress(); // no-op unless trackWave - seeds the bar at (0, waveTotal)
 
     const pRag = ragPrep
       ? settled(scrubText(ragPrep.combined, opts).finally(trackWave ? markFastUnitDone : undefined))
@@ -2257,7 +2250,7 @@ export function ScreenChat() {
     const pAttach = attachment
       ? settled(
           // `total` here always equals attachPieceCount (same pure split, same
-          // input) — attachPieceCount is used directly below so the reported
+          // input) - attachPieceCount is used directly below so the reported
           // total is stable from t=0 rather than only appearing once the
           // first piece resolves.
           scrubLarge(
@@ -2271,7 +2264,7 @@ export function ScreenChat() {
               pushWaveProgress();
             },
             (info) => {
-              // A piece timed out and is being retried — say so instead of
+              // A piece timed out and is being retried - say so instead of
               // letting the bar sit there looking dead.
               waveRetry = { attempt: info.attempt, attempts: info.attempts };
               pushWaveProgress();
@@ -2283,14 +2276,14 @@ export function ScreenChat() {
       scrubText(original, opts).finally(trackWave ? markFastUnitDone : undefined),
     );
 
-    // …consumed in a FIXED order, so the global placeholder numbering stays
+    // ...consumed in a FIXED order, so the global placeholder numbering stays
     // deterministic regardless of which response happens to land first.
     let rag: RagThread | undefined;
     const ragRes = await pRag;
     if (ragPrep && ragRes?.ok) {
       const ri = reindex(ragRes.value.scrubbed, ragRes.value.entities);
       rag = { context: ri.scrubbed, sources: ragPrep.sources, entities: ri.entities };
-    } // scrub failed → context is simply not sent (same silent degrade as before)
+    } // scrub failed -> context is simply not sent (same silent degrade as before)
 
     let instruction: ChatMessage["instruction"];
     const instructionRes = await pInstruction;
@@ -2303,7 +2296,7 @@ export function ScreenChat() {
     const attachRes = await pAttach;
     if (attachRes && attachment) {
       if (!attachRes.ok) {
-        // FAIL CLOSED: couldn't scrub the attachment → send nothing, keep it staged.
+        // Fail closed: couldn't scrub the attachment -> send nothing, keep it staged.
         setLoading(false);
         setLoadingPhase("");
         setSendError(t("chat.errorAttachmentScrubFailed"));
@@ -2325,18 +2318,18 @@ export function ScreenChat() {
       if (!messageRes.ok) throw messageRes.error;
       result = messageRes.value;
     } catch (err) {
-      // FAIL CLOSED: never send unscrubbed text. Keep the input and surface an error.
+      // Fail closed: never send unscrubbed text. Keep the input and surface an error.
       diagAppend(
         `send: scrub FAILED — ${err instanceof Error ? `${err.name}: ${err.message.slice(0, 120)}` : String(err).slice(0, 120)} ` +
           `unauthorized=${isUnauthorizedError(err)} online=${navigator.onLine}`,
       );
       setLoading(false);
       setLoadingPhase("");
-      // Report #5 (2026-07-15 UX walkthrough): a 401 here means the session is
-      // gone, not that the scrubber is unreachable — the global 401 hook
-      // (authStore, via quonApi.ts) already transitions the app to the sign-in
-      // screen; don't tell a hosted user to "start the scrubber" (developer
-      // jargon they have no way to act on) for what is actually an auth issue.
+      // A 401 here means the session is gone, not that the scrubber is
+      // unreachable - the global 401 hook (authStore, via quonApi.ts) already
+      // transitions the app to the sign-in screen; don't tell a hosted user to
+      // "start the scrubber" (developer jargon they have no way to act on) for
+      // what is actually an auth issue.
       setSendError(isUnauthorizedError(err) ? t("errors.sessionExpired") : t("errors.offline"));
       return;
     }
@@ -2453,7 +2446,7 @@ export function ScreenChat() {
   // Waits for the model catalog: until it lands, `models` is the bundled
   // placeholder whose ids differ from the real connection-scoped ones, so sending
   // now would pick the wrong model. If the catalog never arrives (offline), the
-  // text lands in the composer instead of being thrown at a request that fails —
+  // text lands in the composer instead of being thrown at a request that fails -
   // the user's words are never lost either way.
   const handoffConsumed = useRef(false);
   useEffect(() => {
@@ -2514,9 +2507,9 @@ export function ScreenChat() {
   }
 
   // Turn the current text selection into a manual [REDACTED_n] item. The
-  // matching (incl. the cross-line-break tolerance) lives in lib/manualRedact —
-  // and every failure is NAMED, because the silent-null version of this read as
-  // "the button doesn't work" to a real user (feedback #58).
+  // matching (incl. the cross-line-break tolerance) lives in lib/manualRedact -
+  // and every failure is named, because a silent null here reads as "the
+  // button doesn't work".
   function manualItemForValue(value: string, sentText: string): ReviewItem | ManualRedactError {
     const match = findManualSelection(value, sentText);
     if ("error" in match) return match.error;
@@ -2561,18 +2554,18 @@ export function ScreenChat() {
   }
 
   // Durable ("Immer schwärzen") counterpart of redactAttachmentSelection, for
-  // the attachment only (feedback → the Review panel's own selection-to-redact
+  // the attachment only (feedback -> the Review panel's own selection-to-redact
   // power should also be able to remember a term, not just cover this send).
   //
   // Resolves against the attachment's scrubbed BASE text (occurrence count =
   // the blast radius across this document, not just what's left unredacted in
-  // the panel right now) — same gate the document viewer's Text view uses.
-  // Then applies to THIS send via the exact same per-send path
+  // the panel right now) - same gate the document viewer's Text view uses.
+  // Then applies to this send via the exact same per-send path
   // redactAttachmentSelection uses: adding the term to alwaysRedact alone would
   // not touch text the scrub already ran over, so both must happen together.
-  // "Prüfen & schwärzen" (#72) / "Original ansehen & schwärzen" (Review):
+  // "Prüfen & schwärzen" / "Original ansehen & schwärzen" (Review):
   // opens the real DocumentViewer (rendered PDF pages, detection preview,
-  // TextLayer selection) for the STAGED attachment — a library document as
+  // TextLayer selection) for the STAGED attachment - a library document as
   // itself, anything else (fresh upload, Paperless, combined) as an ad-hoc
   // source whose redactions are per-send. The staged state outlives the
   // Review panel (it is consumed by finalizeSend), so one opener serves both.
@@ -2585,23 +2578,23 @@ export function ScreenChat() {
         setReviewViewerDoc(d);
         return;
       }
-      // The library item vanished under the staged chip — preview the staged
+      // The library item vanished under the staged chip - preview the staged
       // text instead of showing nothing.
     }
     setPreviewAdhoc(adhocSourceFor(attachment));
   }
 
   // A per-send redaction chosen in the ad-hoc preview: onto the staged
-  // attachment (→ this send's always_redact), never into a store.
+  // attachment (-> this send's always_redact), never into a store.
   function redactForSend(value: string) {
     setAttachment((a) =>
       a ? { ...a, redactTerms: mergeRedactTerms(a.redactTerms ?? [], [value]) } : a,
     );
   }
 
-  // On close, terms chosen in the viewer must also cover THIS send when Review
+  // On close, terms chosen in the viewer must also cover this send when Review
   // is open: the scrub already ran, so a doc term alone would only bind future
-  // sends — the user just redacted something and rightly expects the message
+  // sends - the user just redacted something and rightly expects the message
   // in front of them to honour it. Deterministic reconcile, not a hope: every
   // term (saved on the document, or per-send on the staged attachment) still
   // present in the outgoing text becomes a per-send manual item.
@@ -2625,7 +2618,7 @@ export function ScreenChat() {
     if (!pendingReview?.attachment) return null;
     const a = pendingReview.attachment;
     const docIds = a.docIds ?? [];
-    if (docIds.length === 0) return null; // ad-hoc upload — nothing to save to
+    if (docIds.length === 0) return null; // ad-hoc upload - nothing to save to
     const resolved = resolveDurableRedaction(
       window.getSelection()?.toString(),
       a.base,
@@ -2639,13 +2632,13 @@ export function ScreenChat() {
         ? { ...pr, attachment: { ...pr.attachment, items: [...pr.attachment.items, item] } }
         : pr,
     );
-    // Save ON the document(s) whose text actually contains the value — with a
+    // Save ON the document(s) whose text actually contains the value - with a
     // combined attachment ("Attach all"), blanket-saving to every doc would pin
     // terms onto documents that never mention them. `occursIn` uses the same
     // boundary rule the backend enforces. Fallback: a value that occurs in the
     // combined text but in none of the fullTexts individually (it straddles the
-    // "=== Document ===" separator) saves to all — over-redaction is the safe
-    // direction, silently saving NOWHERE is not.
+    // "=== Document ===" separator) saves to all - over-redaction is the safe
+    // direction, silently saving nowhere is not.
     const owners = docIds.filter((id) => {
       const d = getDocument(id);
       return d ? occursIn(getDocumentText(d), resolved.value) : false;
@@ -2740,18 +2733,16 @@ export function ScreenChat() {
         />
       )}
 
-      {/* Controls + composer in ONE bordered block (a single divider from the
+      {/* Controls + composer in one bordered block (a single divider from the
           conversation, no double padding). Redaction feedback moved onto each
           message bubble (see UserBubble), so this bottom chrome stays compact. */}
       <div className="border-t border-quon-border px-4 pt-2 pb-3">
-        {/* This row has been squeezed out of shape twice (2026-07: label
-            collapsed to a black circle; 2026-08: the Bot icon rendered OUTSIDE
-            the pill border) — both times because the model trigger was the row's
-            only shrinkable item, so every pill added later crushed it further.
-            The structural fix: nothing in the row shrinks; when the pills don't
-            fit the row SCROLLS horizontally instead. mx-auto on the inner flex
-            keeps it centered while it fits and left-aligned (fully reachable)
-            once it overflows. */}
+        {/* Nothing in this row shrinks; when the pills don't fit, the row
+            scrolls horizontally instead. A shrinkable model trigger gets
+            crushed by every pill added later (label collapsed to a black
+            circle, Bot icon rendered outside the pill border). mx-auto on the
+            inner flex keeps it centered while it fits and left-aligned (fully
+            reachable) once it overflows. */}
         <div
           data-testid="chat-controls-row"
           className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
@@ -2759,7 +2750,7 @@ export function ScreenChat() {
           <div className="mx-auto flex w-max flex-nowrap items-center gap-1.5">
             <Select value={effectiveModelId} onValueChange={setModel}>
               {/* max-w keeps a long model label from eating the whole row on a
-                phone — the base trigger's [&>span]:line-clamp-1 truncates it;
+                phone - the base trigger's [&>span]:line-clamp-1 truncates it;
                 the shrink-0 Bot icon keeps the chip legible as "the model
                 button" even at max truncation. */}
               <SelectTrigger className="h-7 w-auto max-w-40 shrink-0 justify-center gap-1 rounded-full border-quon-border bg-quon-surface px-2.5 text-xs font-semibold text-quon-text [&_svg]:shrink-0">
@@ -2814,7 +2805,7 @@ export function ScreenChat() {
               <ShieldCheck className="h-3.5 w-3.5 shrink-0" />
               {filterActive ? t("chat.filterOnLabel") : t("chat.filterOffLabel")}
             </button>
-            {/* Review pill — only visible when filter is on */}
+            {/* Review pill - only visible when filter is on */}
             {filterActive && (
               <button
                 onClick={() => setProtection(reviewBeforeSend ? "local" : "review")}
@@ -2829,10 +2820,10 @@ export function ScreenChat() {
                 <Lock className="h-3.5 w-3.5 shrink-0" /> {t("chat.reviewLabel")}
               </button>
             )}
-            {/* Context (RAG) pill — only when there is saved Memory/Documents. When
-              it's OFF while saved data exists, a small amber dot signals that the
+            {/* Context (RAG) pill - only when there is saved Memory/Documents. When
+              it's off while saved data exists, a small amber dot signals that the
               user has memory/documents that WON'T be used (the honest "why didn't
-              it use my saved info?" affordance) — passive, not a per-send nag. */}
+              it use my saved info?" affordance) - passive, not a per-send nag. */}
             {hasContextData && (
               <button
                 onClick={() => quon.setUseMemoryContext(!useMemoryContext)}
@@ -2853,13 +2844,13 @@ export function ScreenChat() {
                 )}
               </button>
             )}
-            {/* Explainer for the Kontext pill above — a sibling, not nested inside
+            {/* Explainer for the Kontext pill above - a sibling, not nested inside
               its button (InfoHint is its own tap target with its own Popover; two
               interactive elements can't nest). Same text as the Settings row
               (ContextDefaultCard), so "what does Kontext mean?" answers the same
-              way wherever it's asked (feedback #62 item 3). */}
+              way wherever it's asked. */}
             {hasContextData && <InfoHint text={t("chat.contextInfoHint")} />}
-            {/* Web-search pill — OpenRouter's agentic server tool: the MODEL
+            {/* Web-search pill - OpenRouter's agentic server tool: the MODEL
               decides when to search (queries derive from the scrubbed prompt
               only). Global synced pref, default on. Absent in EU routing. */}
             {webSearchAvailable && (
@@ -2876,12 +2867,12 @@ export function ScreenChat() {
                 <Globe className="h-3.5 w-3.5 shrink-0" /> {t("chat.webLabel")}
               </button>
             )}
-            {/* Overflow menu — currently just the reasoning-effort picker, kept out of
+            {/* Overflow menu - currently just the reasoning-effort picker, kept out of
               the always-visible row so Filter/Review/Context/model stay the
               compact, primary controls. Effective = per-chat override ?? global
               default. The trigger carries a small indicator (the effort's first
               letter) whenever a non-default budget is active, so the state isn't
-              hidden behind the "…". */}
+              hidden behind the "...". */}
             {(() => {
               const reasoningOptions = getReasoningOptions(t);
               const effective = chatEffortOverride ?? reasoningEffort;
@@ -2913,9 +2904,8 @@ export function ScreenChat() {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent side="top" align="end" className="w-56">
                     {/* Plain div instead of DropdownMenuLabel so the explainer
-                      (feedback #62 item 4 — "kostet das auch mehr Token?") can sit
-                      beside the heading; same text as the Settings row
-                      (ReasoningDefaultCard). */}
+                      ("kostet das auch mehr Token?") can sit beside the heading;
+                      same text as the Settings row (ReasoningDefaultCard). */}
                     <div className="flex items-center gap-1.5 px-2 pb-1.5 pt-1.5">
                       <span className="text-[10px] font-semibold uppercase tracking-wide text-quon-muted">
                         {t("chat.reasoningEffortHeading")}
@@ -2942,7 +2932,7 @@ export function ScreenChat() {
         </div>
         <ProtectionLine status={status} protectionLevel={effectiveProtectionLevel} />
 
-        {/* Composer (same block — no second border/padding) */}
+        {/* Composer (same block - no second border/padding) */}
         <div className="mt-2">
           {budgetHintPct !== null && (
             <Notice
@@ -2973,7 +2963,7 @@ export function ScreenChat() {
               modelLabel={modelLabel}
               base={pendingReview.base}
               items={pendingReview.items}
-              // Pass the object through — a field-by-field rebuild here is how
+              // Pass the object through - a field-by-field rebuild here is how
               // docIds silently went missing and the durable button vanished.
               attachment={pendingReview.attachment}
               contextItems={pendingReview.rag?.items}
@@ -3036,9 +3026,9 @@ export function ScreenChat() {
                             : t("chat.truncatedBadge")}
                         </span>
                       )}
-                      {/* #72: check what the filter finds and redact by hand
-                          BEFORE the send — Filter mode included, not just
-                          Review. A visible label, not an icon alone (#71). */}
+                      {/* Check what the filter finds and redact by hand
+                          before the send - Filter mode included, not just
+                          Review. A visible label, not an icon alone. */}
                       <button
                         onClick={openAttachmentPreview}
                         title={t("chat.previewAttachmentTitle")}
@@ -3104,10 +3094,10 @@ export function ScreenChat() {
                     )}
                   </DropdownMenuContent>
                 </DropdownMenu>
-                {/* Photos are accepted here too (#77/#78: an Android picker greys
-                    out every JPG when `accept` has no image type, which read as
-                    "images can't be uploaded"). They take the same OCR review
-                    path as the camera/gallery entries — never extract.ts. */}
+                {/* Photos are accepted here too: an Android picker greys out
+                    every JPG when `accept` has no image type, which reads as
+                    "images can't be uploaded". They take the same OCR review
+                    path as the camera/gallery entries - never extract.ts. */}
                 <input
                   ref={attachInputRef}
                   type="file"
@@ -3141,7 +3131,7 @@ export function ScreenChat() {
                   type="file"
                   accept="image/*"
                   // `multiple`: the gallery lets you tick several screenshots
-                  // either way — without it the browser hands over only the
+                  // either way - without it the browser hands over only the
                   // first and the rest vanish silently (reported).
                   multiple
                   className="hidden"
@@ -3163,7 +3153,7 @@ export function ScreenChat() {
                     browse={paperlessConnector.browse}
                     sourceName={paperlessConnector.name}
                     onPick={(picked) => {
-                      // Same staging path as handleAttach — the text then goes
+                      // Same staging path as handleAttach - the text then goes
                       // through the identical scrub-before-send pipeline. The
                       // source marker only drives the honesty label on the chip.
                       const docs = picked
@@ -3203,14 +3193,14 @@ export function ScreenChat() {
                     index: scanQueue.total - scanQueue.files.length + 1,
                     total: scanQueue.total,
                   }}
-                  // Cancel skips THIS photo and moves on — the ones already
+                  // Cancel skips this photo and moves on - the ones already
                   // reviewed are still staged when the batch ends.
                   onClose={advanceScan}
                   autoAccept={autoAcceptScans}
                   onAcceptAll={() => setAutoAcceptScans(true)}
                   attachMode={{
-                    // Collect only — the dialog calls onClose() right after
-                    // onAttach, and THAT is what advances. Advancing here too
+                    // Collect only - the dialog calls onClose() right after
+                    // onAttach, and that is what advances. Advancing here too
                     // would silently skip the next photo of the batch.
                     onAttach: ({ filename, text }) => {
                       const clean = text.trim();
@@ -3239,7 +3229,7 @@ export function ScreenChat() {
                   className="max-h-[6.25rem] min-h-[1.25rem] flex-1 resize-none bg-transparent text-sm leading-5 text-quon-text placeholder:text-quon-muted focus:outline-none"
                 />
                 {/* The keyboard's dictation types straight into the field, so
-                    this button never returns text and never errors — it only
+                    this button never returns text and never errors - it only
                     explains where that key is on this device. */}
                 <DictationButton
                   disabled={loading}
@@ -3275,8 +3265,8 @@ export function ScreenChat() {
 
       {/* "Original ansehen & schwärzen" from Review: the real viewer (rendered
           PDF pages, TextLayer selection) for the attached library document.
-          TOP level on purpose — it must render while the Review panel is open,
-          and the composer branch it first landed in is the ternary's OTHER arm,
+          TOP level on purpose - it must render while the Review panel is open,
+          and the composer branch it first landed in is the ternary's other arm,
           so it mounted only when review was closed: a visibly dead button. */}
       <DocumentViewer
         doc={reviewViewerDoc}
@@ -3285,7 +3275,7 @@ export function ScreenChat() {
         onRedactForSend={redactForSend}
       />
 
-      {/* MCP tool consent — nothing executes without an explicit yes. */}
+      {/* MCP tool consent - nothing executes without an explicit yes. */}
       {toolConsent && (
         <ToolConsentDialog
           items={toolConsent.items}
@@ -3299,7 +3289,7 @@ export function ScreenChat() {
 
 /** Consent gate for tool calls (MCP + first-party): shows the tool + its
  *  REHYDRATED arguments (the user must see what actually leaves/gets written),
- *  with an optional per-tool "always allow" — hidden entirely when a WRITE
+ *  with an optional per-tool "always allow" - hidden entirely when a write
  *  tool is present (writes are per-action only; see chat-agentic-tools.md).
  *  Deny is the safe default action. */
 function ToolConsentDialog({
@@ -3321,8 +3311,8 @@ function ToolConsentDialog({
           <DialogTitle className="text-sm">{t("chat.toolConsentTitle")}</DialogTitle>
         </DialogHeader>
         <p className="text-xs text-quon-muted">{t("chat.toolConsentIntro")}</p>
-        {/* Injection guard: a WRITE following untrusted content this turn gets
-            an explicit provenance warning — never silent (lethal trifecta). */}
+        {/* Injection guard: a write following untrusted content this turn gets
+            an explicit provenance warning - never silent (lethal trifecta). */}
         {hasWrite && untrusted && (
           <div className="rounded-lg border border-quon-yellow/40 bg-quon-yellow/10 px-2.5 py-2 text-[11px] text-quon-yellow">
             {t("chat.toolConsentUntrusted")}
@@ -3347,7 +3337,7 @@ function ToolConsentDialog({
               </div>
               {(() => {
                 // A friendly one-value summary for the known first-party tools
-                // (still the REAL value — the write-consent guarantee); raw JSON
+                // (still the real value - the write-consent guarantee); raw JSON
                 // only for tools we can't summarize (MCP / complex args).
                 const summary = summarizeToolArgs(item.tool, item.argsDisplay, lookupTitle);
                 return summary ? (
@@ -3403,7 +3393,7 @@ function ProtectionLine({
   protectionLevel: "none" | "local" | "review" | "full";
 }) {
   const { t } = useT();
-  // When filter is off, show nothing here — the toggle pill above already signals it.
+  // When filter is off, show nothing here - the toggle pill above already signals it.
   if (protectionLevel === "none") return null;
 
   if (status === "offline") {
@@ -3418,7 +3408,7 @@ function ProtectionLine({
       <div className="mt-1 text-[10px] text-quon-yellow">{t("chat.reducedDetectionActive")}</div>
     );
   }
-  return null; // filter active and scrubber healthy — the toggle pill is enough
+  return null; // filter active and scrubber healthy - the toggle pill is enough
 }
 
 function escapeRegExp(s: string): string {
@@ -3507,14 +3497,14 @@ const UserBubble = memo(function UserBubble({
   msg: ChatMessage;
   showOriginal: boolean;
   onToggleShowOriginal: () => void;
-  /** Only set on the LAST user bubble during onboarding step 1 — pulses the
+  /** Only set on the last user bubble during onboarding step 1 - pulses the
    *  status line and floats the callout that points at it. */
   onboardingCallout?: { onDismiss: () => void };
-  /** Resends THIS message's original (pre-scrub) text as a new, unfiltered turn.
-   *  Omitted on a message that is itself already unfiltered — there is no
+  /** Resends this message's original (pre-scrub) text as a new, unfiltered turn.
+   *  Omitted on a message that is itself already unfiltered - there is no
    *  "un-scrubbed original" left to fall back to that would differ from it. */
   onResendWithoutFilter?: (original: string) => void;
-  /** True while a generation is already running for this chat — the action is
+  /** True while a generation is already running for this chat - the action is
    *  disabled rather than hidden, same rule the composer's send button follows. */
   resendDisabled?: boolean;
 }) {
@@ -3534,17 +3524,17 @@ const UserBubble = memo(function UserBubble({
   const shownText = showOriginal ? msg.text : (msg.scrubbed ?? msg.text);
   // The status line opens the per-message detail when there's something to show
   // (redactions, the fallback-mode explanation, or the resend action). N=0
-  // protected sends stay a plain, unclickable line — no chevron suggesting
+  // protected sends stay a plain, unclickable line - no chevron suggesting
   // hidden content. An unfiltered send never has entities/fallbackMode, so it
-  // never opens — it's a one-line fact, not a panel.
+  // never opens - it's a one-line fact, not a panel.
   const hasDetail = total > 0 || !!msg.fallbackMode;
-  // Degraded detection (report #1, 2026-07-15 UX walkthrough): AI enrichment was
-  // skipped for this send, so only names + patterns were caught — items a
-  // context-dependent LLM pass would have caught can be missed. The summary line
-  // used to say "N redacted" in the same success tone as a fully-protected send,
-  // which reads as reassurance exactly when it should read as a warning. Only
-  // applies when the send was otherwise protected — an already-flagged
-  // unfiltered/unprotected send keeps its own (already explicit) wording.
+  // Degraded detection: AI enrichment was skipped for this send, so only names
+  // + patterns were caught - items a context-dependent LLM pass would have
+  // caught can be missed. Saying "N redacted" in the same success tone as a
+  // fully-protected send reads as reassurance exactly when it should read as a
+  // warning. Only applies when the send was otherwise protected - an
+  // already-flagged unfiltered/unprotected send keeps its own (already
+  // explicit) wording.
   const degraded = !!msg.fallbackMode && !msg.unfiltered && msg.protected !== false;
 
   const itemsRedactedText = plural(total, {
@@ -3792,11 +3782,11 @@ function AttachmentChip({
  * relay, but the redaction was invisible: the only privacy readout in the chat
  * sits on the USER bubble and sums the typed turn plus its attachment / RAG /
  * instruction. So an exchange that pulled seven Paperless documents through the
- * filter still displayed "no personal data found" — literally true of the four
+ * filter still displayed "no personal data found" - literally true of the four
  * words typed, and exactly the wrong impression about the exchange.
  *
- * Grouped per call, in call order, so each group lines up with its "⚙ …" marker
- * in the answer above. The list mirrors AttachmentChip's `value → [PLACEHOLDER]`
+ * Grouped per call, in call order, so each group lines up with its "..." marker
+ * in the answer above. The list mirrors AttachmentChip's `value -> [PLACEHOLDER]`
  * rows deliberately: a redaction should read the same wherever it is shown.
  */
 function ToolRedactionFooter({ groups }: { groups: ToolRedaction[] }) {
@@ -3876,38 +3866,38 @@ const AssistantBubble = memo(function AssistantBubble({
   onDismissArtifact,
   onRetry,
 }: {
-  /** Pictures the model generated for this answer (#79). */
+  /** Pictures the model generated for this answer. */
   images?: GeneratedImageRef[];
   /** Scope of the chat, so a saved artifact stays in its project. */
   artifactProjectId?: string;
   /** Friendly label of the model that produced this answer (small footer). */
   model?: string;
-  /** Web pages the model cited (web search on) — rendered as a Sources strip. */
+  /** Web pages the model cited (web search on) - rendered as a Sources strip. */
   sources?: WebSource[];
   /** Per-tool-call record of what the filter stripped out of tool RESULTS during
-   *  this turn — rendered as the redaction footer. */
+   *  this turn - rendered as the redaction footer. */
   toolRedactions?: ToolRedaction[];
   messageId: number;
   text: string;
   rawText?: string;
-  /** Indices of artifacts the user dismissed — filtered out of the render. */
+  /** Indices of artifacts the user dismissed - filtered out of the render. */
   dismissedArtifacts?: number[];
   onDismissArtifact?: (messageId: number, index: number) => void;
   /** The model's streamed reasoning ("thinking"), shown in a collapsible panel. */
   reasoning?: string;
   showOriginal?: boolean;
   isError?: boolean;
-  /** True when the stream was cut off mid-answer — `text`/`rawText` are the
+  /** True when the stream was cut off mid-answer - `text`/`rawText` are the
    *  partial (rehydrated) answer that had already arrived, kept on screen
-   *  instead of replaced by an error string (report #8, 2026-07-15 UX
-   *  walkthrough). Renders a small trailing note instead of the full red error
-   *  treatment, since there IS a real (if incomplete) answer here. */
+   *  instead of replaced by an error string. Renders a small trailing note
+   *  instead of the full red error treatment, since there is a real (if
+   *  incomplete) answer here. */
   streamInterrupted?: boolean;
   /** True while this bubble is still streaming. Markdown renders live, but the
    *  text handed to the parser is throttled (useThrottledValue) so the render
    *  cost stays independent of the token rate. */
   streaming?: boolean;
-  /** Set on the LAST error (or stream-interrupted) bubble: re-sends the
+  /** Set on the last error (or stream-interrupted) bubble: re-sends the
    *  conversation to the provider. */
   onRetry?: () => void;
 }) {
@@ -3915,16 +3905,16 @@ const AssistantBubble = memo(function AssistantBubble({
   // "Original" view shows the re-hydrated answer; "anonymized" shows what the
   // provider actually returned (placeholders).
   const shown = showOriginal ? text : (rawText ?? text);
-  // Markdown renders live while streaming, but at a bounded rate — see
+  // Markdown renders live while streaming, but at a bounded rate - see
   // useThrottledValue. ~10 fps is far below a fast model's token rate and
   // indistinguishable from it on screen.
   const throttled = useThrottledValue(shown, 100, !!streaming && !isError);
   // A whole-document ```markdown fence is shown as the document, not as its
-  // source — otherwise a reply that IS a document reads as raw markup, and
+  // source - otherwise a reply that is a document reads as raw markup, and
   // stays that way once the save card is dismissed (reported).
   const body = useMemo(() => unwrapMarkdownArtifacts(throttled), [throttled]);
   // Saveable artifacts always come from the re-hydrated `text` (the real
-  // content), never the placeholder view — only on a settled (non-streaming,
+  // content), never the placeholder view - only on a settled (non-streaming,
   // non-error) message.
   const artifacts = useMemo(
     () => (isError || streaming ? [] : detectArtifacts(text)),
@@ -3946,7 +3936,7 @@ const AssistantBubble = memo(function AssistantBubble({
           >
             <summary className="flex cursor-pointer list-none items-center gap-1.5 text-[11px] font-semibold text-quon-muted">
               <Sparkles className="h-3 w-3 text-quon-indigo" />{" "}
-              {/* Present tense ONLY while tokens are still arriving — a settled
+              {/* Present tense only while tokens are still arriving - a settled
                   answer with a "Thinking" chip above it reads as if the model is
                   still working (reported). Past tense keeps the panel (and its
                   content) without the false live signal. */}

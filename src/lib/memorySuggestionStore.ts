@@ -10,12 +10,12 @@
  * hook over an in-memory array, cached in IndexedDB where every row is sealed
  * with the localVault key (encrypted at rest; rows sealed under a different
  * account's key are unreadable and dropped by idbGetAll). Unlike those stores it
- * is **never synced** — a review queue is per-device working state. The queue
+ * is **never synced** - a review queue is per-device working state. The queue
  * is also capped per scope (`MAX_SUGGESTIONS_PER_SCOPE`) so an idle habit of
  * running sweeps doesn't grow it without bound.
  *
  * The sweep cursors (per chat session: the last message id already processed)
- * DO sync, cross-device, as part of quonStore's `prefs` blob — see the
+ * DO sync, cross-device, as part of quonStore's `prefs` blob - see the
  * `getSweepCursor`/`setSweepCursor`/`resetSweepCursors` re-exports below.
  */
 
@@ -35,14 +35,14 @@ export interface MemorySuggestion {
   kind: MemoryKind;
   /** Short label for facts (mirrors MemoryItem.key). */
   key?: string;
-  /** Candidate memory text — already re-hydrated (real values, device-only). */
+  /** Candidate memory text - already re-hydrated (real values, device-only). */
   text: string;
   tags: string[];
   /** Scope the suggestion was mined in; undefined = global. */
   projectId?: string;
   /** Chat session the fact came from (title is looked up at render time).
    *  Absent for suggestions distilled from pasted text (Memory's large-paste
-   *  triage) — those have no source session. */
+   *  triage) - those have no source session. */
   sourceSessionId?: string;
   /** Document the fact was mined from ("Learn from documents"); mutually
    *  exclusive with `sourceSessionId`. The filename is looked up at render
@@ -54,10 +54,10 @@ export interface MemorySuggestion {
   mode: "create" | "update" | "merge";
   /** For mode "update": the memory item this suggestion refines. */
   targetId?: string;
-  /** For mode "merge": the memory items this suggestion consolidates —
+  /** For mode "merge": the memory items this suggestion consolidates -
    *  accepting supersedes all of them (see `applyMergeSuggestion`). */
   targetIds?: string[];
-  /** For mode "update": the target's text AT THE TIME the suggestion was
+  /** For mode "update": the target's text AT the TIME the suggestion was
    *  created, so a review UI can render a before/after conflict diff without
    *  a live lookup (the target may change or get superseded before review). */
   previousText?: string;
@@ -65,10 +65,10 @@ export interface MemorySuggestion {
 }
 
 const IDB = "memory_suggestions" as const;
-/** Per-scope cap on the review queue — a runaway "Learn from chats" habit
+/** Per-scope cap on the review queue - a runaway "Learn from chats" habit
  *  must not grow the queue without bound. When over cap, the OLDEST plain
  *  "create" suggestions are dropped first; "update"/"merge" suggestions (a
- *  refinement or a resolved conflict — rarer and more valuable, since losing
+ *  refinement or a resolved conflict - rarer and more valuable, since losing
  *  one silently hides a real contradiction) are only dropped once no creates
  *  remain to drop. */
 export const MAX_SUGGESTIONS_PER_SCOPE = 50;
@@ -124,7 +124,7 @@ export function getAllMemorySuggestions(): MemorySuggestion[] {
 const scopeKey = (s: MemorySuggestion): string => s.projectId ?? "__global__";
 
 /** Enforce `MAX_SUGGESTIONS_PER_SCOPE`: when a scope holds more than the cap,
- *  drop the OLDEST suggestions first — plain "create"s before "update"/"merge"
+ *  drop the OLDEST suggestions first - plain "create"s before "update"/"merge"
  *  ones (see the field's doc comment). Returns the surviving list (all scopes)
  *  and the ids dropped, so the caller can also evict them from IndexedDB. */
 function enforceQueueCap(list: MemorySuggestion[]): {
@@ -178,7 +178,7 @@ export function addMemorySuggestions(list: MemorySuggestion[]): void {
  *
  *  Strict scope (`inScope`), matching the sweep that produced them: a project
  *  sweep's results belong to that project, and the global sweep's to the
- *  global pool. This is what the "Learn from…" button reports, so the number
+ *  global pool. This is what the "Learn from..." button reports, so the number
  *  it shows is always the number that sweep just created. */
 export function countSuggestionsInScope(scope: RagScope, kind?: "chats" | "documents"): number {
   const ok = inScope(scope);
@@ -186,9 +186,9 @@ export function countSuggestionsInScope(scope: RagScope, kind?: "chats" | "docum
 }
 
 /** Which sweep produced a suggestion, by its provenance. Without this the two
- *  "Learn from…" buttons would both advertise the same queue, so the documents
+ *  "Learn from..." buttons would both advertise the same queue, so the documents
  *  button would claim credit for facts mined from chats. A paste-distilled
- *  suggestion has neither source and belongs to no sweep — it is never
+ *  suggestion has neither source and belongs to no sweep - it is never
  *  counted. */
 function matchesKind(s: MemorySuggestion, kind?: "chats" | "documents"): boolean {
   if (!kind) return true;
@@ -196,7 +196,7 @@ function matchesKind(s: MemorySuggestion, kind?: "chats" | "documents"): boolean
 }
 
 /** How many suggestions in `scope` are older than `olderThanDays` (default
- *  30) — drives a future "collapse older suggestions" UI affordance. Pure
+ *  30) - drives a future "collapse older suggestions" UI affordance. Pure
  *  local read, no relay. */
 export function countStaleSuggestions(scope: RagScope, olderThanDays = 30): number {
   const ok = inScope(scope);
@@ -204,7 +204,7 @@ export function countStaleSuggestions(scope: RagScope, olderThanDays = 30): numb
   return getAllMemorySuggestions().filter((s) => ok(s) && s.createdAt < cutoff).length;
 }
 
-/** Remove a suggestion (both on Keep — it was consumed — and on Discard). */
+/** Remove a suggestion (both on Keep - it was consumed - and on Discard). */
 export function deleteMemorySuggestion(id: string): void {
   ensureLoaded();
   if (!items.some((x) => x.id === id)) return;
@@ -213,7 +213,7 @@ export function deleteMemorySuggestion(id: string): void {
   emit();
 }
 
-/** Reset the in-memory + cached queue (tests; not needed on logout — rows are
+/** Reset the in-memory + cached queue (tests; not needed on logout - rows are
  *  sealed per-account and unreadable ciphertext is dropped on next load). */
 export function resetMemorySuggestions(): void {
   items = [];
@@ -224,18 +224,18 @@ export function resetMemorySuggestions(): void {
 
 // --- sweep cursors ----------------------------------------------------------
 // Per chat session: the id of the last message a successful sweep processed,
-// so re-runs only look at NEW messages. A failed session never advances its
+// so re-runs only look at new messages. A failed session never advances its
 // cursor (memoryExtract retries it on the next run).
 //
 // P5 (memory-lifecycle-p5.md §"Sweep-cursor sync"): cursors now live in
 // quonStore's synced `prefs` blob (message-id watermarks only, no content),
 // so "Learn from chats" progress follows the account cross-device instead of
-// staying stuck to whichever device happened to run the sweep — otherwise a
+// staying stuck to whichever device happened to run the sweep - otherwise a
 // second device re-relays (and re-costs) content the first device already
 // processed. quonStore's `applyRemotePrefs` key-wise MAX-merges the cursor
 // map on every pull (a remote cursor can only ever advance a local one, never
-// rewind it — see that function's doc comment), independent of the prefs
-// blob's own last-write-wins clock. These wrappers keep the EXACT signatures
+// rewind it - see that function's doc comment), independent of the prefs
+// blob's own last-write-wins clock. These wrappers keep the exact signatures
 // this module always had, so `memoryExtract.ts` doesn't need to know the
 // storage moved.
 export {

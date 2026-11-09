@@ -2,14 +2,13 @@ import { describe, expect, it } from "vitest";
 
 import { shouldFlipToOffline } from "@/lib/healthStore";
 
-// report #5 (2026-07-15 UX walkthrough): "while the backend was down, the header
-// still showed a green 'QUON Active' badge" — the anti-flicker grace period (added
-// 2026-07-02 to stop a mobile background-tab wake-up hiccup from flipping the
-// badge) used to apply unconditionally, so a REAL outage on an already-open tab
-// could stay green for up to two 30s poll intervals. It must now only forgive the
-// one stale poll that fires right after the tab resumes from background.
+// The anti-flicker grace period exists so a mobile background-tab wake-up
+// hiccup does not flip the badge. Applied unconditionally it would hide a real
+// outage on an already-open tab for up to two 30s poll intervals (a green
+// "QUON Active" badge over a dead backend), so it forgives exactly one poll:
+// the stale one that fires right after the tab resumes from background.
 describe("shouldFlipToOffline", () => {
-  it("never flips while the tab is hidden (background suspends JS — see the 2026-07-02 fix)", () => {
+  it("never flips while the tab is hidden (background suspends JS)", () => {
     expect(
       shouldFlipToOffline({
         visibilityHidden: true,
@@ -42,7 +41,7 @@ describe("shouldFlipToOffline", () => {
     ).toBe(true);
   });
 
-  it("flips on the very FIRST failed poll while the tab is in the foreground and was not a resume (a genuine outage)", () => {
+  it("flips on the very first failed poll while the tab is in the foreground and was not a resume (a genuine outage)", () => {
     expect(
       shouldFlipToOffline({
         visibilityHidden: false,

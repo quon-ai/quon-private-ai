@@ -4,7 +4,7 @@
  * COMPILE error, never a silent English fallback.
  *
  * Each screen cluster owns a file under ./catalogs/ exporting { en, de } with a
- * shared namespace prefix (auth.*, chat.*, …). All namespaces are registered
+ * shared namespace prefix (auth.*, chat.*, ...). All namespaces are registered
  * here; the string-externalization pass fills the per-namespace files.
  */
 import { admin } from "./catalogs/admin";

@@ -33,7 +33,7 @@ export async function embedMemory(item: MemoryItem): Promise<MemoryItem> {
         embedding: e,
       }))
     : [];
-  // One chunk → reuse it as the whole-item vector; many → embed the full text once.
+  // One chunk -> reuse it as the whole-item vector; many -> embed the full text once.
   const embedding =
     chunks.length === 1
       ? chunks[0].embedding
@@ -47,9 +47,9 @@ export async function ensureEmbeddingsCurrent(): Promise<void> {
   if (running || typeof window === "undefined") return;
   // On a constrained device this pass is only OPPORTUNISTIC: it may use an
   // embedder that is already up for something the user asked for, but it must
-  // never be the thing that loads it — re-embedding every stale document on
-  // chat mount, dying, and "retrying on the next mount" was one of the two
-  // boot loops behind the iPhone crashes (#68, #76; deviceClass.ts).
+  // never be the thing that loads it - re-embedding every stale document on
+  // chat mount, dying, and "retrying on the next mount" is a boot loop on a
+  // low-memory iPhone (deviceClass.ts).
   if (!currentPolicy().backgroundReembed && !isEmbedderReady()) {
     if (!announcedSkip) {
       announcedSkip = true;

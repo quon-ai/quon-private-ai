@@ -5,7 +5,7 @@ import { login, registerAndVerify, type Creds } from "./helpers/account";
 // Per-project chat defaults (projectChatDefaults.ts + ScreenProjects edit card +
 // ScreenChat seed). A project's default protection SEEDS a chat opened in it, while
 // a global new chat keeps the global default. Uses a FRESH account so the global
-// default protection is deterministically "local" (Filter, Review off) — the shared
+// default protection is deterministically "local" (Filter, Review off) - the shared
 // account's protectionLevel is mutated by other specs.
 const uniq = () => `${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
 
@@ -16,7 +16,7 @@ test("project default 'Review' seeds the Review pill; a global chat does not", a
   await registerAndVerify(page, creds);
   await login(page, creds);
 
-  // Baseline: a global new chat uses the global default (Filter on, Review OFF).
+  // Baseline: a global new chat uses the global default (Filter on, Review off).
   await page.goto("/chat");
   const reviewPill = page.getByRole("button", { name: "Review", exact: true });
   await expect(reviewPill).toBeVisible({ timeout: 30_000 });
@@ -50,7 +50,7 @@ test("project default 'Review' seeds the Review pill; a global chat does not", a
   await expect(page.getByRole("button", { name: /^Saved$/ })).toBeVisible({ timeout: 30_000 });
 
   // Persistence sanity: reopening the project shows the Protection select on Review
-  // (fresh load → Overview tab; walk back into the disclosure).
+  // (fresh load -> Overview tab; walk back into the disclosure).
   await page.goto(`/projects?id=${projectId}`);
   await page.getByRole("tab", { name: "Settings" }).click();
   await page.getByRole("button", { name: /Chat defaults/ }).click();
@@ -58,15 +58,15 @@ test("project default 'Review' seeds the Review pill; a global chat does not", a
     page.getByText("Protection", { exact: true }).locator("xpath=..").getByRole("combobox"),
   ).toContainText(/Review/, { timeout: 30_000 });
 
-  // Start a NEW chat IN the project via the project's own "New chat" link (on the
-  // Overview tab) — an in-app (client-side) navigation, so the just-loaded project
+  // Start a new chat IN the project via the project's own "New chat" link (on the
+  // Overview tab) - an in-app (client-side) navigation, so the just-loaded project
   // store is warm when the seed runs (a cold /chat?p= reload can race the async
   // project hydration).
   await page.getByRole("tab", { name: "Overview" }).click();
   await page.getByRole("link", { name: "New chat" }).click();
   await expect(page).toHaveURL(new RegExp(`/chat\\?p=${projectId}`), { timeout: 30_000 });
 
-  // The chat is seeded to Review → the Review pill is pressed.
+  // The chat is seeded to Review -> the Review pill is pressed.
   const projReviewPill = page.getByRole("button", { name: "Review", exact: true });
   await expect(projReviewPill).toBeVisible({ timeout: 30_000 });
   await expect(projReviewPill).toHaveAttribute("aria-pressed", "true", { timeout: 10_000 });

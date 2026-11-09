@@ -5,15 +5,15 @@ import { clickSend, login, reviewCreds } from "./helpers/account";
 /**
  * Durable PER-DOCUMENT hand-redaction, proven at the wire.
  *
- * The chain: upload into the library → attach from the library → Review mode →
- * select a value → "Immer schwärzen" (saves ON the DocItem, not the global
- * list) → this send's wire is clean — and then the REAL durability proof: a
+ * The chain: upload into the library -> attach from the library -> Review mode ->
+ * select a value -> "Immer schwärzen" (saves ON the DocItem, not the global
+ * list) -> this send's wire is clean - and then the real durability proof: a
  * SECOND send of the same document with no manual step is clean too, because
  * the document's saved terms merge into always_redact and scrubText enforces
  * them.
  *
  * The value is one the harness backend (LLM off) provably cannot detect on its
- * own — bare letters+digits, no format — otherwise this would prove detection,
+ * own - bare letters+digits, no format - otherwise this would prove detection,
  * not the saved term.
  */
 const SECRET = "Vorgangscode Q7TR41";
@@ -45,8 +45,8 @@ test("a saved document redaction constrains every send of that document", async 
     });
   });
 
-  // reviewCreds, NOT sharedCreds: this spec turns Review mode ON, and the
-  // protection level SYNCS (prefs blob) — on the shared account it leaked into
+  // reviewCreds, not sharedCreds: this spec turns Review mode ON, and the
+  // protection level SYNCS (prefs blob) - on the shared account it leaked into
   // every later spec, whose sends then stalled at the approval panel. The
   // review-mode account exists precisely so a leftover Review can reach no one.
   await login(page, reviewCreds());
@@ -99,8 +99,8 @@ test("a saved document redaction constrains every send of that document", async 
     throw new Error("value not found in preview");
   }, SECRET);
 
-  // The "view original & redact" button must OPEN the real viewer. This click
-  // is load-bearing: the button once shipped visible but dead — the dialog
+  // The "view original & redact" button must open the real viewer. This click
+  // is load-bearing: the button once shipped visible but dead - the dialog
   // render was never mounted (a guarded insert matched a comment), and no test
   // clicked it, so it reached production. Reported by the user, not a test.
   await page.getByRole("button", { name: /Original ansehen|View original/i }).click();
@@ -111,14 +111,14 @@ test("a saved document redaction constrains every send of that document", async 
   await expect(viewer).toBeHidden();
 
   await page.getByRole("button", { name: /Immer schwärzen|Always redact/i }).click();
-  // Confirmation names the DOCUMENT scope — proof the resolver ran and where it saved.
+  // Confirmation names the DOCUMENT scope - proof the resolver ran and where it saved.
   await expect(page.getByText(/gespeichert|saved on this document/i)).toBeVisible();
 
   await page.getByRole("button", { name: /Send to|An .* senden/i }).click();
   await expect(page.getByText("Verstanden.").first()).toBeVisible({ timeout: 60_000 });
   expect(lastStreamBody).not.toContain(SECRET);
 
-  // --- send 2: same document, NO manual step. This is what "durable" means. ---
+  // --- send 2: same document, no manual step. This is what "durable" means. ---
   lastStreamBody = "";
   await attachFromLibrary(page, fname);
   await page
@@ -130,7 +130,7 @@ test("a saved document redaction constrains every send of that document", async 
   await page.getByRole("button", { name: /Send to|An .* senden/i }).click();
   await expect(page.getByText("Verstanden.").nth(1)).toBeVisible({ timeout: 60_000 });
 
-  // …and the wire is clean without anyone touching a selection.
+  // ...and the wire is clean without anyone touching a selection.
   expect(lastStreamBody).not.toContain(SECRET);
   expect(lastStreamBody.length).toBeGreaterThan(0);
 });

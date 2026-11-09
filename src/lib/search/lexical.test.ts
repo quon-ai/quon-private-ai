@@ -38,14 +38,14 @@ describe("subwordMatch (German compound anchoring)", () => {
     expect(subwordMatch("nettoeinkommen", "einkommen")).toBe(true);
   });
 
-  it("does NOT match below SUBWORD_MIN_LEN even if one is a substring of the other", () => {
+  it("does not match below SUBWORD_MIN_LEN even if one is a substring of the other", () => {
     // Guards the false-anchor class the STOPWORDS comment in this file warns
     // about: short coincidental overlaps ("ein"/"rat") must not anchor.
     expect(subwordMatch("ein", "einkommen")).toBe(false);
     expect(subwordMatch("rat", "vorratslager")).toBe(false);
   });
 
-  it("does NOT match two unrelated words that both clear the length floor", () => {
+  it("does not match two unrelated words that both clear the length floor", () => {
     expect(subwordMatch("einkommen", "talbach")).toBe(false);
     expect(subwordMatch("ferritin", "gesundheitsinformationen")).toBe(false);
   });
@@ -61,7 +61,7 @@ describe("lexicalCoverage (subword anchoring integrated)", () => {
 
   it("stopword-filtered casual query words still never anchor (regression guard)", () => {
     // "kann"/"machen"/"sonst"/"alles" are stripped by STOPWORDS before they
-    // ever reach subwordMatch — confirms the subword rule didn't reopen the
+    // ever reach subwordMatch - confirms the subword rule didn't reopen the
     // casual-query false-anchor class those stopwords exist to close.
     const q = new Set(contentTerms("was kann man sonst alles machen"));
     expect(q.size).toBe(0); // every word in that sentence is a stopword
@@ -69,25 +69,25 @@ describe("lexicalCoverage (subword anchoring integrated)", () => {
   });
 });
 
-describe("lexicalCoverage (curated synonym expansion — query side only)", () => {
+describe("lexicalCoverage (curated synonym expansion: query side only)", () => {
   it("a query synonym ('Gehalt') matches text that only ever says a different-root word ('Einkommen')", () => {
     const q = new Set(contentTerms("wie hoch ist unser Gehalt"));
     expect(lexicalCoverage(q, "Mein Einkommen ist stabil.")).toBeGreaterThan(0);
   });
 
   it("a synonym hit does not inflate coverage past a literal match (denominator stays queryTerms.size)", () => {
-    // "gehalt" has 8 curated cluster-mates, but it can still only satisfy ITS
-    // OWN slot — coverage must be exactly 1/1, identical to a literal match.
+    // "gehalt" has 8 curated cluster-mates, but it can still only satisfy its
+    // Own slot - coverage must be exactly 1/1, identical to a literal match.
     const q = new Set(contentTerms("Gehalt"));
     expect(lexicalCoverage(q, "Mein Einkommen ist stabil.")).toBe(1);
   });
 
-  it("expansion is QUERY-SIDE ONLY: 'Gehalt' appearing in the text doesn't matter to an unrelated query", () => {
+  it("expansion is QUERY-SIDE only: 'Gehalt' appearing in the text doesn't matter to an unrelated query", () => {
     const q = new Set(contentTerms("was kann man in talbach machen"));
     expect(lexicalCoverage(q, "Mein Gehalt und Sparkonto bei der Sparkasse")).toBe(0);
   });
 
-  it("guard: the deliberately-rejected Wohnung↔Adresse pairing is not connected", () => {
+  it("guard: the deliberately-rejected Wohnung<->Adresse pairing is not connected", () => {
     const q = new Set(contentTerms("wie lautet meine Adresse"));
     expect(lexicalCoverage(q, "Unsere Wohnung ist ziemlich chaotisch.")).toBe(0);
   });

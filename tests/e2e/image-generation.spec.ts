@@ -3,14 +3,14 @@ import { test, expect } from "@playwright/test";
 import { clickSend, login, openChat, sharedCreds } from "./helpers/account";
 
 /**
- * Image generation (#79). Hermetic: the catalog and the stream are mocked at
- * the network layer — no provider, no cost. What is pinned:
+ * Image generation. Hermetic: the catalog and the stream are mocked at
+ * the network layer - no provider, no cost. What is pinned:
  *
  *  - an image-capable model shows the "Bild" badge in the picker;
  *  - a send with that model asks the relay for `image_output`;
  *  - an `{image}` event becomes a picture in the assistant bubble;
- *  - the picture survives a reload — the message keeps a reference and the
- *    bytes are in the sealed local store, NOT in the synced chat blob.
+ *  - the picture survives a reload - the message keeps a reference and the
+ *    bytes are in the sealed local store, not in the synced chat blob.
  */
 const PNG =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
@@ -29,7 +29,7 @@ test("an image model is badged, asks for an image, shows it, and keeps it across
   // The default catalog (connections.py) already carries the image model; the
   // mock only guarantees it on a box whose runtime settings override the list.
   // Also un-disable it: the throwaway E2E stack has no provider key, so the
-  // catalog marks every entry disabled (sends still work — the stream is
+  // catalog marks every entry disabled (sends still work - the stream is
   // mocked below), and a disabled Radix option cannot be clicked.
   await page.route("**/models", async (route) => {
     const res = await route.fetch();
@@ -54,7 +54,7 @@ test("an image model is badged, asks for an image, shows it, and keeps it across
     });
   });
   // The background upload of the image chunks must not fail the test on a
-  // stack without an originals quota — accept whatever it pushes.
+  // stack without an originals quota - accept whatever it pushes.
   await page.route("**/sync/push", async (route) => {
     const body = JSON.parse(route.request().postData() ?? "{}") as {
       changes?: { id: string }[];
@@ -71,7 +71,7 @@ test("an image model is badged, asks for an image, shows it, and keeps it across
   await login(page, sharedCreds());
   await openChat(page);
 
-  // Pick the image model — the picker badges it.
+  // Pick the image model - the picker badges it.
   await page.getByRole("combobox").first().click();
   const option = page.getByRole("option", { name: /gemini.*2\.5.*flash.*image/i });
   await expect(option.getByTestId("image-model-badge")).toHaveText(/Bild|Image/);
@@ -106,7 +106,7 @@ test("the badge marks only image models, and a text model sends no image_output"
   await login(page, sharedCreds());
   await openChat(page);
   await page.getByRole("combobox").first().click();
-  // Exactly the image model carries the badge — nothing else in the catalog.
+  // Exactly the image model carries the badge - nothing else in the catalog.
   const badges = page.getByTestId("image-model-badge");
   await expect(badges).toHaveCount(1);
   await expect(

@@ -1,9 +1,9 @@
 /**
  * Roundtrip + tamper tests for the zero-knowledge key schedule. This is QUON's
- * trust anchor — until now it was only exercised indirectly via the E2E auth
+ * trust anchor - until now it was only exercised indirectly via the E2E auth
  * flow. These lock the core invariants: the password path and the recovery path
- * unlock the SAME Master Key, a wrong password cannot, ciphertext survives a
- * JSON roundtrip, and any tampering fails closed (throws — never a partial
+ * unlock the same Master Key, a wrong password cannot, ciphertext survives a
+ * JSON roundtrip, and any tampering fails closed (throws - never a partial
  * plaintext). Argon2id is genuinely run (64 MiB / 3 ops), so allow a long timeout.
  */
 import { describe, expect, it } from "vitest";
@@ -65,14 +65,14 @@ describe("quonCrypto key schedule", () => {
     expect(eq(recovered, masterKey)).toBe(true);
   }, 20000);
 
-  it("recovery rotation: the NEW phrase unwraps the MK, the OLD one is dead", async () => {
+  it("recovery rotation: the new phrase unwraps the MK, the OLD one is dead", async () => {
     const { material, masterKey } = await buildRegistration(PW);
     const rotation = await buildRecoveryRotation(masterKey, material.kdfParams);
     expect(isValidMnemonic(rotation.mnemonic)).toBe(true);
     expect(rotation.mnemonic).not.toBe(material.mnemonic);
 
-    // New phrase + new material → the same Master Key (kdfParams MUST be the
-    // stored ones — the server keeps one params column for both derivations).
+    // New phrase + new material -> the same Master Key (kdfParams must be the
+    // stored ones - the server keeps one params column for both derivations).
     const recovered = await recoverMasterKey(
       rotation.mnemonic,
       rotation.recSalt,
@@ -81,13 +81,13 @@ describe("quonCrypto key schedule", () => {
     );
     expect(eq(recovered, masterKey)).toBe(true);
 
-    // The OLD phrase cannot open the NEW wrap (rotation invalidates it).
+    // The OLD phrase cannot open the new wrap (rotation invalidates it).
     await expect(
       recoverMasterKey(material.mnemonic, rotation.recSalt, rotation.wrapRec, material.kdfParams),
     ).rejects.toThrow();
   }, 30000);
 
-  it("encryptJSON → decryptJSON round-trips under a Master-Key-derived subkey", async () => {
+  it("encryptJSON -> decryptJSON round-trips under a Master-Key-derived subkey", async () => {
     const { masterKey } = await buildRegistration(PW);
     const key = deriveChatKey(masterKey);
     const value = { role: "user", content: "Anna Müller, IBAN DE89…", n: 42 };
@@ -99,14 +99,14 @@ describe("quonCrypto key schedule", () => {
     const { masterKey } = await buildRegistration(PW);
     const key = deriveChatKey(masterKey);
     const ct = encryptJSON({ secret: "top" }, key);
-    // Mutate one base64 char deep in the body (past the nonce) → auth tag fails.
+    // Mutate one base64 char deep in the body (past the nonce) -> auth tag fails.
     const bytes = Array.from(atob(ct), (c) => c.charCodeAt(0));
     bytes[bytes.length - 3] ^= 0x01;
     const tampered = btoa(String.fromCharCode(...bytes));
     expect(() => decryptJSON(tampered, key)).toThrow();
   }, 20000);
 
-  it("re-wrapping under a new password keeps the SAME Master Key and preserves recovery", async () => {
+  it("re-wrapping under a new password keeps the same Master Key and preserves recovery", async () => {
     const { material, masterKey } = await buildRegistration(PW);
     const NEW_PW = "a different passphrase entirely";
     const rewrapped = await rewrapForPassword(masterKey, NEW_PW);
@@ -127,10 +127,10 @@ describe("quonCrypto key schedule", () => {
   }, 30000);
 });
 
-// Shared Projects primitives. No Argon2 needed — a Master Key is just 32 random
+// Shared Projects primitives. No Argon2 needed - a Master Key is just 32 random
 // bytes, so generateProjectKey() doubles as a fast MK stand-in (same shape).
 describe("shared-projects crypto (identity keypair + sealed project keys)", () => {
-  it("identity priv wrap → open round-trips under the same Master Key; a wrong MK fails closed", async () => {
+  it("identity priv wrap -> open round-trips under the same Master Key; a wrong MK fails closed", async () => {
     await ensureReady();
     const mk = generateProjectKey();
     const { pub, priv } = generateIdentityKeypair();
@@ -145,14 +145,14 @@ describe("shared-projects crypto (identity keypair + sealed project keys)", () =
     expect(() => openIdentityPriv(wrapped, otherMk)).toThrow();
   });
 
-  it("seal → open round-trips a project key; the wrong identity cannot open it", async () => {
+  it("seal -> open round-trips a project key; the wrong identity cannot open it", async () => {
     await ensureReady();
     const alice = generateIdentityKeypair();
     const pk = generateProjectKey();
     expect(pk).toHaveLength(32);
 
     const sealed = sealToIdentity(pk, alice.pub);
-    // Sealed boxes are ephemeral-key + nonce derived — never the plaintext.
+    // Sealed boxes are ephemeral-key + nonce derived - never the plaintext.
     expect(sealed.length).toBeGreaterThan(pk.length);
     expect(eq(openSealedFromIdentity(sealed, alice.pub, alice.priv), pk)).toBe(true);
 
@@ -175,7 +175,7 @@ describe("shared-projects crypto (identity keypair + sealed project keys)", () =
   });
 });
 
-// PRF outputs and Master Keys are both 32 random bytes — generateProjectKey()
+// PRF outputs and Master Keys are both 32 random bytes - generateProjectKey()
 // doubles as a fast stand-in for each (no Argon2 in these tests, same as the
 // shared-projects suite above).
 describe("biometric-unlock wrap (WebAuthn PRF)", () => {

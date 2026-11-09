@@ -11,7 +11,7 @@ import { renderMermaid } from "@/lib/mermaid";
  * - **The source is never lost.** A syntax error (models produce those) falls
  *   back to the code block instead of swallowing what was written, and the
  *   user can always switch to the source deliberately.
- * - **Mermaid loads only when a diagram is actually shown** (~500KB) — the
+ * - **Mermaid loads only when a diagram is actually shown** (~500KB) - the
  *   import lives behind renderMermaid(), so a chat without diagrams never
  *   pays. Answers stream token-by-token, so an incomplete diagram would fail
  *   to parse mid-stream; we therefore only render when `streaming` is false.
@@ -32,7 +32,7 @@ export function MermaidBlock({ code, streaming = false }: { code: string; stream
         if (!cancelled) setSvg(out);
       })
       .catch(() => {
-        // Broken/partial diagram source — show it as code rather than nothing.
+        // Broken/partial diagram source - show it as code rather than nothing.
         if (!cancelled) {
           setSvg(null);
           setFailed(true);
@@ -50,7 +50,7 @@ export function MermaidBlock({ code, streaming = false }: { code: string; stream
   );
 
   // While the answer is still streaming, or after a parse failure, the source
-  // IS the honest rendering.
+  // Is the honest rendering.
   if (streaming || failed || (showSource && svg === null)) {
     return (
       <div className="mb-2 last:mb-0">
@@ -82,7 +82,7 @@ export function MermaidBlock({ code, streaming = false }: { code: string; stream
         source
       ) : svg ? (
         // mermaid runs with securityLevel:"strict" (labels sanitised, no click
-        // handlers), and the CSP forbids inline script execution regardless —
+        // handlers), and the CSP forbids inline script execution regardless -
         // so injecting the generated SVG markup is safe. See lib/mermaid.ts.
         <div
           ref={container}

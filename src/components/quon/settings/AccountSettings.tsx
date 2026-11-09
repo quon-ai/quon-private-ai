@@ -3,7 +3,7 @@
  *
  * Zero-knowledge is preserved throughout:
  *   - change-password re-wraps the UNCHANGED Master Key client-side (see
- *     authStore.changePassword) — the server never sees the password or the key.
+ *     authStore.changePassword) - the server never sees the password or the key.
  *   - password strength is checked client-side (passwordPolicy) because the
  *     server only ever receives the derived authToken.
  *   - both password change and account deletion require the current password,
@@ -93,8 +93,8 @@ function LanguageCard() {
 }
 
 // "die schriften sind teilweise recht klein. Vll kann man eine Einstellung
-// einbauen um die schriftgröße generell zu ändern?" (feedback #62 item 2).
-// Three discrete steps, applied as a root font-size percentage — see
+// einbauen um die schriftgröße generell zu ändern?" - the request this answers.
+// Three discrete steps, applied as a root font-size percentage - see
 // lib/fontScale.ts for why that scales Tailwind's rem-based type everywhere.
 // Device-local (quonStore.ts's `fontScale` field), not synced.
 const FONT_SIZE_LABEL_KEYS: Record<FontScale, MessageKey> = {
@@ -296,10 +296,10 @@ function ChangePasswordCard() {
   );
 }
 
-/** Biometric unlock for THIS device (WebAuthn PRF — Face ID / Touch ID /
+/** Biometric unlock for this device (WebAuthn PRF - Face ID / Touch ID /
  *  fingerprint). Renders nothing when the device has no user-verifying platform
  *  authenticator; enrollment can still fail honest at create-time when the
- *  authenticator lacks the PRF extension (only testable then — e.g. iOS < 18). */
+ *  authenticator lacks the PRF extension (only testable then - e.g. iOS < 18). */
 function BiometricUnlockCard() {
   const { t } = useT();
   const { user } = useAuth();
@@ -331,7 +331,7 @@ function BiometricUnlockCard() {
       setEnrolled(true);
     } catch (e) {
       if (e instanceof BioCancelledError) {
-        /* user dismissed the prompt — reset silently */
+        /* user dismissed the prompt - reset silently */
       } else if (e instanceof BioPrfUnavailableError) {
         setError(t("settings.bioPrfUnavailable"));
       } else {
@@ -399,8 +399,8 @@ function BiometricUnlockCard() {
 }
 
 /** Recovery phrase: the OLD phrase is deliberately un-reshowable (never stored
- *  — that is the zero-knowledge point), so "I lost it" is served by ROTATION:
- *  generate a NEW phrase while unlocked; the old one stops working instantly.
+ *  - that is the zero-knowledge point), so "I lost it" is served by ROTATION:
+ *  generate a new phrase while unlocked; the old one stops working instantly.
  *  Password-gated (a hijacked session alone must not rotate recovery). */
 function RecoveryHintCard() {
   const { t } = useT();
@@ -520,10 +520,10 @@ function DeleteAccountCard() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // `users` → `project_shares` cascades on delete (migration 0007): deleting the
-  // account instantly drops every project THIS user owns and shares, for every
+  // `users` -> `project_shares` cascades on delete (migration 0007): deleting the
+  // account instantly drops every project this user owns and shares, for every
   // member, with no way back (v1 has no key rotation / ownership transfer). Warn
-  // up front rather than let the owner find out after the fact. Best-effort —
+  // up front rather than let the owner find out after the fact. Best-effort -
   // a failed fetch just leaves the warning off; it never blocks deletion itself.
   const [ownedShareCount, setOwnedShareCount] = useState(0);
   useEffect(() => {
@@ -534,7 +534,7 @@ function DeleteAccountCard() {
         if (!cancelled) setOwnedShareCount(shares.filter((s) => s.owner).length);
       })
       .catch(() => {
-        /* transient — the warning simply stays hidden */
+        /* transient - the warning simply stays hidden */
       });
     return () => {
       cancelled = true;
@@ -550,7 +550,7 @@ function DeleteAccountCard() {
     try {
       await deleteAccount(password);
       // On success the auth status flips to `anonymous` and the app shows the
-      // sign-in screen automatically — no navigation needed here.
+      // sign-in screen automatically - no navigation needed here.
     } catch (e) {
       setError(translateApiError(e, t));
       setBusy(false);

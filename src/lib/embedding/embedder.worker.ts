@@ -1,13 +1,13 @@
 /**
- * Web Worker that runs the Transformers.js embedding model OFF the main thread.
+ * Web Worker that runs the Transformers.js embedding model off the main thread.
  *
  * ONNX/WASM inference is synchronous and blocks whatever thread it runs on; doing
  * it on the UI thread freezes the tab ("page not responding") while a large
  * document indexes. Running it here keeps the main thread free to render. The
  * main-thread proxy with the public API lives in `embedder.ts`.
  *
- * Protocol (main → worker): { type: "warm" } | { type: "embed", id, texts }
- *           (worker → main): { type: "status", loading, ready }
+ * Protocol (main -> worker): { type: "warm" } | { type: "embed", id, texts }
+ *           (worker -> main): { type: "status", loading, ready }
  *                          | { type: "result", id, vectors }
  *                          | { type: "error", id?, message }
  */
@@ -33,11 +33,11 @@ function getPipe(): Promise<FeatureExtractor> {
     ctx.postMessage({ type: "status", loading: true, ready: false });
     // Fetch the model from the hub and cache it in the browser; no local files.
     env.allowLocalModels = false;
-    // E2E harness only (dev builds + explicit flag — structurally unreachable
+    // E2E harness only (dev builds + explicit flag - structurally unreachable
     // in production): pull the model + ORT wasm from the local mirror served
     // by the vite middleware instead of huggingface.co/jsdelivr. Fresh test
     // contexts have no cache, so without this every document-heavy spec
-    // re-downloads ~100MB — that IS their runtime.
+    // re-downloads ~100MB - that is their runtime.
     if (import.meta.env.DEV && import.meta.env.VITE_QUON_TEST_LOCAL_MODELS === "1") {
       env.remoteHost = `${self.location.origin}/e2e-models/`;
       if (env.backends.onnx.wasm)

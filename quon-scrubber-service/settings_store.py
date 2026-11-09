@@ -19,8 +19,8 @@ from config import settings
 logger = logging.getLogger("quon.settings")
 
 # Where the operator's live edits (model catalog, keys, PII backend) persist.
-# In Docker this MUST point into the data volume (RUNTIME_SETTINGS_PATH is set
-# to /app/data/runtime_settings.json in docker-compose) — the module-directory
+# In Docker this must point into the data volume (RUNTIME_SETTINGS_PATH is set
+# to /app/data/runtime_settings.json in docker-compose) - the module-directory
 # default lives in the image filesystem, so every `docker-compose up --build`
 # recreated it from the build context and silently reverted all Settings-UI
 # edits (observed live: an operator-added model vanished after each deploy,
@@ -45,7 +45,7 @@ def _load() -> dict:
             ):
                 # One-time migration: seed the volume-backed store from the
                 # image-baked legacy file, so existing config carries over on
-                # the first boot after the path move. Strictly env-gated — a
+                # the first boot after the path move. Strictly env-gated - a
                 # test/dev override of _STORE_PATH must never pull in the real
                 # module-directory file.
                 _cache = json.loads(_LEGACY_STORE_PATH.read_text("utf-8"))
@@ -98,7 +98,7 @@ def set_disabled_model_ids(ids: list[str]) -> None:
 
 # --- Provider connections -------------------------------------------------
 # The built-in OpenRouter connection's exposed models (allow-list chosen from
-# the catalog). Empty → fall back to a sensible default set (see connections.py).
+# the catalog). Empty -> fall back to a sensible default set (see connections.py).
 def get_openrouter_models() -> list[str]:
     with _lock:
         return list(_load().get("openrouter_models", []))

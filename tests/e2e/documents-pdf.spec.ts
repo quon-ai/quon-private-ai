@@ -16,11 +16,11 @@ test("PDF upload extracts + indexes without the Safari ReadableStream crash", as
 
   // The document shows up (extraction kicked off). `.first()` because a retry
   // re-pulls the sample.pdf its earlier attempt already synced to the shared
-  // account, so more than one entry can be present — the crash guards below are
+  // account, so more than one entry can be present - the crash guards below are
   // count-independent and are what this test actually asserts.
   await expect(page.getByText("sample.pdf").first()).toBeVisible({ timeout: 90_000 });
 
-  // …and the extraction error the Safari bug produced never appears.
+  // ...and the extraction error the Safari bug produced never appears.
   await expect(page.getByText(/Couldn't read this PDF/i)).toHaveCount(0);
   expect(pageErrors.join("\n")).not.toMatch(/readableStream|undefined is not a function/i);
 });

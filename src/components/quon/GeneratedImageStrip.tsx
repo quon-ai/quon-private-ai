@@ -6,11 +6,11 @@ import { downloadBytes } from "@/lib/download";
 import { useT } from "@/lib/i18n/i18n";
 
 /**
- * The pictures a model generated for one answer (#79). The message only holds
+ * The pictures a model generated for one answer. The message only holds
  * references; the bytes come from the sealed local store, or are fetched and
  * decrypted from the sync relay on a device that did not generate them
  * (chat/generatedImages.ts). Every state is visible: loading, the image, or
- * an honest "only on the other device" line — never a silent gap.
+ * an honest "only on the other device" line - never a silent gap.
  */
 export function GeneratedImageStrip({ images }: { images: GeneratedImageRef[] }) {
   if (!images.length) return null;
@@ -47,7 +47,7 @@ function GeneratedImage({ image }: { image: GeneratedImageRef }) {
       if (url) URL.revokeObjectURL(url);
     };
     // Re-run when the reference gains its chunkCount (synced after the first
-    // render on another device) — that is what turns "missing" into the image.
+    // render on another device) - that is what turns "missing" into the image.
   }, [image.id, image.chunkCount, image.mime]);
 
   if (state.kind === "loading") {

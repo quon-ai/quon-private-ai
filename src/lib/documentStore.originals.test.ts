@@ -1,8 +1,8 @@
 /**
- * Manifest handling on DocItem (`original` — the pointer other devices use to
+ * Manifest handling on DocItem (`original` - the pointer other devices use to
  * lazily fetch synced original bytes): set/clear semantics, the no-op guard
  * (must not bump updatedAt or re-push), and the delete-detail event that lets
- * originalSync tombstone a deleted document's chunks. Pure store logic —
+ * originalSync tombstone a deleted document's chunks. Pure store logic -
  * IndexedDB is absent in node and the store fails soft to memory-only.
  */
 import { describe, expect, it, vi } from "vitest";

@@ -6,16 +6,15 @@
  * In the browser that is a one-liner: read `document.cookie`.
  *
  * The native shell breaks that assumption. Requests go through the Tauri host,
- * whose cookie jar lives in Rust — the session cookie is stored and re-sent
+ * whose cookie jar lives in Rust - the session cookie is stored and re-sent
  * correctly, but it is invisible to `document.cookie`, so the token would be
- * empty and every write would 403. Found while fixing the macOS app's first
- * connection (2026-08-05): the same jar that makes native auth work at all is
- * what hides the token.
+ * empty and every write would 403. The same jar that makes native auth work
+ * at all is what hides the token.
  *
  * The fix keeps the server untouched: the Tauri fetch deliberately exposes
  * `set-cookie` on the response (browsers treat it as a forbidden response
  * header, the plugin re-attaches it), so we capture the token from the
- * response that sets it. The double-submit property is unchanged — the token
+ * response that sets it. The double-submit property is unchanged - the token
  * is still a per-session secret that must be echoed back and is still verified
  * server-side.
  */
@@ -29,11 +28,11 @@ const COOKIE = "quon_csrf";
  * The server sets `quon_csrf` only when it issues a session (login / verify /
  * recover). A browser keeps that cookie itself, so a returning tab still has
  * the token. In the native shell the SESSION cookie is persisted by the host's
- * jar while a token held only in memory is not — so after a restart the app is
+ * jar while a token held only in memory is not - so after a restart the app is
  * authenticated but every write would 403. Storing it here restores the
  * browser's own property. It is not a secret in the browser either (the server
  * deliberately sets it non-httpOnly so JS can echo it); its security value is
- * that an attacker on another origin cannot READ it, which holds equally in
+ * that an attacker on another origin cannot read it, which holds equally in
  * localStorage.
  */
 const STORE_KEY = "quon_csrf_native";
@@ -65,7 +64,7 @@ export function captureCsrf(res: Response): void {
     try {
       globalThis.localStorage?.setItem(STORE_KEY, nativeToken);
     } catch {
-      /* private mode / storage full — the in-memory copy still serves this run */
+      /* private mode / storage full - the in-memory copy still serves this run */
     }
   }
 }

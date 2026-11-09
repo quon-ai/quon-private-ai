@@ -54,7 +54,7 @@ test("a dropped stream resumes and completes the answer", async ({ page }) => {
   // Resume asked for exactly the events it had already applied (2), so nothing
   // is replayed twice and nothing is skipped.
   expect(resumeFrom).toBe("2");
-  // No "connection lost" note — the user never sees the drop.
+  // No "connection lost" note - the user never sees the drop.
   await expect(page.getByText(/Connection lost/)).toHaveCount(0);
 });
 
@@ -84,10 +84,10 @@ test("an expired job falls back to the partial answer with Retry", async ({ page
 });
 
 /**
- * Feedback #84: the provider refused the request (OpenRouter 401 on the sub-key).
- * The server forwards that as an `{error}` event inside a 200 stream — no HTTP
- * status, the same shape as a dropped socket — and the client resumed it five
- * times, then showed "Verbindung verloren". The refusal IS the answer: it must
+ * A provider refusal (OpenRouter 401 on the sub-key) is forwarded by the server
+ * as an `{error}` event inside a 200 stream - no HTTP status, the same shape as
+ * a dropped socket - so a client that treats it as a drop resumes it five times
+ * and then shows "Verbindung verloren". The refusal is the answer: it must
  * surface as the real message, with no resume attempt at all.
  */
 test("a provider refusal in the stream is shown as-is and never resumed", async ({ page }) => {

@@ -1,10 +1,10 @@
 /**
- * The Markdown renderer WITH math (remark-math + KaTeX). Split from Markdown.tsx
+ * The Markdown renderer with math (remark-math + KaTeX). Split from Markdown.tsx
  * on purpose: KaTeX is ~300 KB plus fonts, and most answers contain no TeX, so
  * this module is `lazy()`-loaded only for a message `hasMath()` says needs it.
  * The KaTeX stylesheet is bundled by Vite and served from our own origin, and
  * its inline `style=` attributes are covered by the existing `style-src
- * 'unsafe-inline'` — no CSP change.
+ * 'unsafe-inline'` - no CSP change.
  *
  * `throwOnError: false` + `strict: "ignore"`: a model's half-valid TeX renders
  * as best it can (in red, KaTeX's own convention) instead of crashing the

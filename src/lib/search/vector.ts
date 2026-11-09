@@ -2,7 +2,7 @@
  *
  * Operates over the decrypted items the Memory/Document stores already hold in
  * memory, so search is fully local (zero-knowledge). Embeddings from the
- * embedder are L2-normalized, so cosine reduces to a dot product — but the full
+ * embedder are L2-normalized, so cosine reduces to a dot product - but the full
  * formula is used here so it stays correct for any vectors. */
 
 export function cosine(a: number[], b: number[]): number {

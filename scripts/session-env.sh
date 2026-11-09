@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # Per-checkout ports and scratch paths, so two sessions can work at once.
 #
-# The problem this solves: git worktrees isolate the source, but NOT the test
+# The problem this solves: git worktrees isolate the source, but not the test
 # harness. playwright.config.ts hardcoded :8011/:8012 and /tmp/quon_e2e.db, and
-# deleted those files at every run start — so a second run wiped the first run's
+# deleted those files at every run start - so a second run wiped the first run's
 # live database mid-suite, silently. Ports and scratch paths must therefore be
-# derived from WHICH CHECKOUT you are in.
+# derived from which CHECKOUT you are in.
 #
 # The primary checkout keeps the historical numbers (8080 / 8011 / 8012) on
 # purpose: the docs, launch.json and everyone's muscle memory refer to them, and
@@ -46,7 +46,7 @@ fi
 if (( SLOT == 0 )); then
   DEV_PORT=8080; API_PORT=8011; WEB_PORT=8012
 else
-  BASE=$(( 8100 + SLOT * 4 ))          # 8104 … 8256, clear of 8000/8080/8085/8090/11434
+  BASE=$(( 8100 + SLOT * 4 ))          # 8104 ... 8256, clear of 8000/8080/8085/8090/11434
   API_PORT=$BASE; WEB_PORT=$(( BASE + 1 )); DEV_PORT=$(( BASE + 2 ))
 fi
 

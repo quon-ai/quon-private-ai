@@ -47,7 +47,7 @@ SYSTEM_PROMPT_PROTECTED = (
     " If that document itself contains fenced code blocks (a diagram, a snippet), open and close the OUTER fence with FOUR backticks (````markdown) so the inner ``` fences stay intact."
 )
 
-# Used when the filter is OFF: a neutral prompt with no mention of redaction so
+# Used when the filter is off: a neutral prompt with no mention of redaction so
 # the model does not apply its own privacy heuristics to real text.
 SYSTEM_PROMPT_UNPROTECTED = (
     "You are a helpful assistant. Answer in the user's language."
@@ -88,7 +88,7 @@ def friendly_provider_error(status_code: int, body: bytes | str) -> str:
     """Turn an upstream provider failure into a message a user can act on.
 
     The raw upstream text is technical ("Insufficient credits. Add more using
-    https://openrouter.ai/…") and, for provisioned sub-keys, actively misleading —
+    https://openrouter.ai/...") and, for provisioned sub-keys, actively misleading - 
     the user cannot top up a key they don't own. Map the known cases (credit/
     spend-cap exhaustion, bad key, rate limit) to plain guidance and fall back to
     the raw message for everything else.
@@ -143,7 +143,7 @@ def _build_request(
     endpoint = (base_url or region.chat_base_url()).rstrip("/")
     system_prompt = SYSTEM_PROMPT_PROTECTED if protected else SYSTEM_PROMPT_UNPROTECTED
     # Today's date, stated outright. This replaces OpenRouter's
-    # `openrouter:datetime` server tool, which was measured to stall EVERY
+    # `openrouter:datetime` server tool, which was measured to stall every
     # request by ~10 s (see the tool block below) to deliver one short string.
     system_prompt = f"{system_prompt}\n\nToday's date is {_today()}."
     def turn(m: ChatTurn) -> dict:
@@ -164,40 +164,39 @@ def _build_request(
         "stream": stream,
     }
     if tools:
-        # Copy — the web-search append below must not mutate the caller's list.
+        # Copy - the web-search append below must not mutate the caller's list.
         payload["tools"] = list(tools)
     # OpenRouter's agentic web SEARCH (executed on OpenRouter's side; the MODEL
-    # decides when to invoke it — vendor-app comfort). Cost accrues only per
+    # decides when to invoke it - vendor-app comfort). Cost accrues only per
     # search actually performed. Coexists with client (MCP) function tools in
-    # the same array. Gated to the REAL OpenRouter endpoint — custom
+    # the same array. Gated to the real OpenRouter endpoint - custom
     # OpenAI-compatible providers don't know the type.
     #
-    # ⚠️ ONLY web_search. `openrouter:web_fetch` and `openrouter:datetime` were
+    # Only web_search. `openrouter:web_fetch` and `openrouter:datetime` were
     # attached here too and turned out to be the single biggest latency defect
     # in the product: measured against the live instance, merely ATTACHING
     # either one delayed the first token to ~10.1 s and suppressed streaming
     # entirely (the whole answer arrived in one chunk), on questions the model
-    # never even searched for — zero citations came back. Isolated per tool,
+    # never even searched for - zero citations came back. Isolated per tool,
     # first-token on "how does a heat pump work":
     #     none 1.5-2.2 s | web_search 1.8-2.3 s | datetime 10.1 s | web_fetch
     #     10.2-10.9 s (Gemini Flash; datetime also 10.1 s on Claude Sonnet)
-    # So web_search is free and the other two cost ~9 s on EVERY message. The
+    # So web_search is free and the other two cost ~9 s on every message. The
     # date they were partly there for is now simply stated in the system prompt
     # above, and "read this URL" is already served by POST /fetch-url.
-    # …and not in EU routing: the plugin is refused there for every model
+    # ...and not in EU routing: the plugin is refused there for every model
     # ("Web search is not available in your data region"), so it is never sent.
     if web_search and endpoint == settings.openrouter_base_url.rstrip("/") and not region.is_eu():
         payload.setdefault("tools", []).append({"type": "openrouter:web_search"})
-    # OpenRouter's unified reasoning param — normalizes effort across o-series
+    # OpenRouter's unified reasoning param - normalizes effort across o-series
     # (effort) and Anthropic/Gemini (token budget). Models without reasoning ignore
     # it. Only send a validated value so bad input can't reach the provider.
     if reasoning_effort in _REASONING_EFFORTS:
         payload["reasoning"] = {"effort": reasoning_effort}
-    # Image generation (#79): OpenRouter's `modalities` asks an image-capable
+    # Image generation: OpenRouter's `modalities` asks an image-capable
     # model for a picture alongside text; it streams back as `delta.images`
-    # (base64 data URLs). Sent ONLY when the client asked — text models ignore
-    # or reject the field, and the send-path latency rule (src/CLAUDE.md) says
-    # nothing rides on every request unmeasured.
+    # (base64 data URLs). Sent only when the client asked - text models ignore
+    # or reject the field, and nothing rides on every request unmeasured.
     if image_output:
         payload["modalities"] = ["image", "text"]
     headers = {
@@ -306,7 +305,7 @@ def _iter_annotations(delta_obj: dict, choice: dict) -> list[dict]:
 
     Providers put them either on the streaming `delta` or on the finished
     `message`, and wrap each one as ``{"type": "url_citation", "url_citation":
-    {...}}`` — though some send the fields inline. Unknown or malformed shapes
+    {...}}`` - though some send the fields inline. Unknown or malformed shapes
     are skipped rather than raised: a citation is a nice-to-have, never a reason
     to break the answer stream.
     """
@@ -350,8 +349,8 @@ async def chat_stream(
     image_output: bool = False,
 ) -> AsyncIterator[str | dict]:
     """Stream completion: yields text deltas (str). When the model requests
-    tool calls, their streamed fragments are accumulated and ONE dict event
-    ``{"tool_calls": [{id, name, arguments}, …]}`` is yielded at stream end.
+    tool calls, their streamed fragments are accumulated and one dict event
+    ``{"tool_calls": [{id, name, arguments}, ...]}`` is yielded at stream end.
     With ``image_output`` a generated picture arrives as ``{"image": <data URL>}``.
     Raises :class:`ProviderError`."""
     url, payload, headers = _build_request(
@@ -373,8 +372,8 @@ async def chat_stream(
                 if response.status_code != 200:
                     body = await response.aread()
                     # The user sees the friendly text; the operator needs the
-                    # upstream reason (disabled key? limit? model gone?) — httpx
-                    # logs only the status (#84). Never the key, never the prompt.
+                    # upstream reason (disabled key? limit? model gone?) - httpx
+                    # logs only the status. Never the key, never the prompt.
                     logger.warning(
                         "openrouter refused chat/completions: %s %s",
                         response.status_code,
@@ -386,7 +385,7 @@ async def chat_stream(
                     )
                 # Tool-call fragments accumulate by index; flushed as one event.
                 pending_calls: dict[int, dict] = {}
-                # Citation URLs already forwarded — providers repeat the full
+                # Citation URLs already forwarded - providers repeat the full
                 # annotation list on later chunks, so dedupe by URL.
                 seen_citations: set[str] = set()
 
@@ -407,7 +406,7 @@ async def chat_stream(
                 async for line in response.aiter_lines():
                     line = line.strip()
                     # SSE keep-alive comments (": OPENROUTER PROCESSING") and blank
-                    # lines aren't data — skip them (they still reset the read timeout,
+                    # lines aren't data - skip them (they still reset the read timeout,
                     # which is how slow/router models like fusion hold the connection).
                     if not line.startswith("data:"):
                         continue
@@ -421,9 +420,9 @@ async def chat_stream(
                         chunk = json.loads(data)
                     except ValueError:
                         continue
-                    # A mid-stream provider error — common with meta/router models
+                    # A mid-stream provider error - common with meta/router models
                     # (e.g. openrouter fusion) that orchestrate upstream models and
-                    # can fail AFTER emitting a preamble. It arrives as a chunk with
+                    # can fail after emitting a preamble. It arrives as a chunk with
                     # an `error` field and no usable `choices`. Surfacing it (instead
                     # of silently dropping it, which leaves the client hanging on a
                     # half-answer) turns "no response" into a clear error the UI can
@@ -450,10 +449,10 @@ async def chat_stream(
                         event = flush_tool_calls()
                         if event:
                             yield event
-                    # Reasoning ("thinking") tokens — OpenRouter surfaces them in a
+                    # Reasoning ("thinking") tokens - OpenRouter surfaces them in a
                     # separate `reasoning` delta for reasoning models. Forwarded as a
                     # distinct event so the client can show a collapsible thinking
-                    # panel; NEVER mixed into the answer text. Contains no user PII
+                    # panel; never mixed into the answer text. Contains no user PII
                     # the answer wouldn't (it's the model reasoning over placeholders).
                     reasoning = delta_obj.get("reasoning")
                     if reasoning:
@@ -464,7 +463,7 @@ async def chat_stream(
                     # message. Forwarded as their own event so the client can show
                     # a "Sources" strip. Only url+title travel: the citation's
                     # `content` excerpt is page text we neither need nor want to
-                    # store. Public web metadata — no user PII, and it rides the
+                    # store. Public web metadata - no user PII, and it rides the
                     # same E2E-encrypted chat as everything else.
                     new_cites = []
                     for ann in _iter_annotations(delta_obj, choice):
@@ -474,9 +473,9 @@ async def chat_stream(
                             new_cites.append({"url": url, "title": ann.get("title") or ""})
                     if new_cites:
                         yield {"annotations": new_cites}
-                    # Generated images (#79). Streaming providers put them on
+                    # Generated images. Streaming providers put them on
                     # the delta; a provider that only fills the final message
-                    # is covered too. One event per image, the data URL as-is —
+                    # is covered too. One event per image, the data URL as-is - 
                     # the client stores the bytes sealed on the device.
                     for img in _iter_images(delta_obj, choice):
                         yield {"image": img}

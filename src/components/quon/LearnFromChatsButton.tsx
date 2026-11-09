@@ -12,27 +12,27 @@ import { useT } from "@/lib/i18n/i18n";
 import type { MessageKey } from "@/lib/i18n/catalog";
 
 /**
- * The manual Auto-Memory triggers (v1: the button IS the opt-in; nothing runs in
- * the background). Each mines one source in scope — a project's chats/documents,
- * or, without `projectId`, the global pool — for durable facts and fills the
+ * The manual Auto-Memory triggers (v1: the button is the opt-in; nothing runs in
+ * the background). Each mines one source in scope - a project's chats/documents,
+ * or, without `projectId`, the global pool - for durable facts and fills the
  * review queue shown in the Memory screen; nothing is saved to Memory without
  * explicit approval there.
  *
  * The sweeps run at module level (memorySweepRunner) so their progress survives
  * navigating away and back, and a re-entered screen shows the live status or the
- * final result — the buttons just reflect and trigger them.
+ * final result - the buttons just reflect and trigger them.
  *
  * Zero-knowledge: source text is scrubbed on-device before the relay sees it and
  * placeholders are re-hydrated locally (src/lib/memoryExtract.ts,
  * src/lib/memoryFromDocuments.ts).
  *
- * ⚠️ The result must stay REACHABLE. A sweep fills a review queue that lives on
- * another screen (in a project: Content → memory), and reported 2026-08-04 the
- * only thing to click afterwards was this button again — which re-ran the
- * sweep, found nothing left to analyse, and replaced "29 suggestions to
- * review" with "Nothing new to learn". The suggestions were never lost, but
- * the one affordance present destroyed the evidence that they existed. Hence
- * `onShowReview` + the waiting-count chip below, and the guard in run().
+ * The result must stay reachable. A sweep fills a review queue that lives on
+ * another screen (in a project: Content -> memory). If the only thing to click
+ * afterwards is this button again, a second run finds nothing left to analyse
+ * and replaces "29 suggestions to review" with "Nothing new to learn" - the
+ * suggestions are not lost, but the one affordance present destroys the
+ * evidence that they exist. Hence `onShowReview` + the waiting-count chip
+ * below, and the guard in run().
  */
 function LearnButton({
   projectId,
@@ -57,11 +57,11 @@ function LearnButton({
     getSweepState(projectId, kind),
   );
   // Ambient discovery signal: how much in-scope material has never been mined.
-  // Recomputed on each render — useQuonState re-renders on store changes,
-  // subscribeSweep on a completed run (cursors advanced → count drops).
+  // Recomputed on each render - useQuonState re-renders on store changes,
+  // subscribeSweep on a completed run (cursors advanced -> count drops).
   const pending = running ? 0 : countPending(projectId);
   // What a previous sweep already found and nobody has reviewed yet. Strictly
-  // scoped, so this is exactly what THIS button's sweep produced.
+  // scoped, so this is exactly what this button's sweep produced.
   const ok = inScope(projectId);
   const awaiting = useMemorySuggestions().filter(
     (s) => ok(s) && (kind === "chats" ? !!s.sourceSessionId : !!s.sourceDocId),

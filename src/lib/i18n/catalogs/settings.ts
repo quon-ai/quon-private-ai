@@ -1,6 +1,6 @@
 /**
  * "settings" namespace UI strings. Keys are prefixed `settings.*`. Keep `en`
- * and `de` in sync — a missing German key is a compile error via catalog.ts.
+ * and `de` in sync - a missing German key is a compile error via catalog.ts.
  * (The bulk is filled by the string-externalization pass; the language-card
  * keys below are pre-seeded because the switcher ships with the i18n core.)
  */
@@ -30,8 +30,8 @@ export const settings = {
     "settings.typesLoading": "Loading types…",
     "settings.typesDisabledWarning":
       "{count} type(s) turned off — data of those kinds is sent to the model unredacted.",
-    // #54: "would a link to the docs and a status indicator not make sense
-    // here? In the chat it is a bit late." Both, right under the types.
+    // "would a link to the docs and a status indicator not make sense here? In
+    // the chat it is a bit late." Both, right under the types.
     "settings.detectStatusOk":
       "Detection runs on this server, in-process: names via spaCy, patterns via the regex net, GLiNER {gliner}.",
     "settings.detectStatusGlinerOn": "loaded",
@@ -189,7 +189,7 @@ export const settings = {
     "settings.presetOllamaLocal": "Ollama (local)",
 
     // RedactionListsCard.tsx
-    // NOT "on this device": the list rides the E2E-encrypted `prefs` blob and
+    // Not "on this device": the list rides the E2E-encrypted `prefs` blob and
     // follows the account across devices. Saying otherwise was doubly wrong once
     // the document viewer began writing into it.
     "settings.alwaysRedactTitle": "Always redact",
@@ -235,7 +235,7 @@ export const settings = {
     "settings.reasoningHigh": "High",
     "settings.reasoningHighHint": "Deep reasoning, slower",
 
-    // ContextDefaultCard.tsx — explainer text is shared with the chat
+    // ContextDefaultCard.tsx - explainer text is shared with the chat
     // composer's Context pill (chat.contextInfoHint), same feature.
     "settings.contextDefaultTitle": "Context (Memory & Documents)",
     "settings.contextDefaultDesc":
@@ -495,7 +495,7 @@ export const settings = {
     "settings.reasoningHigh": "Hoch",
     "settings.reasoningHighHint": "Tiefes Reasoning, langsamer",
 
-    // ContextDefaultCard.tsx — Erklärtext wird mit dem Kontext-Pill im
+    // ContextDefaultCard.tsx - Erklärtext wird mit dem Kontext-Pill im
     // Chat-Eingabefeld geteilt (chat.contextInfoHint), gleiches Feature.
     "settings.contextDefaultTitle": "Kontext (Erinnerung & Dokumente)",
     "settings.contextDefaultDesc":

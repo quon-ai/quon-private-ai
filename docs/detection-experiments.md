@@ -1,5 +1,8 @@
 # Detection experiments — the dated record
 
+The decision-paper view of this record is published at
+<https://app.quon-ai.com/docs/detection-whitepaper>.
+
 [detection-evaluation.md](detection-evaluation.md) explains the method: what
 each measurement can and cannot see, and how to run the same checks. This page
 is the other half — the record of what was actually tried: every setup, every

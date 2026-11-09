@@ -1,5 +1,5 @@
 /**
- * demo.* — the public scrub-only demo (/demo): a visitor pastes a text and
+ * demo.* - the public scrub-only demo (/demo): a visitor pastes a text and
  * sees what a model would receive. No account, no model call, nothing stored.
  * The page is ENGLISH by default whatever the instance's language (it is
  * written for strangers), with its own German switch; du-form in German, the

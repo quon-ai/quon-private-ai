@@ -33,9 +33,35 @@ test.describe("detection docs page", () => {
     await page.getByRole("button", { name: "Deutsch" }).click();
     await page.getByRole("link", { name: "So testen wir den Filter" }).click();
     await expect(page).toHaveURL(/\/docs\/detection\?lang=de/);
-    // Arrives already in German — the hand-over, not the default.
+    // Arrives already in German - the hand-over, not the default.
     await expect(
       page.getByRole("heading", { name: "So testen wir den Privatsphäre-Filter" }),
     ).toBeVisible();
+  });
+});
+
+test.describe("detection whitepaper page", () => {
+  test.use({ storageState: { cookies: [], origins: [] } });
+
+  test("the whitepaper renders as a document, reachable from the overview", async ({ page }) => {
+    await page.goto("/docs/detection");
+    // The page is server-rendered and a click in the pre-hydration window is
+    // silently lost (see useHydrated). Links carry no disabled state, so the
+    // hydration-gated language toggle is the sentinel: once it is enabled,
+    // React has attached and the link click cannot fall into the window.
+    await expect(page.getByRole("button", { name: "Deutsch" })).toBeEnabled();
+    await page.getByRole("link", { name: "Read the whitepaper" }).click();
+    await expect(page).toHaveURL(/\/docs\/detection-whitepaper/);
+    await expect(
+      page.getByRole("heading", {
+        name: "PII Detection in QUON — Architecture Selection and Quality Evidence",
+      }),
+    ).toBeVisible();
+    // The decision table made it through the markdown pipeline intact.
+    await expect(page.getByRole("columnheader", { name: "C in-process (shipped)" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "7. Management Summary" })).toBeVisible();
+    // The editorial pass holds on the rendered page: no local-file links.
+    const relLinks = await page.locator("article a[href$='.md'], article a[href^='../']").count();
+    expect(relLinks).toBe(0);
   });
 });

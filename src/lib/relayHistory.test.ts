@@ -51,12 +51,12 @@ describe("toRelayHistory", () => {
   });
 });
 
-describe("withTurnContext (issue #74 — the attachment must sit next to its turn)", () => {
+describe("withTurnContext: the attachment must sit next to its turn", () => {
   const u = (t: string): ChatTurn => ({ role: "user", content: t });
   const a = (t: string): ChatTurn => ({ role: "assistant", content: t });
   const sys = (t: string): ChatTurn => ({ role: "system", content: t });
 
-  it("splices this turn's context immediately before the LAST user turn", () => {
+  it("splices this turn's context immediately before the last user turn", () => {
     // The reported shape: a running chat, a document attached to the newest
     // message. At the head, the model read it as belonging to the first
     // question and answered "I only have the first report".
@@ -78,7 +78,7 @@ describe("withTurnContext (issue #74 — the attachment must sit next to its tur
     expect(out.map((t) => t.content)).toEqual(["PERSONA", "DOC", "frage"]);
   });
 
-  it("is unchanged for a first turn — where the old order was already right", () => {
+  it("is unchanged for a first turn: where the old order was already right", () => {
     const out = withTurnContext([u("frage")], [], [sys("DOC")]);
     expect(out.map((t) => t.content)).toEqual(["DOC", "frage"]);
   });

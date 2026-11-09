@@ -14,7 +14,7 @@ describe("chatRunner registry", () => {
     expect(getRun("s1")).toBeUndefined();
   });
 
-  it("keeps per-session controllers separate — aborting one leaves the other running", () => {
+  it("keeps per-session controllers separate: aborting one leaves the other running", () => {
     const a = new AbortController();
     const b = new AbortController();
     beginRun("A", { controller: a, assistantId: 1 });

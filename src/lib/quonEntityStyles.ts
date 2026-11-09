@@ -112,7 +112,7 @@ const DEFAULT_STYLE: RawStyle = {
  *  page is English regardless of the instance's default. */
 export function entityStyle(type: string, lang?: Lang): EntityStyle {
   const raw = STYLES[type];
-  // Unknown type → keep the raw type string as the label (no catalog entry).
+  // Unknown type -> keep the raw type string as the label (no catalog entry).
   if (!raw) return { label: type, dot: DEFAULT_STYLE.dot, chip: DEFAULT_STYLE.chip };
   const label = lang ? translate(lang, raw.labelKey) : tr(raw.labelKey);
   return { label, dot: raw.dot, chip: raw.chip };

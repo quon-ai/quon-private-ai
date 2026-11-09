@@ -1,22 +1,22 @@
-"""Real-DOCUMENT eval — the user's own paperwork (insurance, invoices, medical,
+"""Real-DOCUMENT eval - the user's own paperwork (insurance, invoices, medical,
 tax, utilities), opt-in and offline by default.
 
     python tests/realworld_docs_ingest.py ~/Downloads/Test_Documents
     QUON_RUN_REALWORLD_DOCS=1 pytest tests/test_realworld_docs.py -q -s
 
-Why this exists alongside ``test_realworld.py``: that one covers chat PROMPTS —
+Why this exists alongside ``test_realworld.py``: that one covers chat PROMPTS -
 short, casual, and the register where the PERSON false positives lived. Real
 documents are the opposite register, and they carry identifier FORMATS no
 synthetic generator invents: policy numbers, Steuernummern, Aktenzeichen, meter
-readings, Versichertennummern. The value showed immediately — the first run over
+readings, Versichertennummern. The value showed immediately - the first run over
 45 files found that the dotted German date, the single most common shape in the
 set (126 occurrences), was excluded from PHONE but never DETECTED, a hole the
 synthetic corpus could not see because the cloud LLM was covering it.
 
-Documents have NO gold labels, so like the prompt eval this measures false
+Documents have no gold labels, so like the prompt eval this measures false
 positives and coverage, never recall. Recall stays with the synthetic corpus.
 
-- Report: ``~/.quon/realworld/REALWORLD_DOCS_REPORT.md`` — every detection with
+- Report: ``~/.quon/realworld/REALWORLD_DOCS_REPORT.md`` - every detection with
   context, for HUMAN review. Real data: outside the repo, never printed here.
 - Ratchet: the same ``labels.json``, under document-specific keys so a prompt FP
   and a document FP cannot mask each other::
@@ -27,11 +27,8 @@ positives and coverage, never recall. Recall stays with the synthetic corpus.
   never-detected-again, so every fixed FP becomes a permanent regression test
   against the real documents.
 
-(Config-2 — the LLM-enriched mode — was removed with the LLM tier on 2026-08-23.) FULL
-pipeline including the cloud LLM. ⚠️ This SENDS the document text to the
-configured endpoint. Enabled only because the operator explicitly selected
-non-sensitive documents for cloud runs (2026-08-19); it is off by default and
-never gates, mirroring the corpus's band-not-gate convention for LLM runs.
+There is no LLM-enriched comparison mode: the deterministic in-process pipeline
+is the only one measured, so the document text never leaves the machine.
 """
 
 from __future__ import annotations
@@ -65,7 +62,7 @@ def _load() -> list[dict]:
     if not path.exists():
         return []
     out = []
-    # split("\n"), NOT splitlines() — see holdout_transfer.load(): U+2028 in an
+    # split("\n"), not splitlines() - see holdout_transfer.load(): U+2028 in an
     # OCR'd page is left raw by json.dumps and splits a record in half.
     for line in path.read_text(encoding="utf-8").split("\n"):
         line = line.strip()
@@ -85,7 +82,7 @@ def test_realworld_documents():
 
     import scrubber
 
-    llm_on = False  # config-2 removed with the LLM tier (2026-08-23)
+    llm_on = False  # there is no LLM-enriched mode
 
     labels_path = _data_dir() / "labels.json"
     fixed_fps: set[str] = set()

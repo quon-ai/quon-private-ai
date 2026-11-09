@@ -58,7 +58,7 @@ interface QueryHit {
   score: number;
 }
 
-/** Bytes → megabytes for the storage line: whole MB from 10 MB up, one decimal
+/** Bytes -> megabytes for the storage line: whole MB from 10 MB up, one decimal
  *  below (so small usage doesn't read as "0 MB"). */
 function formatMb(bytes: number): string {
   const mb = bytes / (1024 * 1024);
@@ -89,7 +89,7 @@ export function ScreenDocuments({
   const [urlDraft, setUrlDraft] = useState("");
   const [urlBusy, setUrlBusy] = useState(false);
   const [urlError, setUrlError] = useState<string | null>(null);
-  // Originals that couldn't sync (server storage quota) — non-blocking banner:
+  // Originals that couldn't sync (server storage quota) - non-blocking banner:
   // the document itself is synced/searchable, only the layout-view bytes stay local.
   const syncIssues = useSyncExternalStore(
     subscribeOriginalSyncIssues,
@@ -98,18 +98,18 @@ export function ScreenDocuments({
   );
   const [quotaBannerDismissed, setQuotaBannerDismissed] = useState(false);
   // Show only failed documents (toggled from the failed-count chip) so a single
-  // failure isn't lost in a long list — the connector import result only reports
+  // failure isn't lost in a long list - the connector import result only reports
   // a COUNT, this is where "which one / why" lives.
   const [onlyFailed, setOnlyFailed] = useState(false);
   const failedDocs = docs.filter((d) => scoped(d) && d.status === "failed");
   const quotaDocs = docs.filter((d) => scoped(d) && syncIssues[d.id] === "quota");
   const tooBigDocs = docs.filter((d) => scoped(d) && syncIssues[d.id] === "toobig");
-  // Larger than THIS device can push safely (deviceClass.ts) — the original is
+  // Larger than this device can push safely (deviceClass.ts) - the original is
   // cached here and syncs the next time the document is opened on a desktop.
   const deviceDocs = docs.filter((d) => scoped(d) && syncIssues[d.id] === "device");
-  // Server-side originals storage (used / quota) — informational, best-effort.
+  // Server-side originals storage (used / quota) - informational, best-effort.
   const [usage, setUsage] = useState<OriginalsUsage | null>(null);
-  // Photos wait here for the OCR review dialog (one at a time — closing the
+  // Photos wait here for the OCR review dialog (one at a time - closing the
   // dialog advances to the next queued photo). `total` counts the whole batch
   // so the dialog can say "2 / 5"; it resets once the queue drains.
   const [photoQueue, setPhotoQueue] = useState<{ files: File[]; total: number }>({
@@ -118,7 +118,7 @@ export function ScreenDocuments({
   });
   /** "Take all": the rest of the scan batch is saved without a review stop. */
   const [autoAcceptScans, setAutoAcceptScans] = useState(false);
-  // Inline filename edit — only one row at a time.
+  // Inline filename edit - only one row at a time.
   const [renaming, setRenaming] = useState<{ id: string; value: string } | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const photoInput = useRef<HTMLInputElement>(null);
@@ -140,7 +140,7 @@ export function ScreenDocuments({
         if (!cancelled) setUsage(u);
       })
       .catch(() => {
-        /* offline / older backend — the line is simply not shown */
+        /* offline / older backend - the line is simply not shown */
       });
     const off = onEmbedderReady(setReady);
     return () => {
@@ -164,7 +164,7 @@ export function ScreenDocuments({
   }
 
   async function ingest(file: File) {
-    // Manual upload → the shared pipeline (no provenance; connectors pass `source`).
+    // Manual upload -> the shared pipeline (no provenance; connectors pass `source`).
     const id = createDocumentId();
     try {
       await ingestDocument({
@@ -187,7 +187,7 @@ export function ScreenDocuments({
   }
 
   // Import a public web page as a document: the backend fetches + Readability-
-  // extracts the text (server sees the URL + public content — see the honest
+  // extracts the text (server sees the URL + public content - see the honest
   // note in the UI), then it's ingested + encrypted locally like any document.
   async function importUrl() {
     const url = urlDraft.trim();
@@ -298,8 +298,8 @@ export function ScreenDocuments({
       />
       {/* "Scan a photo" opens the camera directly on mobile (`capture`). An
           existing gallery/library image is still scannable via "Drop files or
-          browse" above — it accepts image/* and routes into the same OCR review
-          dialog. (On desktop `capture` is ignored → a normal file dialog.) */}
+          browse" above - it accepts image/* and routes into the same OCR review
+          dialog. (On desktop `capture` is ignored -> a normal file dialog.) */}
       <input
         ref={photoInput}
         type="file"
@@ -314,7 +314,7 @@ export function ScreenDocuments({
       {/* Same OCR pipeline, but capture-free: mobile opens the photo library
           instead of jumping straight into the camera. `multiple` matters: the
           library UI lets you tick several photos either way, and without it the
-          browser hands us only the first one — the rest were silently dropped. */}
+          browser hands us only the first one - the rest were silently dropped. */}
       <input
         ref={galleryInput}
         type="file"
@@ -337,10 +337,10 @@ export function ScreenDocuments({
         </>
       )}
 
-      {/* #56: the ZK answer WHERE the doubt arises — one honest line above the
+      {/* The ZK answer where the doubt arises - one honest line above the
           dropzone, linking to the full data-flow story. A user with Depotauszüge
-          in hand asked "liegen die jetzt ungeschwärzt auf deinem Server rum?";
-          the answer existed but only in the architecture docs. */}
+          in hand asks "liegen die jetzt ungeschwärzt auf deinem Server rum?";
+          an answer that lives only in the architecture docs does not help. */}
       <p className="mt-3 text-[11px] leading-snug text-quon-muted">
         {t("docs.zkHint")}{" "}
         <Link to="/trust" className="font-semibold text-quon-indigo hover:text-quon-indigo-hover">
@@ -413,7 +413,7 @@ export function ScreenDocuments({
         {urlError && <p className="mt-1 text-[10px] text-destructive">{urlError}</p>}
       </div>
 
-      {/* Server-side originals storage — informational only */}
+      {/* Server-side originals storage - informational only */}
       {usage && (
         <div className="mt-3 flex items-center gap-2 text-[10px] text-quon-muted">
           <div className="h-1 w-28 overflow-hidden rounded-full bg-quon-surface-2">
@@ -449,7 +449,7 @@ export function ScreenDocuments({
         </Notice>
       )}
 
-      {/* Over-cap originals (never synced — layout view exists only here) */}
+      {/* Over-cap originals (never synced - layout view exists only here) */}
       {tooBigDocs.length > 0 && (
         <Notice variant="warning" className="mt-4">
           <span className="font-semibold">{t("docs.tooBigTitle")}</span> {t("docs.tooBigBody")}

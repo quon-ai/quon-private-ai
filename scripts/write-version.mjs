@@ -3,9 +3,9 @@
  *
  * Why this exists: a running instance keeps the JavaScript it loaded. An
  * installed PWA is never reloaded just because the operator deployed, so after
- * a deploy the user goes on testing the OLD code — which cost us a bug report
- * for a feature that was already live. The client compares its compile-time id
- * against this file and offers a reload; see src/lib/appVersion.ts.
+ * a deploy the user goes on using the old code and reports bugs in features
+ * that are already live. The client compares its compile-time id against this
+ * file and offers a reload; see src/lib/appVersion.ts.
  *
  * Runs as `prebuild`, alongside copy-ort.mjs, so the file is in `public/` before
  * Vite copies it into the build output (and is git-ignored, like public/ort).
@@ -26,7 +26,7 @@ function buildId() {
   try {
     sha = execFileSync("git", ["rev-parse", "--short", "HEAD"], { cwd: root }).toString().trim();
   } catch {
-    /* not a git checkout (exported tree) — the timestamp alone still works */
+    /* not a git checkout (exported tree) - the timestamp alone still works */
   }
   return `${sha}-${Date.now().toString(36)}`;
 }

@@ -11,21 +11,21 @@ describe("rrfFuse", () => {
     expect(out[0]).toBe("a");
   });
 
-  it("an item present in only ONE ranking still surfaces — the hybrid-retrieval guarantee", () => {
+  it("an item present in only one ranking still surfaces: the hybrid-retrieval guarantee", () => {
     // This is the mechanism the income-bug fix relies on: an item the vector
     // ranking places far down (or not at all) can still enter via a strong
     // lexical-only ranking.
-    const vectorRanking = rank(["x", "y", "z"]); // "einkommen-note" absent — poor cosine
+    const vectorRanking = rank(["x", "y", "z"]); // "einkommen-note" absent - poor cosine
     const lexicalRanking = rank(["einkommen-note"]); // top of the lexical ranking
     const out = rrfFuse([vectorRanking, lexicalRanking], id);
     expect(out).toContain("einkommen-note");
   });
 
-  it("combines ranks additively — an item ranked well in BOTH beats one ranked #1 in only one", () => {
+  it("combines ranks additively: an item ranked well in both beats one ranked #1 in only one", () => {
     const out = rrfFuse(
       [
-        rank(["solo", "both"]), // "both" is #2 here
-        rank(["both", "other"]), // "both" is #1 here
+        rank(["solo", "both"]), // "both" is second here
+        rank(["both", "other"]), // "both" is first here
       ],
       id,
     );

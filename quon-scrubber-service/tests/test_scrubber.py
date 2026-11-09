@@ -51,7 +51,7 @@ def test_never_redact_drops_matching_value_case_insensitive():
 
 
 def test_never_redact_is_whole_value_not_substring():
-    # Allowing "Xantan" must NOT suppress a real name that merely contains it.
+    # Allowing "Xantan" must not suppress a real name that merely contains it.
     out = _apply_never_redact(_det(("PERSON", "Xantana Müller")), ["xantan"])
     assert [d["value"] for d in out] == ["Xantana Müller"]
 
@@ -116,7 +116,7 @@ def test_pseudonymize_typed_replaces_all_occurrences():
 # --- _merge / _dedup_key: format-variant collision ------------------------
 def test_merge_collapses_iban_spacing_variants_to_one_entity():
     """Same IBAN, spaced vs unspaced (two detectors) must not become two
-    placeholders — otherwise the model sees two 'accounts'."""
+    placeholders - otherwise the model sees two 'accounts'."""
     spaced = {"type": "IBAN", "value": "DE89 3704 0044 0532 0130 00", "score": 0.9}
     unspaced = {"type": "IBAN", "value": "DE89370400440532013000", "score": 0.8}
     merged = _merge([spaced], [unspaced])
@@ -204,13 +204,13 @@ def test_safety_net_detects_amounts_and_email():
     amounts = {v for t, v in pairs if t == "FINANCIAL_AMOUNT"}
     assert "145.000 €" in amounts and "$4.2M" in amounts
     assert ("EMAIL", "a@b.com") in pairs
-    # Technical numbers without currency must NOT be flagged as amounts.
+    # Technical numbers without currency must not be flagged as amounts.
     assert not [d for d in detect_safety_net("Version 3.2.1, 99,7%, 64 GB") if d["type"] == "FINANCIAL_AMOUNT"]
 
 
 def test_safety_net_amounts_plain_unseparated_digits():
-    # Regression: "EUR 8045" matched only "EUR 804" → the span missed the word
-    # boundary → the amount wasn't redacted at all (a leak). See fallback._NUMBER.
+    # Regression: "EUR 8045" matched only "EUR 804" -> the span missed the word
+    # boundary -> the amount wasn't redacted at all (a leak). See fallback._NUMBER.
     for amt in ["EUR 8045", "USD 1274", "$320000", "GBP 50000"]:
         found = {
             d["value"]
@@ -272,7 +272,7 @@ def test_titled_name_redacted_end_to_end_without_llm(monkeypatch):
     """The confirmed production leak: with the cloud LLM UNAVAILABLE, a bare
     German title+surname must still be redacted by the always-on deterministic
     backstop (real spaCy NER + fallback, no mocks). Before the supplement, spaCy
-    returned [] for these and — with the LLM also down — they passed through in
+    returned [] for these and - with the LLM also down - they passed through in
     full. The honorific itself is not PII and stays visible."""
     import asyncio
 
@@ -301,7 +301,7 @@ def test_detect_language_formal_register_unaffected():
 def test_detect_language_reported_bug_rehbergplatz():
     """Regression for the language-misdetection bug (not an ner.py guard bug):
     a casual German QUESTION with no business/formal vocabulary scored 0 hits
-    in BOTH _GERMAN_HINTS and _ENGLISH_HINTS, so detect_language fell through
+    in both _GERMAN_HINTS and _ENGLISH_HINTS, so detect_language fell through
     to its "de == 0 and en == 0 -> en" default. The ENGLISH spaCy model then
     ran on German text and mislabeled the capitalized street/square compound
     "Rehbergplatz" ("-platz" = square/plaza) as PERSON. Fixed by broadening
@@ -331,7 +331,7 @@ def test_detect_language_reported_bug_rehbergplatz():
 )
 def test_detect_language_casual_german_battery(text):
     """Casual, register-neutral German (no formal/business vocabulary) must
-    still resolve to "de" — this is the exact register the original hint list
+    still resolve to "de" - this is the exact register the original hint list
     missed (skewed toward "sehr geehrte" / "betreff" / "rechnung" business-email
     words). Covers different question words, sentence shapes, and additional
     German street/square-name compounds beyond the one reported."""
@@ -357,8 +357,8 @@ def test_detect_language_casual_german_battery(text):
 )
 def test_detect_language_casual_english_battery_unaffected(text):
     """Symmetric regression: broadening _GERMAN_HINTS for casual register must
-    NOT start misclassifying casual, register-neutral ENGLISH (no business
-    vocabulary either) as German. This is the main risk of the fix above —
+    not start misclassifying casual, register-neutral ENGLISH (no business
+    vocabulary either) as German. This is the main risk of the fix above - 
     verified explicitly rather than just eyeballed."""
     assert detect_language(text) == "en"
 
@@ -366,19 +366,19 @@ def test_detect_language_casual_english_battery_unaffected(text):
 @pytest.mark.parametrize(
     "text",
     [
-        # "den" — the English noun (a den/room), not the German article:
+        # "den" - the English noun (a den/room), not the German article:
         "my den needs a new sofa",
         "I turned the den into an office",
         "the kids play in the den upstairs",
         "welcome to my den",
         # "Dann" as an English NAME + "met/at": before _ENGLISH_HINTS was
         # broadened symmetrically, this tied 1:1 on hint words and the de>=en
-        # tie-break flipped it to "de" — and the GERMAN model then found no
+        # tie-break flipped it to "de" - and the GERMAN model then found no
         # entities, silently LEAKING both names (the English model catches
         # PERSON Kim + PERSON Dann). For a privacy gateway a wrong-language
         # flip is a recall hole, not just an FP risk.
         "Kim and Dann met at noon",
-        # "Mir" — the space station, colliding with German "mir":
+        # "Mir" - the space station, colliding with German "mir":
         "photos from the Mir station",
     ],
 )
@@ -387,18 +387,18 @@ def test_detect_language_english_with_german_lookalike_tokens(text):
     hand-written English battery passed): short casual English sentences that
     CONTAIN one of the newly-added German hint words as an English
     token/name. These flipped to "de" until _ENGLISH_HINTS gained common
-    casual English function words (my/is/to/into/at/met/...) so the count —
-    not the German-favoring tie-break — decides."""
+    casual English function words (my/is/to/into/at/met/...) so the count - 
+    not the German-favoring tie-break - decides."""
     assert detect_language(text) == "en"
 
 
 def test_detect_language_excluded_english_collision_words_not_added():
     """Words that are valid German but collide with common English spellings
-    must NOT be in _GERMAN_HINTS, or an ordinary English sentence containing
+    must not be in _GERMAN_HINTS, or an ordinary English sentence containing
     them would flip to "de". Documents the words deliberately left out of the
     broadened list (see the comment above _GERMAN_HINTS in scrubber.py).
 
-    "was" is the one caught AFTER the fact by the corpus eval's before/after
+    "was" is the one caught after the fact by the corpus eval's before/after
     diff (not by the hand-written battery above, since none of those sentences
     happened to use it): importing ner_gazetteer.INTERROGATIVES wholesale
     pulled in "was" (German "what"), which collides with the English
@@ -417,11 +417,11 @@ def test_detect_language_excluded_english_collision_words_not_added():
 
 def test_detect_language_residual_ambiguous_case_was_hat_only():
     """Known residual edge case (surfaced during verification, not force-fixed):
-    a short German sentence whose ONLY plausible hint word is "was" or "hat"
+    a short German sentence whose only plausible hint word is "was" or "hat"
     still resolves to the "en" default, because both are correctly EXCLUDED as
     English collisions (see test_detect_language_excluded_english_collision_
-    words_not_added). Verified this does NOT leak PII through the full
-    pipeline (no capitalized noun for the English NER model to misfire on) —
+    words_not_added). Verified this does not leak PII through the full
+    pipeline (no capitalized noun for the English NER model to misfire on) - 
     but it is a real classification miss a user could hit. No safe fix is
     available without reintroducing an English-collision risk; "Never redact"
     / rephrasing is the user-facing mitigation, same as any residual gap in
@@ -445,30 +445,30 @@ def test_detect_language_residual_ambiguous_case_was_hat_only():
 
 def test_detect_language_hint_breaks_only_the_zero_evidence_tie():
     """The client-locale hint (ScrubOptions.language_hint): bare noun queries
-    ("Milchreis Rezept") carry no hint word in either language — word lists
-    structurally can't fix that class (36% of FP-affected prompts in the
-    2026-07-08 real-world review; 35/36 vanish under the correct model). The
-    hint decides ONLY that zero-evidence case and never overrides text signal."""
+    ("Milchreis Rezept") carry no hint word in either language - word lists
+    structurally can't fix that class (36% of FP-affected prompts in a review
+    of real chat history; 35/36 vanish under the correct model). The
+    hint decides only that zero-evidence case and never overrides text signal."""
     # Zero-evidence German noun queries: hint routes them to the German model.
     for text in ["Milchreis Rezept", "Airfryer Blumenkohl", "Chai Latte Koffein"]:
         assert detect_language(text) == "en"  # old default, unchanged without hint
         assert detect_language(text, hint="de") == "de"
-    # Real signal beats the hint in BOTH directions.
+    # Real signal beats the hint in both directions.
     assert detect_language("Which store is closest to me", hint="de") == "en"
     assert detect_language("Wann kommt der Bus heute", hint="en") == "de"
-    # Umlauts are decisive German evidence — hint ignored.
+    # Umlauts are decisive German evidence - hint ignored.
     assert detect_language("Grüße", hint="en") == "de"
     # Invalid hints fall back to the old default.
     assert detect_language("Milchreis Rezept", hint="fr") == "en"
     assert detect_language("Milchreis Rezept", hint=None) == "en"
-    # Bonus: the previously-documented residual gap ("was"/"hat" both excluded
-    # as English collisions -> zero evidence) is now covered by the hint too.
+    # Bonus: the residual gap ("was"/"hat" both excluded as English collisions
+    # -> zero evidence) is covered by the hint too.
     assert detect_language("Was hat es damit auf sich", hint="de") == "de"
 
 
 def test_detect_language_full_pipeline_no_person_false_positive():
     """End-to-end regression: the reported bug only matters because it produced
-    a PERSON false positive through the FULL scrub() pipeline under
+    a PERSON false positive through the full scrub() pipeline under
     options.language="auto" (not just a detect_language() unit mismatch)."""
     import asyncio
 
@@ -484,7 +484,7 @@ def test_detect_language_full_pipeline_no_person_false_positive():
     assert result.metadata.language_detected == "de"
     # The regression this guards is a PERSON false positive from the wrong-model
     # path. ("Rehbergplatz" may legitimately be picked up as ADDRESS now that
-    # that type exists — a location, not a person — so we assert on PERSON
+    # that type exists - a location, not a person - so we assert on PERSON
     # specifically rather than total emptiness, which also keeps the test stable
     # whether or not a local LLM is reachable.)
     assert all(e.type != "PERSON" for e in result.entities)
@@ -514,8 +514,8 @@ def test_address_regex_catches_common_shapes(text, expected):
 @pytest.mark.parametrize(
     "text",
     [
-        "Ich wohne in Berlin.",              # bare city — no number
-        "Die Bahnhofstraße ist gesperrt.",   # bare street — no number
+        "Ich wohne in Berlin.",              # bare city - no number
+        "Die Bahnhofstraße ist gesperrt.",   # bare street - no number
         "Version 12 der Software.",          # number without a street word
         "Er heißt Herr Wildberg.",           # surname, not an address
     ],
@@ -565,7 +565,7 @@ def test_always_redact_survives_an_overlapping_never_redact() -> None:
     """always_redact must win over never_redact.
 
     Regression for a fail-OPEN: `_apply_never_redact` filtered by value
-    regardless of type, so a value the user had put on BOTH lists was dropped —
+    regardless of type, so a value the user had put on both lists was dropped - 
     the allow-list silently cancelling an explicit "always redact this", with
     nothing surfaced to the user. The neighbouring `disabled_types` block had
     always treated CUSTOM as a hard override; this one did not.
@@ -577,18 +577,17 @@ def test_always_redact_survives_an_overlapping_never_redact() -> None:
     kept = _apply_never_redact(detected, ["Kundennummer 48213", "Xantan"])
     kept_values = [d["value"] for d in kept]
 
-    # The explicit always-redact entry survives…
+    # The explicit always-redact entry survives...
     assert "Kundennummer 48213" in kept_values
-    # …while a genuine false positive is still suppressed.
+    # ...while a genuine false positive is still suppressed.
     assert "Xantan" not in kept_values
 
 
 # --- spelled-out dates + prefixed insurance ids in the safety net -----------
-# Added 2026-08-19 after a golden-58 comparison of the cloud 24B against a
-# self-hosted 7B: 5 of the 7B's 11 leaks were written dates the 24B caught, in
-# both languages, plus two prefixed insurance ids. Deterministic shapes must not
-# depend on which model is configured, so they moved into the net. These are the
-# exact values that leaked.
+# From a golden-set comparison of a 24B model against a 7B: 5 of the 7B's 11
+# leaks were written dates the 24B caught, in both languages, plus two prefixed
+# insurance ids. Deterministic shapes must not depend on which model is
+# configured, so they live in the net. These are the exact values that leaked.
 @pytest.mark.parametrize(
     "text,expected",
     [
@@ -635,8 +634,8 @@ def test_spelled_dates_can_be_left_to_the_llm(monkeypatch):
     assert [d for d in detect_safety_net("Termin am 15. April 2025") if d["type"] == "DATE"] == []
 
 
-# --- shared blind spots: both models missed these (2026-08-19 golden-58) -----
-# Not a model weakness — the 24B leaked the slash date and BOTH models leaked the
+# --- shared blind spots: both models missed these on the golden set ----------
+# Not a model weakness - the 24B leaked the slash date and both models leaked the
 # internal host and the labelled record id. A shape both models miss belongs in
 # the net, not in a model comparison.
 @pytest.mark.parametrize("value", ["09/15/1978", "05/12/1962", "1/2/2024"])
@@ -668,8 +667,8 @@ def test_internal_host_alternation_does_not_truncate():
      ("Patienten-ID: A-99812", "A-99812")],
 )
 def test_labelled_ids_redact_the_value_not_the_label(text, ident):
-    """The corpus requires the LABEL ('MRN') to survive while the identifier is
-    redacted — so the emitter must use the capture group, not the whole match."""
+    """The corpus requires the label ('MRN') to survive while the identifier is
+    redacted - so the emitter must use the capture group, not the whole match."""
     found = {d["value"] for d in detect_safety_net(text)}
     assert ident in found
     assert not any(v.upper().startswith("MRN") for v in found)
@@ -685,10 +684,10 @@ def test_new_patterns_do_not_fire_on_prose(text):
 
 
 # --- academic qualifiers between title and name -----------------------------
-# "Dr. med. Stefan Weber" was the ONE real detection miss left after the
-# 2026-08-19 golden-58: the lowercase qualifier sits where the name pattern
+# "Dr. med. Stefan Weber" was the one real detection miss left on the golden
+# set: the lowercase qualifier sits where the name pattern
 # expects a capital, so the whole span was skipped. The qualifier is consumed,
-# never emitted — the honorific still stays in the output on purpose (see
+# never emitted - the honorific still stays in the output on purpose (see
 # test_titled_name_redacted_end_to_end_without_llm).
 @pytest.mark.parametrize(
     "text,name",
@@ -711,12 +710,10 @@ def test_academic_qualifier_is_not_itself_emitted():
 
 
 # --- dotted German dates ----------------------------------------------------
-# Found by running the net over 45 REAL German documents (2026-08-19): dd.mm.yyyy
-# was the most common identifier shape at 126 occurrences and config 1 caught
-# NONE. looks_like_date() existed only to keep such strings OUT of PHONE; nothing
-# emitted them as DATE. The synthetic corpus missed it because the cloud LLM
-# covered the form — so it leaked precisely on the degraded path, where the net
-# is the only thing left.
+# Found by running the net over 45 real German documents: dd.mm.yyyy was the
+# most common identifier shape at 126 occurrences and config 1 caught none.
+# looks_like_date() existed only to keep such strings out of PHONE; nothing
+# emitted them as DATE.
 @pytest.mark.parametrize(
     "text,value",
     [
@@ -743,7 +740,7 @@ def test_safety_net_catches_dotted_german_dates(text, value):
 )
 def test_dotted_date_does_not_eat_version_or_amount_strings(text):
     """Digit-group WIDTH is what separates a date from a version, a section
-    number and a grouped amount — all three live in the same documents."""
+    number and a grouped amount - all three live in the same documents."""
     assert [d for d in detect_safety_net(text) if d["type"] == "DATE"] == []
 
 
@@ -760,7 +757,7 @@ def test_dotted_date_still_excluded_from_phone():
 
 # --- E1/E2: widening what the LLM veto is allowed to reach -------------------
 # The veto is doubly-gated (NER marks tentative AND the LLM says NOT_NAME), which
-# is what makes a wrong model answer safe. These do NOT touch that gate — they
+# is what makes a wrong model answer safe. These do not touch that gate - they
 # widen only what qualifies as tentative, so the LLM finally gets a channel to
 # say "that is a payroll field, not a person". With no LLM, everything here stays
 # redacted exactly as before.
@@ -799,7 +796,7 @@ def test_ocr_damage_predicate_leaves_normal_names_alone(value):
     assert _looks_ocr_damaged(value) is False
 
 
-# --- E4: identifier LABEL vocabulary ----------------------------------------
+# --- E4: identifier label vocabulary ----------------------------------------
 @pytest.mark.parametrize(
     "text,ident",
     [
@@ -818,7 +815,7 @@ def test_widened_identifier_labels(text, ident):
 @pytest.mark.parametrize("text", ["Die Nummer der Seite 12", "Artikel 8829911 kostet 12 EUR"])
 def test_bare_numbers_are_still_not_identifiers(text):
     """Matching bare digit runs was rejected: an 8-digit number is as plausibly an
-    article number or a meter reading as an identifier. The LABEL is what makes
+    article number or a meter reading as an identifier. The label is what makes
     it unambiguous."""
     assert [d for d in detect_safety_net(text) if d["type"] == "OTHER"] == []
 
@@ -833,8 +830,8 @@ def test_pdf_split_umlaut_is_repaired_before_detection():
     """
     from scrubber import _repair_extraction_artifacts
 
-    spacing = "Du¨nenwald"      # U+00A8 SPACING DIAERESIS — NFC leaves it alone
-    combining = "Dünenwald"    # U+0308 COMBINING DIAERESIS — NFC joins it
+    spacing = "Du¨nenwald"      # U+00A8 SPACING DIAERESIS - NFC leaves it alone
+    combining = "Dünenwald"    # U+0308 COMBINING DIAERESIS - NFC joins it
     assert _repair_extraction_artifacts(spacing) == "Dünenwald"
     assert _repair_extraction_artifacts(combining) == "Dünenwald"
     # Text with no damage must come back byte-identical.
@@ -845,11 +842,11 @@ def test_pdf_split_umlaut_is_repaired_before_detection():
 @pytest.mark.parametrize(
     "text",
     [
-        # The read_url E2E's mocked listing (2026-09-04): scraped pages and old
-        # exports transliterate umlauts, the umlaut shortcut sees nothing, no
-        # hint word matched, and the zero-evidence default sent GERMAN text to
-        # the ENGLISH model — which invented PERSONs out of capitalised noun
-        # phrases ("Ruhige Finca", "Grosse Auswahl").
+        # A fetched holiday listing: scraped pages and old exports transliterate
+        # umlauts, the umlaut shortcut sees nothing, no hint word matched, and
+        # the zero-evidence default sent German text to the English model -
+        # which invented PERSONs out of capitalised noun phrases ("Ruhige
+        # Finca", "Grosse Auswahl").
         "Ruhige Finca im Suedwesten, windgeschuetzt, zwei Wochen frei im Januar.",
         "Grosse Auswahl an Modellen, Beratung vor Ort.",
         "Schoene Wohnung fuer zwei Personen, Anfrage ueber das Formular.",
@@ -880,7 +877,7 @@ def test_detect_language_transliteration_additions_leave_english_alone(text):
 @pytest.mark.anyio
 async def test_scrub_fetched_listing_no_person_fp_without_gliner():
     """Full-pipeline regression for the read_url FP class, in the E2E/self-host
-    configuration (no GLiNER, so the V1 cross-check cannot rescue anything —
+    configuration (no GLiNER, so the V1 cross-check cannot rescue anything - 
     the language router plus _keep_person guard 5 must carry it alone)."""
     text = "Ruhige Finca im Suedwesten, windgeschuetzt, zwei Wochen frei im Januar."
     result = await scrub(text, ScrubOptions(placeholder_style="indexed"))

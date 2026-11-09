@@ -4,7 +4,7 @@ import { adminCreds, freshEmail, login, registerAndVerify, type Creds } from "./
 
 /**
  * Admin screen: global-setup registers a DEDICATED admin account first (the
- * first-account-becomes-admin bootstrap on the fresh throwaway DB) — worker
+ * first-account-becomes-admin bootstrap on the fresh throwaway DB) - worker
  * slot accounts are all plain users. adminCreds() is the only way in here.
  */
 
@@ -26,9 +26,9 @@ test("admin sees the Admin screen: user list, stats, invite create shows the cod
   // Stats chips render.
   await expect(page.getByText(/Accounts:/)).toBeVisible();
 
-  // Create an invite — the code is displayed exactly once, then the list shows
+  // Create an invite - the code is displayed exactly once, then the list shows
   // the invite as open without any code.
-  // Unique note per run — the shared DB accumulates invites across retries.
+  // Unique note per run - the shared DB accumulates invites across retries.
   const note = `e2e invite ${Date.now()}`;
   await page.getByPlaceholder(/Note/).fill(note);
   await page.getByRole("button", { name: "Create invite" }).click();

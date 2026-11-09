@@ -1,14 +1,14 @@
 """SQLite foundation for QUON's multi-user, sync, and key-management features.
 
-A deliberately small layer on top of the stdlib ``sqlite3`` module — no ORM, so
+A deliberately small layer on top of the stdlib ``sqlite3`` module - no ORM, so
 it stays light enough for a Raspberry Pi / Synology NAS. Provides:
 
-- :func:`connect` / :func:`get_conn` / :func:`transaction` — connection helpers
+- :func:`connect` / :func:`get_conn` / :func:`transaction` - connection helpers
   (WAL mode, foreign keys on, sensible busy timeout).
-- :func:`init_db` — a tiny forward-only migration runner that applies every
+- :func:`init_db` - a tiny forward-only migration runner that applies every
   ``migrations/*.sql`` file in filename order, tracking applied versions in a
   ``schema_migrations`` table (idempotent; safe to call on every startup).
-- :func:`now_ms` / :func:`next_server_seq` — small shared utilities.
+- :func:`now_ms` / :func:`next_server_seq` - small shared utilities.
 
 Feature modules (auth, sync, provisioning) own their own SQL against the
 connection objects handed out here.
@@ -63,20 +63,20 @@ def connect() -> sqlite3.Connection:
     conn.execute("PRAGMA busy_timeout=5000")
     # WAL + NORMAL is the recommended pairing: commits stop fsync-ing the WAL on
     # every write (a large multi-user write-throughput win) while staying
-    # crash-safe — only an OS/power failure can lose the *most recent* commits,
-    # never corrupt the database. FULL's per-commit fsync is the single biggest
+    # crash-safe - only an OS/power failure can lose the *most recent* commits,
+    # never corrupt the database. Full's per-commit fsync is the single biggest
     # SQLite write bottleneck under concurrent users.
     conn.execute("PRAGMA synchronous=NORMAL")
     # Keep a long-running service's WAL from growing unbounded between
     # checkpoints (e.g. after a burst of large blob pushes): truncate it back
-    # to ≤64 MiB at the next checkpoint.
+    # to <=64 MiB at the next checkpoint.
     conn.execute("PRAGMA journal_size_limit=67108864")
     return conn
 
 
 @contextmanager
 def get_conn() -> Iterator[sqlite3.Connection]:
-    """Short-lived autocommit connection — open one per logical operation."""
+    """Short-lived autocommit connection - open one per logical operation."""
     conn = connect()
     try:
         yield conn
@@ -86,7 +86,7 @@ def get_conn() -> Iterator[sqlite3.Connection]:
 
 @contextmanager
 def transaction() -> Iterator[sqlite3.Connection]:
-    """Run a block atomically: ``BEGIN`` … ``COMMIT`` (``ROLLBACK`` on error)."""
+    """Run a block atomically: ``BEGIN`` ... ``COMMIT`` (``ROLLBACK`` on error)."""
     conn = connect()
     try:
         conn.execute("BEGIN")
@@ -111,7 +111,7 @@ def init_db() -> None:
     """Apply any unapplied ``migrations/*.sql`` in filename order.
 
     Forward-only and idempotent: each file runs once and is recorded in
-    ``schema_migrations``. Migrations use ``CREATE TABLE IF NOT EXISTS`` so a
+    ``schema_migrations``. Migrations use ``CREATE TABLE IF not EXISTS`` so a
     partially-applied file can be re-run safely.
     """
     global _initialized

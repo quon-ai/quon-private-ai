@@ -1,13 +1,13 @@
 /**
- * UI-language preference — device-level, readable BEFORE unlock.
+ * UI-language preference - device-level, readable before unlock.
  *
  * PLAIN localStorage + a mirrored cookie (precedent: bioEnrollment.ts /
  * quon_active_user). It holds no secrets, and the auth/unlock screens render
  * before the Master Key exists, so it cannot live in the encrypted quonStore.
  *
  * Two stores on purpose:
- *  - localStorage `quon_lang_v1` — the client's own read.
- *  - cookie `quon_lang` — so the SSR pass (src/server.ts) can render the correct
+ *  - localStorage `quon_lang_v1` - the client's own read.
+ *  - cookie `quon_lang` - so the SSR pass (src/server.ts) can render the correct
  *    <html lang> and initial catalog on the very first paint (no hydration flash).
  *
  * The account is the ultimate source of truth once known (MeResponse.ui_language,
@@ -53,8 +53,8 @@ function readLocalStorage(): Lang | null {
   }
 }
 
-/** The device's effective UI language: an explicit choice (cookie → localStorage)
- *  or the product default (German). The browser locale is deliberately NOT used —
+/** The device's effective UI language: an explicit choice (cookie -> localStorage)
+ *  or the product default (German). The browser locale is deliberately not used -
  *  "Standardsprache Deutsch" means German by default until the user chooses
  *  otherwise (at registration or in Settings), not auto-detected from the browser. */
 export function getLangPref(): Lang {

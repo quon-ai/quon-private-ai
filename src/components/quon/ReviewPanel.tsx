@@ -21,12 +21,12 @@ import { AlwaysRedactButton } from "./AlwaysRedactButton";
 /** What `ReviewPanel` needs about a staged attachment (already scrubbed). */
 export interface ReviewAttachment {
   name: string;
-  /** the already-scrubbed document text (placeholders) — shown for manual redaction */
+  /** the already-scrubbed document text (placeholders) - shown for manual redaction */
   base: string;
   /** per-hit review items detected in the document (toggleable) */
   items: ReviewItem[];
   truncated?: boolean;
-  /** Library doc ids; absent for ad-hoc uploads → no durable redaction. */
+  /** Library doc ids; absent for ad-hoc uploads -> no durable redaction. */
   docIds?: string[];
 }
 
@@ -70,7 +70,7 @@ function ItemRow({
   const { t } = useT();
   const style = entityStyle(item.type);
   return (
-    // The whole ROW toggles — the operator's phrasing review ("klicke in eine
+    // The whole ROW toggles - the operator's phrasing review ("klicke in eine
     // Zeile") doubled as a UX review: a 44px row is a target, a 10px-text
     // button is a hunt. The button stays as the visible state + focus stop;
     // stopPropagation keeps one tap = one toggle.
@@ -87,10 +87,9 @@ function ItemRow({
           {item.value}
         </span>
       </div>
-      {/* Beta feedback 2026-08-23: "geschwärzt" read as a STATUS, not a
-          BUTTON — even the operator had to hunt for the tap target. A toggle
-          the user cannot find protects nothing, so the affordance is spelled
-          out: switch styling, a title, and a visible flip hint. */}
+      {/* A bare "geschwärzt" chip reads as a status, not a button, and a
+          toggle the user cannot find protects nothing, so the affordance is
+          spelled out: switch styling, a title, and a visible flip hint. */}
       <button
         onClick={(e) => {
           e.stopPropagation();
@@ -147,16 +146,15 @@ function HighlightedSent({ text, className }: { text: string; className?: string
   );
 }
 
-/** Small "select text → Redact selection" button (used by the message + doc/context).
+/** Small "select text -> Redact selection" button (used by the message + doc/context).
  *
  *  Two hard-won details:
  *  - onMouseDown preventDefault: in WebKit a mousedown on a button collapses
- *    the text selection BEFORE click fires — the exact selection this button
+ *    the text selection before click fires - the exact selection this button
  *    exists to read. Chrome keeps it (buttons are user-select:none), which is
  *    why the bug never showed in Chromium runs.
- *  - failures SPEAK: the callback returns a named reason and it is shown right
- *    under the button. The silent version read as "the button doesn't work"
- *    (feedback #58). */
+ *  - failures speak: the callback returns a named reason and it is shown right
+ *    under the button. A silent failure reads as "the button doesn't work". */
 function RedactSelectionButton({
   onClick,
   className,
@@ -196,10 +194,10 @@ function RedactSelectionButton({
 /**
  * Collapsible scrubbed full-text of a context source (document / RAG) with a
  * "Redact selection" affordance, so the user can manually black out anything the
- * detector missed — the same power the typed-message preview already has.
+ * detector missed - the same power the typed-message preview already has.
  *
  * `onRedactAlways` is optional and, today, only wired for the attachment: a
- * second action next to the per-send one that ALSO remembers the term on the
+ * second action next to the per-send one that also remembers the term on the
  * enforced always-redact list, for every future send. Omitting it (the
  * Memory/Documents context section) keeps that surface exactly as before.
  */
@@ -266,7 +264,7 @@ export function ReviewPanel({
   attachment?: ReviewAttachment;
   /** hits detected in the retrieved Memory/Documents context (undefined = none injected) */
   contextItems?: ReviewItem[];
-  /** the already-scrubbed context text (placeholders) — shown for manual redaction */
+  /** the already-scrubbed context text (placeholders) - shown for manual redaction */
   contextBase?: string;
   contextSourceCount?: number;
   fallbackMode?: boolean;

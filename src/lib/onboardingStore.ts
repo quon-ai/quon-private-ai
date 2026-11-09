@@ -1,41 +1,41 @@
 /**
- * First-login onboarding — "guided doing" instead of a tour.
+ * First-login onboarding - "guided doing" instead of a tour.
  *
  * State machine (persisted in the encrypted `quonStore`, see QuonState.onboarding*):
- *   0 — fresh chat shows an extra intro turn inviting the user to try a real
+ *   0 - fresh chat shows an extra intro turn inviting the user to try a real
  *       message with a name + email. Any send (whatever the content) advances
  *       to step 1; the composer is never blocked or required.
- *   1 — after the first real scrubbed send, the "Redacted N" badge pulses once
+ *   1 - after the first real scrubbed send, the "Redacted N" badge pulses once
  *       with a callout. Completing (or skipping) this step marks the whole
- *       flow `seen` — onboarding never runs again for this account.
- *   2 — a single dismissible teaser card (Review mode + Memory/Projects). Only
+ *       flow `seen` - onboarding never runs again for this account.
+ *   2 - a single dismissible teaser card (Review mode + Memory/Projects). Only
  *       reachable via the "?" re-entry menu item (AppSidebar, wired separately)
  *       through `reopenOnboardingTeaser` once the flow is already `seen`.
- *   "done" — nothing to show.
+ *   "done" - nothing to show.
  *
  * Eligibility bridge: only accounts registered after this shipped ever reach
  * step 0. The server marks that with `MeResponse.onboarding_pending`, reported
- * exactly once on the /auth/verify response (see auth.py) — the one
+ * exactly once on the /auth/verify response (see auth.py) - the one
  * unambiguous "this account just came alive" event, because verification and
  * the later unlock() that actually reaches `ready` may happen in different
  * tabs or even different devices. `captureEligibility` stashes that one-shot
- * signal in sessionStorage (tab-scoped, not sensitive — just a boolean) the
+ * signal in sessionStorage (tab-scoped, not sensitive - just a boolean) the
  * moment it's seen; `armIfEligible` consumes it once `ready` is reached in
  * that same tab and promotes it into `onboardingStep`. If verify and unlock
  * happen in different tabs/devices, the sessionStorage marker is simply
- * absent there and the account quietly never sees onboarding — fails closed
+ * absent there and the account quietly never sees onboarding - fails closed
  * to "no onboarding", never to "wrong account sees onboarding".
  *
- * `armIfEligible` is called from `AppShell.tsx`'s ready-transition effect —
- * deliberately NOT from authStore's login()/unlock() themselves — because
+ * `armIfEligible` is called from `AppShell.tsx`'s ready-transition effect -
+ * deliberately not from authStore's login()/unlock() themselves - because
  * that effect also runs `stopSync()` for any new/unknown previous account
  * (including every brand-new account's very first ready transition ever),
  * and `stopSync` calls `quonStore.resetState()`. Arming before that reset
  * would be silently wiped back to the "already seen" defaults a moment later.
  *
  * Note `onboardingStep`/`onboardingSeen` live in `QuonState` (quonStore.ts)
- * alongside `alwaysRedact`/`protectionLevel` — that store is a per-device
- * localStorage cache, NOT one of the E2E-synced blob collections (chat/
+ * alongside `alwaysRedact`/`protectionLevel` - that store is a per-device
+ * localStorage cache, not one of the E2E-synced blob collections (chat/
  * memory/documents/projects, see syncEngine.ts). So there is no cross-device
  * "already finished onboarding elsewhere" state to race against here: the
  * sessionStorage marker (itself single-consumption, backed by the verify
@@ -53,13 +53,13 @@ export function captureEligibility(onboardingPending: boolean | undefined): void
   try {
     sessionStorage.setItem(ELIGIBLE_KEY, "1");
   } catch {
-    /* ignore (private mode / quota) — worst case, no onboarding for this signup */
+    /* ignore (private mode / quota) - worst case, no onboarding for this signup */
   }
 }
 
 /** Call once the app reaches `ready` (master key unlocked, right after a fresh
  *  `login()`/`unlock()`). Promotes a same-tab eligibility marker into the step
- *  state, then clears the marker so it's consumed exactly once — the marker
+ *  state, then clears the marker so it's consumed exactly once - the marker
  *  itself is the only source of truth needed (no cross-device state to race
  *  against; see the module docstring), so this is a plain synchronous check. */
 export function armIfEligible(): void {
@@ -82,7 +82,7 @@ export function advanceOnboardingFromIntro(): void {
 }
 
 /** Skip step 1 straight to the step-2 teaser (and mark the flow seen, same as
- *  completing step 1 normally) — used when the step-0 message had nothing
+ *  completing step 1 normally) - used when the step-0 message had nothing
  *  redacted, so the step-1 callout has no badge to anchor to and would never
  *  render; leaving `onboardingStep` at 1 in that case would strand the flow. */
 export function skipToOnboardingTeaser(): void {
@@ -92,7 +92,7 @@ export function skipToOnboardingTeaser(): void {
 }
 
 /** Advance past step 1 (the "Redacted N" callout was shown for a real scrubbed
- *  send). Completing step 1 is what marks the whole flow `seen` — step 2 is an
+ *  send). Completing step 1 is what marks the whole flow `seen` - step 2 is an
  *  optional bonus card, not a gate. */
 export function advanceOnboardingFromCallout(): void {
   if (getQuonState().onboardingStep !== 1) return;

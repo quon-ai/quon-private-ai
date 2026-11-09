@@ -1,29 +1,29 @@
 /**
  * Which devices QUON must treat as MEMORY-CONSTRAINED, and what heavy
- * background work is allowed on them — one policy, consulted by the embedder,
+ * background work is allowed on them - one policy, consulted by the embedder,
  * the lazy re-embed pass and the originals upload scan.
  *
- * Why (issues #68, #76, 2026-09-09): on iPhones the app died within ~15 s of
- * EVERY boot, for days, on any route — Safari's "Auf … ist wiederholt ein
- * Problem aufgetreten" is WebKit reporting that it killed the page process
- * repeatedly (jetsam). The macOS app had the same loop and HANDOFF names the
- * mechanism: WebKit's optimizing WASM tier grinding on the ~23 MB ONNX runtime
- * that the on-device embedder loads, plus a 113 MB model and a 16 MB tokenizer
- * — and every screen pre-warmed that embedder on mount. Two boot-time jobs
- * then RETRY FOREVER without ever learning that they are what kills the page:
- * the originals upload (a 50 MB PDF is held ~3× in memory: bytes, sealed,
- * base64 chunks) and the lazy re-embed of documents indexed under an older
- * model. On the desktop the same work is invisible.
+ * Why: on iPhones the app can die within ~15 s of every boot, on any route -
+ * Safari's "Auf ... ist wiederholt ein Problem aufgetreten" is WebKit
+ * reporting that it killed the page process repeatedly (jetsam). The macOS
+ * app has the same failure mode. The mechanism: WebKit's optimizing WASM tier
+ * grinding on the ~23 MB ONNX runtime that the on-device embedder loads, plus
+ * a 113 MB model and a 16 MB tokenizer - and every screen pre-warming that
+ * embedder on mount. Two boot-time jobs then retry forever without ever
+ * learning that they are what kills the page: the originals upload (a 50 MB
+ * PDF is held ~3x in memory: bytes, sealed, base64 chunks) and the lazy
+ * re-embed of documents indexed under an older model. On the desktop the same
+ * work is invisible.
  *
  * Two independent inputs:
  *
- * - **constrained** — the device class. iOS (every browser there is WebKit
- *   under the same jetsam rules — Safari, Chrome, the home-screen app), or a
- *   reported `deviceMemory` ≤ 4 GB (Chromium on low-end Android/laptops).
+ * - **constrained** - the device class. iOS (every browser there is WebKit
+ *   under the same jetsam rules - Safari, Chrome, the home-screen app), or a
+ *   reported `deviceMemory` <= 4 GB (Chromium on low-end Android/laptops).
  *   Safari reports no deviceMemory at all, hence the UA rule.
- * - **crashLoop** — how many boots in a row followed a SHORT unclean session
+ * - **crashLoop** - how many boots in a row followed a short unclean session
  *   (diagLog). Two or more means "whatever we do at boot is what kills us":
- *   safe mode, on ANY device — skip every optional heavy job this session so
+ *   safe mode, on any device - skip every optional heavy job this session so
  *   the user gets a working app, and the log says why.
  *
  * Pure: the browser facts come in as an argument so the table is unit-tested;
@@ -70,12 +70,12 @@ export interface HeavyWorkPolicy {
   embedBatchSize: number;
   /** Terminate the embedder worker after this much idle time; 0 = never. */
   releaseEmbedderIdleMs: number;
-  /** Ingest one stage at a time: cache the original bytes only AFTER text
+  /** Ingest one stage at a time: cache the original bytes only after text
    *  extraction, instead of reading the file a second time while pdf.js still
-   *  holds its own copy — a large PDF otherwise sits in memory three times over
+   *  holds its own copy - a large PDF otherwise sits in memory three times over
    *  at the same moment (the "crashes at 70 %" case on phones). */
   sequentialIngest: boolean;
-  /** Why — for the diagnostics log. */
+  /** Why - for the diagnostics log. */
   reason: "normal" | "constrained" | "safe-mode";
 }
 
@@ -132,7 +132,7 @@ function navigatorFacts(): DeviceFacts {
 
 let memo: HeavyWorkPolicy | null = null;
 
-/** The policy for THIS session — decided once (the crash-loop count is a
+/** The policy for this session - decided once (the crash-loop count is a
  *  boot-time fact, the device does not change). */
 export function currentPolicy(): HeavyWorkPolicy {
   memo ??= heavyWorkPolicy(isConstrainedDevice(navigatorFacts()), crashLoopCount());

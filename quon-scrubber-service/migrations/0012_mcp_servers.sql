@@ -1,5 +1,5 @@
 -- Per-user MCP (Model Context Protocol) tool servers. The auth header value is
--- sealed under QUON_SERVER_SECRET (crypto_server) — useless to the server
+-- sealed under QUON_SERVER_SECRET (crypto_server) - useless to the server
 -- operator or a DB attacker without that secret. URLs are SSRF-guarded at
 -- write AND request time (net_guard).
 CREATE TABLE IF NOT EXISTS user_mcp_servers (
@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS user_mcp_servers (
     id          TEXT NOT NULL,
     label       TEXT NOT NULL,
     url         TEXT NOT NULL,
-    -- Sealed "Header-Name: value" string (e.g. "Authorization: Bearer …"), or NULL.
+    -- Sealed "Header-Name: value" string (e.g. "Authorization: Bearer ..."), or NULL.
     auth_cipher BLOB,
     enabled     INTEGER NOT NULL DEFAULT 1,
     created_at  INTEGER NOT NULL,

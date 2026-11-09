@@ -1,7 +1,7 @@
 @import "tailwindcss" source(none);
 @import "tw-animate-css";
 @source "../src";
-/* Inter is loaded via a <link> in src/routes/__root.tsx — a remote @import
+/* Inter is loaded via a <link> in src/routes/__root.tsx - a remote @import
    here breaks the lightningcss build (it tries to bundle the URL as a file). */
 
 @custom-variant dark (&:is(.dark *));
@@ -89,7 +89,7 @@
   --input: var(--quon-border);
   --ring: var(--quon-indigo);
 
-  /* Sidebar surface — opaque so the mobile drawer (a Sheet that slides over the
+  /* Sidebar surface - opaque so the mobile drawer (a Sheet that slides over the
      page) is fully readable, not see-through. Distinct from --quon-bg for
      visual hierarchy on desktop. */
   --sidebar: var(--quon-surface);
@@ -172,8 +172,8 @@
   }
 }
 
-/* iOS Safari auto-zooms when a focused input's font is < 16px and does NOT zoom
-   back out — which left the app "zoomed in" (and content cut off) after login on
+/* iOS Safari auto-zooms when a focused input's font is < 16px and does not zoom
+   back out - which left the app "zoomed in" (and content cut off) after login on
    iPhone. Keep form controls at 16px on small screens to suppress that. Rule is
    intentionally unlayered so it beats Tailwind's layered `text-sm` utility, while
    preserving pinch-zoom (unlike maximum-scale=1). */
@@ -186,7 +186,7 @@
 }
 
 /* Slim, subtle scrollbars. The OS-default chunky bar (esp. the bright one macOS
-   shows on hover) looks harsh on the dark UI — most visibly on the chat sidebar.
+   shows on hover) looks harsh on the dark UI - most visibly on the chat sidebar.
    Firefox uses scrollbar-width/color; WebKit/Blink use the ::-webkit pseudo. The
    transparent border + content-box clip make the thumb read as a thin rounded pill
    with breathing room. Pointer-only (coarse touch devices hide the bar anyway). */
@@ -217,7 +217,7 @@
 }
 
 /* Document viewer "Original" mode for DOCX: mammoth's converted HTML is injected
-   as-is (after the docxHtml.ts allowlist), so it carries no classes — style the
+   as-is (after the docxHtml.ts allowlist), so it carries no classes - style the
    bare tags, scoped under .quon-docx. Deliberately paper-like (dark text on the
    white sheet the component renders) rather than the app's dark theme. */
 .quon-docx h1,
@@ -294,21 +294,21 @@
   border-radius: 6px;
 }
 
-/* Detection-preview marks (feedback #55): what the filter WOULD redact, painted
-   in place. One deliberate look everywhere — text view, DOCX/HTML/Markdown
-   originals — so "marked = caught" reads the same in every rendering. The PDF
-   overlay mimics it with translucent rects (DocumentViewer). */
+/* Detection-preview marks: what the filter WOULD redact, painted in place. One
+   deliberate look everywhere - text view, DOCX/HTML/Markdown originals - so
+   "marked = caught" reads the same in every rendering. The PDF overlay mimics
+   it with translucent rects (DocumentViewer). */
 mark[data-quon-hit],
 .quon-detect-mark {
-  background: rgb(253 224 71 / 0.45); /* yellow-300/45 — visible on dark AND paper-white */
+  background: rgb(253 224 71 / 0.45); /* yellow-300/45 - visible on dark AND paper-white */
   color: inherit;
   border-radius: 2px;
   box-shadow: 0 0 0 1px rgb(250 204 21 / 0.5);
   padding: 0 1px;
 }
 
-/* Hand-redacted ("Immer schwärzen") terms get their OWN color, indigo instead
-   of yellow — the filter caught the rest, the user caught this. Conflating the
+/* Hand-redacted ("Immer schwärzen") terms get their own color, indigo instead
+   of yellow - the filter caught the rest, the user caught this. Conflating the
    two would misreport who found what. Overrides the rule above by cascade
    order (equal-specificity attribute selectors) for text-node marks; the
    `.quon-detect-mark-manual` class variant covers the PDF overlay, which draws
@@ -322,12 +322,12 @@ mark[data-quon-hit="MANUAL"],
 /* PDF Original view: a real, selectable pdf.js TextLayer mounted on top of
    each rasterized page (DocumentViewer's PdfPage), so "Immer schwärzen"
    works there exactly like it does in the Text view. QUON never imports
-   pdf.js's own web/pdf_viewer.css (it drags in the whole viewer chrome —
-   find bar, annotation editor, etc.) — this is the minimal subset the
+   pdf.js's own web/pdf_viewer.css (it drags in the whole viewer chrome - 
+   find bar, annotation editor, etc.) - this is the minimal subset the
    TextLayer class itself actually needs: it sets --font-height/--scale-x/
    --rotate per span and a --min-font-size on the container in JS (see
    text_layer.js), and expects the CSS below to consume them. Positioning
-   (left/top per span, as %) is inline, set by pdf.js itself — untouched here.
+   (left/top per span, as %) is inline, set by pdf.js itself - untouched here.
    Box sizing (width/height) is pinned in JS (PdfPage.mountTextLayer) rather
    than left to pdf.js's setLayerDimensions, which sizes via a CSS round()
    expression tied to custom properties pdf_viewer.css defines and we don't. */
@@ -361,10 +361,10 @@ mark[data-quon-hit="MANUAL"],
   display: contents;
 }
 .quon-pdf-text-layer ::selection {
-  background: rgb(129 140 248 / 0.4); /* indigo-400/40 — visible on the white page */
+  background: rgb(129 140 248 / 0.4); /* indigo-400/40 - visible on the white page */
 }
 
-/* /trust — the animated data-flow diagram (the "Ameisenstraße"). Kept as scoped
+/* /trust - the animated data-flow diagram (the "Ameisenstraße"). Kept as scoped
    CSS rather than utilities, for the same reason quon-shimmer is: the
    marching-ants tracks, the travelling packet chips and the hero lift are
    animation geometry Tailwind can't express cleanly. All colour derives from the
@@ -479,7 +479,7 @@ mark[data-quon-hit="MANUAL"],
   color: var(--quon-muted);
 }
 
-/* The ant trail: two dashed legs (device→filter, filter→provider) with packet
+/* The ant trail: two dashed legs (device->filter, filter->provider) with packet
    chips travelling along them, plus a slower return track underneath. */
 .qt-lane {
   grid-column: 1 / -1;

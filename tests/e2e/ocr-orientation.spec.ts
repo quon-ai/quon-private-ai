@@ -3,13 +3,13 @@ import { test, expect } from "@playwright/test";
 import { login, sharedCreds } from "./helpers/account";
 
 /**
- * Landscape scans read as garbage (operator report, 2026-09-14): the engine
- * recognises only horizontal upright lines, so a page turned by 90° came back
- * as sideways nonsense. ocr.ts now retries on the rotated canvas when the
- * first pass reads as sideways/upside-down and keeps the best pass.
+ * Landscape scans must not read as garbage: the engine recognises only
+ * horizontal upright lines, so a page turned by 90° comes back as sideways
+ * nonsense unless ocr.ts retries on the rotated canvas when the first pass
+ * reads as sideways/upside-down and keeps the best pass.
  *
- * This runs the REAL engine — PaddleOCR PP-OCRv6 tiny, ~6 MB of models from
- * the Paddle CDN on first use — which the hermetic gate deliberately never
+ * This runs the real engine - PaddleOCR PP-OCRv6 tiny, ~6 MB of models from
+ * the Paddle CDN on first use - which the hermetic gate deliberately never
  * does (photo-scan.spec.ts). Opt in locally:
  *
  *     QUON_OCR_LOCAL=1 npx playwright test tests/e2e/ocr-orientation.spec.ts

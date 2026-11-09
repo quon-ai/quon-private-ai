@@ -1,14 +1,14 @@
 /**
- * Biometric unlock (WebAuthn PRF) — full loop on a CDP virtual authenticator:
- * enroll in Settings → force the `locked` state (drop the sessionStorage MK) →
- * unlock via the biometric button → data decrypts. Plus the revoked-elsewhere
- * path (server row gone → honest message, marker cleared, password fallback).
+ * Biometric unlock (WebAuthn PRF) - full loop on a CDP virtual authenticator:
+ * enroll in Settings -> force the `locked` state (drop the sessionStorage MK) ->
+ * unlock via the biometric button -> data decrypts. Plus the revoked-elsewhere
+ * path (server row gone -> honest message, marker cleared, password fallback).
  *
  * Chromium-only: the virtual authenticator is a CDP feature (WebAuthn.enable
- * with hasPrf, protocol.d.ts declares it) — WebKit has no equivalent. The
- * crypto path (PRF output → wrap/unwrap) is unit-tested in quonCrypto.test.ts;
+ * with hasPrf, protocol.d.ts declares it) - WebKit has no equivalent. The
+ * crypto path (PRF output -> wrap/unwrap) is unit-tested in quonCrypto.test.ts;
  * ordinary WebKit coverage of ScreenUnlock stays with auth.spec.ts. Uses a
- * fresh account, never the shared serial one — enrollment mutates server state.
+ * fresh account, never the shared serial one - enrollment mutates server state.
  */
 import { execFileSync } from "node:child_process";
 
@@ -58,7 +58,7 @@ test("enroll in Settings, unlock with the passkey, revoked row falls back honest
     timeout: 15_000,
   });
 
-  // --- Enroll (Settings → Account) ---------------------------------------
+  // --- Enroll (Settings -> Account) ---------------------------------------
   await page.goto("/settings");
   await page.getByRole("tab", { name: "Account" }).click();
   await page.getByRole("button", { name: "Enable on this device" }).click();
@@ -73,12 +73,12 @@ test("enroll in Settings, unlock with the passkey, revoked row falls back honest
   // --- Auto biometric unlock: fires on its own, no button tap ------------
   // The CDP virtual authenticator auto-satisfies user verification, so the
   // on-mount auto-trigger unlocks without interaction (real Android Chrome
-  // behaves the same; iOS Safari would need the button — see ScreenAuth).
+  // behaves the same; iOS Safari would need the button - see ScreenAuth).
   await expect(page.getByText("Protection Level")).toBeVisible({ timeout: 30_000 });
   await dismissReleaseNotes(page);
 
-  // --- Revoked elsewhere: server row gone → honest message + fallback ----
-  // Via the shared helper, not the sqlite3 CLI — that binary is an undeclared
+  // --- Revoked elsewhere: server row gone -> honest message + fallback ----
+  // Via the shared helper, not the sqlite3 CLI - that binary is an undeclared
   // system dependency the mini-PC runner does not have (spawnSync ENOENT).
   execSql("DELETE FROM user_bio_keys;");
   await page.evaluate(() => sessionStorage.clear());
@@ -86,10 +86,10 @@ test("enroll in Settings, unlock with the passkey, revoked row falls back honest
   await expect(page.getByText("Enter your password to unlock")).toBeVisible({ timeout: 30_000 });
 
   // The prefetch discovers the 404 and withdraws the button (marker cleared).
-  // The button may vanish at ANY point — including between an isVisible check
+  // The button may vanish at any point - including between an isVisible check
   // and a click (this raced in CI: the click strict-waits on a detaching
   // element and times out). So: try one best-effort short click, tolerate every
-  // failure mode, and assert only the invariant — the button ends up hidden.
+  // failure mode, and assert only the invariant - the button ends up hidden.
   // (The click-first path additionally surfaces the honest revoked message,
   // but the withdraw-first path never shows one, so it can't be asserted.)
   const bioButton = page.getByRole("button", { name: BIO_BUTTON });
@@ -102,7 +102,7 @@ test("enroll in Settings, unlock with the passkey, revoked row falls back honest
   await expect(page.getByText("Protection Level")).toBeVisible({ timeout: 30_000 });
 });
 
-test("lost passkey (Pixel class): streak → hint → password → repair card → new passkey works", async ({
+test("lost passkey (Pixel class): streak -> hint -> password -> repair card -> new passkey works", async ({
   page,
 }) => {
   const { cdp, authenticatorId } = await addVirtualAuthenticator(page);
@@ -120,13 +120,13 @@ test("lost passkey (Pixel class): streak → hint → password → repair card �
     timeout: 15_000,
   });
 
-  // The Pixel scenario: the OS update deletes the passkey — the authenticator
+  // The Pixel scenario: the OS update deletes the passkey - the authenticator
   // is still there, the credential is gone, our marker and the server wrap
   // survive untouched.
   await cdp.send("WebAuthn.clearCredentials", { authenticatorId });
 
   // Lock and try to unlock with the (dead) passkey. Each attempt rejects with
-  // NotAllowedError — indistinguishable from a cancel, silently swallowed
+  // NotAllowedError - indistinguishable from a cancel, silently swallowed
   // before this fix. Two failures reach the streak threshold.
   await page.evaluate(() => sessionStorage.clear());
   await page.reload();
@@ -141,13 +141,13 @@ test("lost passkey (Pixel class): streak → hint → password → repair card �
 
   // The hint's promise: password unlock, then the repair offer.
   await page.getByPlaceholder("Password", { exact: true }).fill(creds.password);
-  // exact: true — the biometric button is (correctly) still on the screen and
+  // exact: true - the biometric button is (correctly) still on the screen and
   // also matches /Unlock/.
   await page.getByRole("button", { name: "Unlock", exact: true }).click();
   await expect(page.getByText("Protection Level")).toBeVisible({ timeout: 30_000 });
   await dismissReleaseNotes(page);
 
-  // The unlock returned to /settings (where the lock happened) — the repair
+  // The unlock returned to /settings (where the lock happened) - the repair
   // offer lives on the dashboard, the screen a returning user actually lands on.
   await page.goto("/dashboard");
   await expect(page.getByText("Your passkey seems to be gone")).toBeVisible({ timeout: 15_000 });
@@ -156,7 +156,7 @@ test("lost passkey (Pixel class): streak → hint → password → repair card �
     timeout: 15_000,
   });
 
-  // And the new passkey actually unlocks: lock again → auto-unlock fires (the
+  // And the new passkey actually unlocks: lock again -> auto-unlock fires (the
   // streak was cleared, so auto-fire is re-enabled).
   await page.evaluate(() => sessionStorage.clear());
   await page.reload();

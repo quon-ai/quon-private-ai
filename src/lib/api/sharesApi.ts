@@ -3,7 +3,7 @@
  *
  * Zero-knowledge contract: the server stores per-member grants whose `sealed_pk`
  * is the 32-byte project key sealed (crypto_box_seal) to that member's X25519
- * identity public key — opaque ciphertext to the server. Invites are out-of-band
+ * identity public key - opaque ciphertext to the server. Invites are out-of-band
  * links only (`src/lib/shareLink.ts`); the server learns who accepted, never an
  * email lookup (would reopen the closed account-enumeration oracle).
  */
@@ -12,7 +12,7 @@ import { apiFetch } from "./http";
 
 export type ShareRole = "owner" | "writer" | "reader";
 
-/** One row of GET /shares — the caller's grant on a shared project. */
+/** One row of GET /shares - the caller's grant on a shared project. */
 export interface ShareGrant {
   project_id: string;
   role: ShareRole;
@@ -20,7 +20,7 @@ export interface ShareGrant {
   owner: boolean;
   member_count: number;
   created_at: number;
-  /** The caller's OWN sealed project key (base64) — what lets a fresh device
+  /** The caller's own sealed project key (base64) - what lets a fresh device
    *  restore project keys from grants without a re-invite. */
   sealed_pk: string;
 }
@@ -46,7 +46,7 @@ export const sharesApi = {
     }),
 
   /** Mint a single-use invite token for a shared project (owner only). The token
-   *  goes into the invite link's fragment together with the PK — the PK itself
+   *  goes into the invite link's fragment together with the PK - the PK itself
    *  never touches the server (see shareLink.ts). */
   invite: (projectId: string) =>
     apiFetch<{ token: string; expires_at: number }>(
@@ -55,7 +55,7 @@ export const sharesApi = {
     ),
 
   /** Redeem an invite. `sealed_pk` is the project key (from the link fragment)
-   *  sealed to the ACCEPTING member's own identity_pub — their durable grant. */
+   *  sealed to the ACCEPTING member's own identity_pub - their durable grant. */
   accept: (token: string, sealed_pk: string) =>
     apiFetch<{ project_id: string; role: ShareRole }>("/shares/accept", {
       method: "POST",
@@ -82,7 +82,7 @@ export const sharesApi = {
     }),
 
   /** Owner unshares the project entirely (server drops share + grants + blobs;
-   *  members keep what they already pulled — no PK rotation in v1). */
+   *  members keep what they already pulled - no PK rotation in v1). */
   unshare: (projectId: string) =>
     apiFetch<{ ok: boolean }>(`/shares/${encodeURIComponent(projectId)}`, {
       method: "DELETE",

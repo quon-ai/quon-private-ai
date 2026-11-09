@@ -1,6 +1,6 @@
 /**
  * The public "how we test the filter" page (/docs/detection): the end-user
- * companion to the /demo page. Same standalone shell as ScreenDemo — not
+ * companion to the /demo page. Same standalone shell as ScreenDemo - not
  * inside AppShell (that renders the sign-in screen for visitors), English by
  * default with its own local language switch that never touches the visitor's
  * app-wide preference.
@@ -110,6 +110,12 @@ export function ScreenDetectionDocs({ initialLang }: { initialLang?: Lang }) {
             className="font-semibold text-quon-indigo underline-offset-2 hover:underline"
           >
             {t("evaluation.ctaDemo")}
+          </Link>
+          <Link
+            to="/docs/detection-whitepaper"
+            className="text-quon-muted underline-offset-2 hover:text-quon-text hover:underline"
+          >
+            {t("evaluation.ctaWhitepaper")}
           </Link>
           <a
             href={SOURCE_URL}

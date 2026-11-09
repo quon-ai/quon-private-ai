@@ -86,7 +86,7 @@ def test_quota_rejects_blob_with_distinct_status(quon_client, monkeypatch):
     over = _push(c, h, [_orig("orig:d1:1", b"y" * 60)])
     assert over.json()["results"][0]["status"] == "quota"
 
-    # The rejected blob was NOT stored.
+    # The rejected blob was not stored.
     r = c.get("/sync/blob", params={"collection": "originals", "id": "orig:d1:1"})
     assert r.status_code == 404
 

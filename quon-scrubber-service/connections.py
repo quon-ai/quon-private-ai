@@ -3,11 +3,11 @@
 The built-in **OpenRouter** connection (billed per-user via provisioned sub-keys,
 or the global key for self-host) plus any number of user-added **OpenAI-compatible**
 BYOK providers (OpenAI, Anthropic's OpenAI-compat endpoint, Groq, Together, local
-Ollama/LM-Studio, …). This module decides which models are offered to the client
+Ollama/LM-Studio, ...). This module decides which models are offered to the client
 and resolves each chat to the right ``(base_url, api_key)``.
 
 Keys live server-side only (the runtime store / per-user sub-keys) and are never
-returned to the browser — the same trust model as the existing OpenRouter key.
+returned to the browser - the same trust model as the existing OpenRouter key.
 """
 
 from __future__ import annotations
@@ -24,9 +24,9 @@ from models import ChatModelInfo, ConnectionInfo
 OPENROUTER_ID = "openrouter"
 
 # OpenRouter models exposed until the user picks from the catalog.
-# Order matters: the client's model-validity fallback picks the FIRST enabled
-# entry, so the intended default (Sonnet) must lead. "~vendor/…-latest" are
-# OpenRouter's floating latest-aliases — the catalog stays current without
+# Order matters: the client's model-validity fallback picks the first enabled
+# entry, so the intended default (Sonnet) must lead. "~vendor/...-latest" are
+# OpenRouter's floating latest-aliases - the catalog stays current without
 # per-release edits.
 _DEFAULT_OPENROUTER_MODELS = [
     "~anthropic/claude-sonnet-latest",
@@ -35,19 +35,19 @@ _DEFAULT_OPENROUTER_MODELS = [
     "mistralai/mistral-large",
     "~openai/gpt-latest",
     "openrouter/fusion",
-    # Image generation (#79): a cheap image-output model in the default
-    # catalog. NB: a live box's runtime_settings.json overrides this list —
-    # adding it there (Settings → models) is a deploy step, not automatic.
+    # Image generation: a cheap image-output model in the default
+    # catalog. NB: a live box's runtime_settings.json overrides this list - 
+    # adding it there (Settings -> models) is a deploy step, not automatic.
     "google/gemini-2.5-flash-image",
 ]
 
 
 def is_image_output_slug(slug: str) -> bool:
     """OpenRouter's image-output models follow one naming convention
-    (`…-image`, `…-image-preview`, `…-image-mini`, `…-image-2`); the public
-    catalog confirms it (architecture.output_modalities ∋ "image"). The name
+    (`...-image`, `...-image-preview`, `...-image-mini`, `...-image-2`); the public
+    catalog confirms it (architecture.output_modalities "image"). The name
     rule is what the client can rely on offline, so it is the source of truth
-    here — a wrong positive only costs a `modalities` field the model ignores."""
+    here - a wrong positive only costs a `modalities` field the model ignores."""
     return bool(re.search(r"(^|/)[^/]*-image(-|$)", slug.lstrip("~")))
 
 
@@ -109,7 +109,7 @@ def list_connections(user_id: str | None = None) -> list[ConnectionInfo]:
 
 
 def chat_catalog(user_id: str | None = None) -> list[ChatModelInfo]:
-    """Flat model list for the client dropdown — union across all connections.
+    """Flat model list for the client dropdown - union across all connections.
     Models the user has disabled (their own list, else the global default) are
     marked disabled."""
     import user_settings
@@ -119,7 +119,7 @@ def chat_catalog(user_id: str | None = None) -> list[ChatModelInfo]:
     for conn in list_connections(user_id):
         for slug in conn.models:
             # Strict EU routing: a model the EU domain does not serve is not
-            # offered at all (region.py). Unknown stays visible — the request
+            # offered at all (region.py). Unknown stays visible - the request
             # fails closed upstream, with a worded error.
             if conn.id == OPENROUTER_ID and region.available(slug) is False:
                 continue
@@ -162,7 +162,7 @@ def resolve_for_chat(connection_id: str | None, user_id: str | None) -> tuple[st
 
 def resolve_catalog(connection_id: str | None, user_id: str | None) -> tuple[str, str] | None:
     """``(base_url, api_key)`` for a catalog (/models) listing. OpenRouter uses the
-    GLOBAL key; a custom connection uses its own key (per-user first, then global)."""
+    global key; a custom connection uses its own key (per-user first, then global)."""
     cid = connection_id or OPENROUTER_ID
     if cid == OPENROUTER_ID:
         key = settings_store.get_openrouter_key()

@@ -2,7 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 
 import { freshEmail, login, registerAndVerify } from "./helpers/account";
 
-// Account self-service (Settings ▸ Account). Each test uses its OWN fresh account
+// Account self-service (Settings Account). Each test uses its own fresh account
 // so it can safely rotate/delete credentials without disturbing the shared one.
 
 async function openAccountTab(page: Page): Promise<void> {
@@ -11,7 +11,7 @@ async function openAccountTab(page: Page): Promise<void> {
 }
 
 test("change password: the new password unlocks, the old one is rejected", async ({ page }) => {
-  // Multiple real Argon2id derivations (register, login, re-wrap, two re-logins) —
+  // Multiple real Argon2id derivations (register, login, re-wrap, two re-logins) -
   // legitimately slow; give it headroom so it doesn't flake on the shared stack.
   test.slow();
   const creds = { email: freshEmail("pw"), password: "Old-Password-123!" };
@@ -33,7 +33,7 @@ test("change password: the new password unlocks, the old one is rejected", async
   await page.goto("/");
   await expect(page.getByPlaceholder("Email")).toBeVisible({ timeout: 30_000 });
 
-  // OLD password is rejected — the verifier was rotated, so login never reaches
+  // OLD password is rejected - the verifier was rotated, so login never reaches
   // the app.
   await page.getByPlaceholder("Email").fill(creds.email);
   await page.getByPlaceholder("Password", { exact: true }).fill(creds.password);
@@ -41,7 +41,7 @@ test("change password: the new password unlocks, the old one is rejected", async
   await expect(page.getByText("Protection Level")).toHaveCount(0, { timeout: 10_000 });
   await expect(page.getByPlaceholder("Email")).toBeVisible();
 
-  // NEW password unwraps the UNCHANGED Master Key → the app unlocks. (If the key
+  // New password unwraps the UNCHANGED Master Key -> the app unlocks. (If the key
   // had been altered, unlockMasterKey would throw and login would fail here.)
   await page.getByPlaceholder("Password", { exact: true }).fill(NEWPW);
   await page.getByRole("button", { name: "Sign in" }).click();

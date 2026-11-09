@@ -12,7 +12,7 @@ test("a provider error shows a Retry button; retrying succeeds and clears the er
   await page.route("**/chat/stream", async (route) => {
     calls += 1;
     if (calls === 1) {
-      // First send fails hard — chatStream throws on !res.ok → error bubble.
+      // First send fails hard - chatStream throws on !res.ok -> error bubble.
       await route.fulfill({
         status: 500,
         headers: { "content-type": "application/json" },

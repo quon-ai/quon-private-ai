@@ -24,7 +24,7 @@ export const DEFAULT_PLACEHOLDER_STYLE: PlaceholderStyle =
  * Chat models offered in the composer dropdown. `id` is the OpenRouter model
  * slug sent to the (upcoming) /chat endpoint; "Auto" uses OpenRouter's router.
  * `disabled` greys an option out (local models aren't wired yet). Slugs are
- * editable — this is the temporary fixed list until /models is served by the
+ * editable - this is the temporary fixed list until /models is served by the
  * backend.
  */
 export interface ChatModel {
@@ -36,7 +36,7 @@ export interface ChatModel {
   connection_id?: string;
   /** Provider-local model slug sent to the relay. */
   model?: string;
-  /** The model can return a generated image (#79) — the picker badges it and
+  /** The model can return a generated image - the picker badges it and
    *  a send asks for `image_output`. */
   image_output?: boolean;
 }
@@ -51,8 +51,8 @@ export const CHAT_MODELS: ChatModel[] = [
 ];
 
 // The pre-catalog placeholder default for brand-new stores. Once the real
-// catalog loads, validity correction falls back to the FIRST enabled catalog
-// model — so the server-side default list must lead with the same model.
+// catalog loads, validity correction falls back to the first enabled catalog
+// model - so the server-side default list must lead with the same model.
 export const DEFAULT_CHAT_MODEL = "~anthropic/claude-sonnet-latest";
 
 // --- Types ----------------------------------------------------------------
@@ -64,16 +64,16 @@ export const PLACEHOLDER_RE = /\[[A-Z]+_\d+\]/g;
 
 /**
  * Tolerant matcher used only for re-hydration. A model echoing a placeholder back
- * sometimes lightly mutates it — case drift (`[Person_1]`), separator drift
+ * sometimes lightly mutates it - case drift (`[Person_1]`), separator drift
  * (`[PERSON-1]`, `[PERSON 1]`) or inner padding (`[ PERSON_1 ]`). We still want to
- * restore those. (Markdown-bold `**[PERSON_1]**` already matches — the `**` sit
+ * restore those. (Markdown-bold `**[PERSON_1]**` already matches - the `**` sit
  * outside the brackets.)
  *
  * The SECOND alternative matches a BRACKET-LESS uppercase token (`PERSON_1`): the
  * model regularly drops the brackets when forming a possessive/genitive
- * (`PERSON_1s Bedürfnisse`) or otherwise inlining the token — a real reported bug
+ * (`PERSON_1s Bedürfnisse`) or otherwise inlining the token - a real reported bug
  * where the answer showed a raw `PERSON_1` instead of the name. This is safe
- * because a bare match with NO matching map entry is a no-op (returns the token
+ * because a bare match with no matching map entry is a no-op (returns the token
  * unchanged), so ordinary uppercase_number tokens in text are never altered.
  * Each match is normalized back to the canonical `[TYPE_N]` key before lookup.
  */
@@ -98,7 +98,7 @@ export function applyPlaceholders(text: string, map: Record<string, string>): st
 
 export interface ScrubOptions {
   language?: Language;
-  /** Browser-locale tie-break for language:"auto" — used by the backend ONLY
+  /** Browser-locale tie-break for language:"auto" - used by the backend only
    *  when the text itself carries zero language evidence (bare noun queries
    *  like "Milchreis Rezept"). Injected automatically by scrubText(). */
   language_hint?: "de" | "en";
@@ -117,7 +117,7 @@ export interface ScrubOptions {
  * The user's UI language as a scrub-language hint ("de"/"en"), or undefined for
  * any other locale. Sent with every scrub so the backend's zero-evidence
  * fallback routes a bare German noun query ("Milchreis Rezept") through the
- * GERMAN spaCy model instead of hardcoding English — the single biggest
+ * GERMAN spaCy model instead of hardcoding English - the single biggest
  * real-world PERSON false-positive class. Never overrides actual text signal.
  * SSR-safe: no navigator on the server.
  */
@@ -148,7 +148,7 @@ export interface ScrubMetadata {
   ner_used?: boolean;
   /** why the LLM enrichment was skipped, when it was (e.g. "timeout", "budget") */
   skip_reason?: string | null;
-  /** true when the input had no upper-case letter — NER names are deferred to the LLM */
+  /** true when the input had no upper-case letter - NER names are deferred to the LLM */
   low_case_signal?: boolean;
 }
 
@@ -191,12 +191,12 @@ export interface HealthStatus {
   version: string;
   /** OpenRouter routing region: "global" or "eu" (strict in-region routing). */
   region?: string;
-  /** False in EU routing: the web-search plugin is refused there — the chat hides the toggle. */
+  /** False in EU routing: the web-search plugin is refused there - the chat hides the toggle. */
   web_search_available?: boolean;
   /** true when the spaCy/Presidio NER engine is loaded and ready */
   ner_ready?: boolean;
   /** Active PII extraction backend. "local" now means the whole detection stack
-   *  runs in-process (NER + regex + GLiNER), not just Ollama — from the caller's
+   *  runs in-process (NER + regex + GLiNER), not just Ollama - from the caller's
    *  side both mean the same thing: nothing leaves the box to classify text. */
   /** true when the active PII backend can run right now */
   pii_ready?: boolean;
@@ -226,7 +226,7 @@ export interface EntityTypeInfo {
 export interface ChatTurn {
   role: "system" | "user" | "assistant" | "tool";
   content: string;
-  /** Assistant turn that requested tool calls (OpenAI shape) — MCP loop. */
+  /** Assistant turn that requested tool calls (OpenAI shape) - MCP loop. */
   tool_calls?: Array<{
     id: string;
     type: "function";
@@ -258,7 +258,7 @@ export interface ChatResult {
 
 export class QuonError extends Error {
   /** HTTP status of the failed response, when this came from one (a network-level
-   *  failure — timeout, DNS, connection refused — has no status). */
+   *  failure - timeout, DNS, connection refused - has no status). */
   status?: number;
   constructor(message: string, status?: number) {
     super(message);
@@ -267,18 +267,17 @@ export class QuonError extends Error {
   }
 }
 
-/** True for a QuonError that came from a 401 response — the session/cookie is
+/** True for a QuonError that came from a 401 response - the session/cookie is
  *  genuinely gone, as opposed to the scrubber being unreachable or a generic
  *  provider/server error. Callers use this to avoid mislabeling a session
- *  expiry as "QUON is unreachable" or "model provider error" (report #5,
- *  2026-07-15 UX walkthrough). */
+ *  expiry as "QUON is unreachable" or "model provider error". */
 export function isUnauthorizedError(err: unknown): boolean {
   return err instanceof QuonError && err.status === 401;
 }
 
 // --- Session-expiry hook ---------------------------------------------------
-// Registered by authStore (see authStore.ts) so a 401 mid-session — the cookie/
-// session is genuinely gone (expired, revoked, account deleted elsewhere) —
+// Registered by authStore (see authStore.ts) so a 401 mid-session - the cookie/
+// session is genuinely gone (expired, revoked, account deleted elsewhere) -
 // transitions the app straight to the sign-in screen instead of every
 // subsequent call failing with a misleading "scrubber unreachable" / "model
 // provider error" message. A plain module-level callback (not an authStore
@@ -299,11 +298,11 @@ export { csrfToken };
 
 /**
  * The error for a non-2xx response: the backend's `detail` when it sent one
- * (that is the string `translateApiError` localises — e.g. "That is not an
- * OpenRouter key …" from the key check, #91), else path + status. Before this
- * every caller saw only "/settings/openrouter-key responded 400", so a reason
- * the server took care to word never reached the screen. The diagnostics log
- * keeps path + status only — never a body (#68).
+ * (that is the string `translateApiError` localises - e.g. "That is not an
+ * OpenRouter key ..." from the key check), else path + status. Without the
+ * detail every caller sees only "/settings/openrouter-key responded 400", and a
+ * reason the server took care to word never reaches the screen. The diagnostics
+ * log keeps path + status only - never a body.
  */
 async function responseError(path: string, res: Response): Promise<QuonError> {
   let detail: string | null = null;
@@ -314,7 +313,7 @@ async function responseError(path: string, res: Response): Promise<QuonError> {
       if (typeof d === "string" && d.trim()) detail = d.trim();
     }
   } catch {
-    /* not JSON, or already consumed — fall back to the status line */
+    /* not JSON, or already consumed - fall back to the status line */
   }
   return new QuonError(detail ?? `${path} responded ${res.status}`, res.status);
 }
@@ -336,9 +335,9 @@ async function request<T>(path: string, init: RequestInit, timeoutMs: number): P
     });
     captureCsrf(res);
     if (!res.ok) {
-      // #68: two iPhone reports of "Fehler beim Senden" arrived with a
-      // diagnostic log that held NOTHING but crash markers — the failed
-      // request itself was never recorded. Path + status only, never a body.
+      // Record the failed request itself: a diagnostic log that holds nothing
+      // but crash markers cannot explain a "Fehler beim Senden". Path + status
+      // only, never a body.
       diagAppend(`api ${method} ${path} -> ${res.status}`);
       if (res.status === 401) onUnauthorized?.();
       throw await responseError(path, res);
@@ -357,7 +356,7 @@ async function request<T>(path: string, init: RequestInit, timeoutMs: number): P
 }
 
 /** Thrown when the backend returned 200 but a value the user asked to have
- *  ALWAYS redacted is still present in the result. Distinct from a transport
+ *  always redacted is still present in the result. Distinct from a transport
  *  failure: retrying will not help, and the send must not proceed. */
 export class ScrubIncompleteError extends QuonError {
   readonly term: string;
@@ -386,13 +385,13 @@ export async function demoScrub(
 
 export async function scrubText(text: string, options?: ScrubOptions): Promise<ScrubResult> {
   const result = await scrubRequest(text, options);
-  // ⚠️ The choke point that makes a hand-redaction a GUARANTEE rather than a
+  // The choke point that makes a hand-redaction a guarantee rather than a
   // hope. Every send path funnels through here, so verifying once means each of
-  // them fails closed through its existing catch — no per-site edits, and no new
+  // them fails closed through its existing catch - no per-site edits, and no new
   // path can forget it. `always_redact` is the user's explicit instruction; if a
   // term survived, the backend did not honour it and the text must not be sent.
   //
-  // Placeholders need no special handling — see the note in redactSpans.ts.
+  // Placeholders need no special handling - see the note in redactSpans.ts.
   const surviving = verifyRedactions(result.scrubbed, options?.always_redact ?? []);
   if (surviving) throw new ScrubIncompleteError(surviving);
   return result;
@@ -425,7 +424,7 @@ export async function checkHealth(): Promise<HealthStatus> {
   return request<HealthStatus>("/health", { method: "GET" }, 5000);
 }
 
-/** Instance-level connector config (public values only — e.g. the operator's
+/** Instance-level connector config (public values only - e.g. the operator's
  *  Dropbox OAuth client id for one-click connect). */
 export async function getConnectorsConfig(): Promise<{
   dropbox_app_key: string;
@@ -449,7 +448,7 @@ export interface CloudOcrResult {
 }
 
 /**
- * Cloud OCR fallback — only ever called after the user explicitly confirmed
+ * Cloud OCR fallback - only ever called after the user explicitly confirmed
  * the escalation in the scan dialog (the default path is fully on-device).
  * Unlike the generic `request()` this surfaces the backend's `detail` message,
  * because the failure modes are actionable (budget exhausted, rate limit).
@@ -506,7 +505,7 @@ export async function ocrCloudTranscribe(imageB64: string): Promise<CloudOcrResu
         const body = (await res.json()) as { detail?: unknown };
         if (typeof body.detail === "string" && body.detail) detail = body.detail;
       } catch {
-        // non-JSON error body — keep the generic message
+        // non-JSON error body - keep the generic message
       }
       throw new QuonError(detail);
     }
@@ -527,7 +526,7 @@ export interface FetchedUrl {
 
 /**
  * Fetch a public web page's main text via the backend (server-side Readability).
- * NOT zero-knowledge for the URL: the server sees the URL + public page content
+ * not zero-knowledge for the URL: the server sees the URL + public page content
  * (same trust class as web_fetch). The returned text is ingested + encrypted
  * client-side. SSRF-guarded server-side.
  */
@@ -544,7 +543,7 @@ export async function fetchUrl(url: string, raw = false): Promise<FetchedUrl> {
       const body = (await res.json()) as { detail?: unknown };
       if (typeof body.detail === "string" && body.detail) detail = body.detail;
     } catch {
-      /* non-JSON error body — keep the generic message */
+      /* non-JSON error body - keep the generic message */
     }
     throw new QuonError(detail);
   }
@@ -555,7 +554,7 @@ export interface LinkPreview {
   url: string;
   title: string;
   description: string;
-  /** Absolute image URL ON THE ORIGIN. Never render it directly — pass it
+  /** Absolute image URL ON the ORIGIN. Never render it directly - pass it
    *  through `linkImageUrl` so the merchant's server never sees the browser. */
   image?: string | null;
 }
@@ -563,7 +562,7 @@ export interface LinkPreview {
 /**
  * Preview metadata (title, description, image URL) for an answer's cited web
  * results. The server does the fetching so the browser never contacts the cited
- * sites — a direct request would tell every site in the result list who is
+ * sites - a direct request would tell every site in the result list who is
  * asking about it, the same passive leak that keeps favicons out of the strip.
  *
  * Best-effort by design: a failure yields an empty list and the plain source
@@ -598,15 +597,15 @@ export interface FeedbackPayload {
   screenshotB64?: string;
   screenshotMime?: string;
   contactBack?: boolean;
-  /** Optional technical diagnostics (diagLog report) — consent-gated in the
+  /** Optional technical diagnostics (diagLog report) - consent-gated in the
    *  dialog with the full text shown before sending. */
   diag?: string;
 }
 
 /**
- * Send beta feedback to the operator (emailed server-side). NOT zero-knowledge:
- * the message + optional screenshot reach the server in the clear — the UI says
- * so. Tied to the logged-in account.
+ * Send in-app feedback to the operator (emailed server-side). Not
+ * zero-knowledge: the message + optional screenshot reach the server in the
+ * clear - the UI says so. Tied to the logged-in account.
  */
 export async function sendFeedback(payload: FeedbackPayload): Promise<void> {
   const res = await http().fetch(`${QUON_API_URL}/feedback`, {
@@ -668,7 +667,7 @@ export async function getModels(): Promise<ChatModel[]> {
 
 /** Stream a chat completion; `onDelta` is called with each text chunk. When
  *  `tools` are sent and the model requests calls, `onToolCalls` receives the
- *  accumulated calls (once) — the caller runs the consent/execute loop. */
+ *  accumulated calls (once) - the caller runs the consent/execute loop. */
 export async function chatStream(
   messages: ChatTurn[],
   model: string,
@@ -683,13 +682,13 @@ export async function chatStream(
   onReasoning?: (delta: string) => void,
   onSources?: (sources: WebSource[]) => void,
   resume?: ResumeHooks,
-  /** Ask an image-capable model for a picture (#79); the data URL arrives via
-   *  `onImage` — one event per image, stored sealed on the device by the caller. */
+  /** Ask an image-capable model for a picture; the data URL arrives via
+   *  `onImage` - one event per image, stored sealed on the device by the caller. */
   image?: { output: boolean; onImage?: (dataUrl: string) => void },
 ): Promise<StreamLegResult> {
   let res: Response;
   try {
-    // streamingFetch, not http().fetch: this response is READ AS IT ARRIVES,
+    // streamingFetch, not http().fetch: this response is read AS IT ARRIVES,
     // and the Android shell's native fetch cannot do that (platform/streamHttp.ts).
     res = await streamingFetch()(`${QUON_API_URL}/chat/stream`, {
       method: "POST",
@@ -702,7 +701,7 @@ export async function chatStream(
         protected: protectedFlag,
         tools: tools && tools.length ? tools : undefined,
         web_search: webSearch || undefined,
-        // "off"/undefined → omit so the provider uses its default (JSON drops undefined).
+        // "off"/undefined -> omit so the provider uses its default (JSON drops undefined).
         reasoning_effort:
           reasoningEffort && reasoningEffort !== "off" ? reasoningEffort : undefined,
         image_output: image?.output || undefined,
@@ -733,7 +732,7 @@ export async function chatStream(
 }
 
 /** Outcome of one streaming leg. `terminal: false` means the stream stopped
- *  WITHOUT a done/error event — i.e. the connection was cut (the mobile
+ *  without a done/error event - i.e. the connection was cut (the mobile
  *  backgrounding case), so the caller should resume rather than treat the
  *  partial answer as final. */
 export interface StreamLegResult {
@@ -752,13 +751,13 @@ interface SseHandlers extends ResumeHooks {
   onToolCalls?: (calls: StreamToolCall[]) => void;
   onReasoning?: (delta: string) => void;
   onSources?: (sources: WebSource[]) => void;
-  /** A generated image as a data URL (#79). */
+  /** A generated image as a data URL. */
   onImage?: (dataUrl: string) => void;
 }
 
 /**
  * Read one SSE chat stream to completion. Shared by the initial POST and the
- * resume GET so both apply events identically — the resume replay MUST produce
+ * resume GET so both apply events identically - the resume replay must produce
  * the same accumulation the lost leg would have.
  *
  * `onEvent` reports how many BUFFERED events have been applied. The leading
@@ -800,13 +799,13 @@ async function readChatSse(res: Response, h: SseHandlers): Promise<StreamLegResu
       }
       if (payload.job) {
         h.onJob?.(payload.job);
-        continue; // not a buffered event — must not advance the offset
+        continue; // not a buffered event - must not advance the offset
       }
       applied += 1;
       h.onEvent?.(applied);
       if (payload.done) terminal = true;
       if (payload.error) {
-        terminal = true; // a real answer about the request — never resume it
+        terminal = true; // a real answer about the request - never resume it
         throw new StreamPayloadError(payload.error);
       }
       if (payload.tool_calls?.length) h.onToolCalls?.(payload.tool_calls);
@@ -822,16 +821,16 @@ async function readChatSse(res: Response, h: SseHandlers): Promise<StreamLegResu
 /**
  * The server heartbeats an open stream every 20 s (`: ping`, main.py) while the
  * provider is silent, so a healthy leg is never quiet for long. A leg that
- * delivers NOTHING for this long is a socket that is open on paper and dead on
- * the wire — a mobile radio hand-off, a proxy that stopped forwarding. Before
- * this watchdog that leg hung „Antwort wird erstellt…" indefinitely (feedback
- * #85: 50 s and counting on Android, while the server had the whole answer
- * after 15 s), because `reader.read()` never resolves and nothing else fires.
- * Three missed heartbeats and the leg is cut and resumed from its offset.
+ * delivers nothing for this long is a socket that is open on paper and dead on
+ * the wire - a mobile radio hand-off, a proxy that stopped forwarding. Without
+ * this watchdog that leg hangs on „Antwort wird erstellt..." indefinitely (on
+ * Android, long after the server has the whole answer), because
+ * `reader.read()` never resolves and nothing else fires. Three missed
+ * heartbeats and the leg is cut and resumed from its offset.
  */
 export const STREAM_IDLE_MS = 60_000;
 
-/** Thrown by the idle watchdog — status-less on purpose: `isTransportFailure`
+/** Thrown by the idle watchdog - status-less on purpose: `isTransportFailure`
  *  treats it as a dropped socket and the caller re-attaches to the job. */
 export class StreamIdleError extends QuonError {
   constructor() {
@@ -858,12 +857,12 @@ async function readOrIdle(
 }
 
 /**
- * An `{error}` event INSIDE a 200 stream: the provider refused the request
+ * An `{error}` event inside a 200 stream: the provider refused the request
  * (bad key, budget gone, model unavailable). It arrives without an HTTP status
- * — the stream itself was fine — which is exactly the signature a dropped
- * socket has, so it needs its own type: `isTransportFailure` must say NO to
- * it. Feedback #84: the key-rejected message was swallowed by five resume
- * attempts and shown as "Verbindung verloren".
+ * - the stream itself was fine - which is exactly the signature a dropped
+ * socket has, so it needs its own type: `isTransportFailure` must say no to
+ * it, or a key-rejected message is swallowed by the resume attempts and shown
+ * as "Verbindung verloren".
  */
 export class StreamPayloadError extends QuonError {
   constructor(message: string) {
@@ -872,7 +871,7 @@ export class StreamPayloadError extends QuonError {
   }
 }
 
-/** Thrown when a resume target is gone (server restart / TTL) — the caller
+/** Thrown when a resume target is gone (server restart / TTL) - the caller
  *  falls back to its normal Retry path. */
 export class StreamGoneError extends Error {}
 
@@ -917,7 +916,7 @@ export interface ProviderConnection {
   owner: "global" | "user"; // "global" = operator-shared; "user" = your own BYOK
 }
 
-/** One model from a provider's catalog (GET …/catalog). */
+/** One model from a provider's catalog (GET .../catalog). */
 export interface CatalogModel {
   id: string;
   name: string;
@@ -937,7 +936,7 @@ export interface SettingsStatus {
   own_openrouter_key?: boolean;
   /** OpenRouter routing region: "global" or "eu" (strict in-region routing). */
   region?: string;
-  /** False in EU routing: the web-search plugin is refused there — hide the toggle. */
+  /** False in EU routing: the web-search plugin is refused there - hide the toggle. */
   web_search_available?: boolean;
   models: ChatModel[];
   connections: ProviderConnection[];
@@ -997,7 +996,7 @@ export async function getConnectionCatalog(id: string): Promise<CatalogModel[]> 
 /**
  * Usage of the account's included AI budget (the $-capped OpenRouter sub-key
  * minted at signup on hosted deployments). `provisioned` is false on self-host
- * / BYOK-only deployments — hide any budget UI entirely then. Only usage/limit
+ * / BYOK-only deployments - hide any budget UI entirely then. Only usage/limit
  * numbers are exposed; the sub-key itself never leaves the server.
  */
 export interface UsageStatus {
@@ -1050,14 +1049,14 @@ export type QuonStatus = "active" | "fallback" | "offline" | "loading";
 /**
  * Map a /health response (or a failed probe) to a traffic-light status.
  *  - active:   service up + the active PII backend is ready (cloud configured,
- *              or local Ollama up with a model) → NER + patterns + LLM enrichment
- *  - fallback: service up but the LLM backend is unavailable → NER + patterns only
- *  - offline:  service unreachable → data would be sent unprotected
+ *              or local Ollama up with a model) -> NER + patterns + LLM enrichment
+ *  - fallback: service up but the LLM backend is unavailable -> NER + patterns only
+ *  - offline:  service unreachable -> data would be sent unprotected
  */
 export function deriveStatus(health: HealthStatus | null, failed: boolean): QuonStatus {
   if (failed) return "offline";
   if (!health) return "loading";
-  // pii_ready is the whole in-process detection stack (NER + net + GLiNER) —
+  // pii_ready is the whole in-process detection stack (NER + net + GLiNER) -
   // the only detector there is, since the LLM extraction tier was removed.
   return health.pii_ready ? "active" : "fallback";
 }

@@ -1,13 +1,13 @@
 """Account-enumeration resistance for the auth endpoints.
 
 Three oracles closed and locked in here:
-  * /auth/kdf     — dummy params for unknown emails must have the SAME key set
+  * /auth/kdf     - dummy params for unknown emails must have the same key set
                     as real accounts (the old dummy leaked via extra keys), and
                     the dummy salt must be deterministic per email.
-  * /auth/login   — unknown email and wrong password must return the identical
+  * /auth/login   - unknown email and wrong password must return the identical
                     status + detail (the Argon2 timing is equalized via a dummy
                     verification; asserted structurally, not by clock).
-  * /auth/register — an already-active email must look exactly like a fresh
+  * /auth/register - an already-active email must look exactly like a fresh
                     signup (201 pending, one email), never a 409.
 """
 
@@ -59,11 +59,11 @@ def test_register_active_account_fakes_success(quon_client, monkeypatch):
     # Forget the original verify token so we can assert none is (re)issued.
     c.captured.pop("dup@x.de", None)
 
-    # Attacker re-registers the address with DIFFERENT credentials.
+    # Attacker re-registers the address with different credentials.
     r = c.post("/auth/register", json=register_body("dup@x.de", auth_token=b"Z" * 32))
     assert r.status_code == 201 and r.json()["status"] == "pending"
 
-    # Exactly one "already registered" notice, and NO verify token was created.
+    # Exactly one "already registered" notice, and no verify token was created.
     assert notices == ["dup@x.de"]
     assert "dup@x.de" not in c.captured
 

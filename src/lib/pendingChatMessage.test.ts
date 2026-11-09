@@ -1,4 +1,4 @@
-/** The dashboard→chat handoff. The one-shot property is the whole point: if a
+/** The dashboard->chat handoff. The one-shot property is the whole point: if a
  *  take() left the message behind, every later visit to /chat would re-send it
  *  (and re-spend the user's AI budget). */
 import { beforeEach, describe, expect, it } from "vitest";
@@ -19,7 +19,7 @@ describe("pendingChatMessage", () => {
   it("hands the message over exactly once", () => {
     setPendingChatMessage("Wie funktioniert eine Wärmepumpe?");
     expect(takePendingChatMessage()).toBe("Wie funktioniert eine Wärmepumpe?");
-    // The second visit to /chat must NOT re-send it.
+    // The second visit to /chat must not re-send it.
     expect(takePendingChatMessage()).toBeNull();
   });
 

@@ -1,8 +1,8 @@
 /**
- * URL policy for the sanitized DOCX viewer HTML — the one place a mammoth
+ * URL policy for the sanitized DOCX viewer HTML - the one place a mammoth
  * conversion could smuggle something active (javascript:/data: links, remote
  * image beacons). The DOM allowlist walk itself needs a browser DOMParser; in
- * its absence sanitizeDocxHtml must fail closed to "" (→ text-view fallback).
+ * its absence sanitizeDocxHtml must fail closed to "" (-> text-view fallback).
  */
 import { describe, expect, it } from "vitest";
 

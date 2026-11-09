@@ -26,6 +26,7 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TrustRouteImport } from './routes/trust'
 import { Route as VerifyRouteImport } from './routes/verify'
 import { Route as DocsDetectionRouteImport } from './routes/docs.detection'
+import { Route as DocsDetectionWhitepaperRouteImport } from './routes/docs.detection-whitepaper'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -112,6 +113,11 @@ const DocsDetectionRoute = DocsDetectionRouteImport.update({
   path: '/docs/detection',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DocsDetectionWhitepaperRoute = DocsDetectionWhitepaperRouteImport.update({
+  id: '/docs/detection-whitepaper',
+  path: '/docs/detection-whitepaper',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -131,6 +137,7 @@ export interface FileRoutesByFullPath {
   '/trust': typeof TrustRoute
   '/verify': typeof VerifyRoute
   '/docs/detection': typeof DocsDetectionRoute
+  '/docs/detection-whitepaper': typeof DocsDetectionWhitepaperRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -150,6 +157,7 @@ export interface FileRoutesByTo {
   '/trust': typeof TrustRoute
   '/verify': typeof VerifyRoute
   '/docs/detection': typeof DocsDetectionRoute
+  '/docs/detection-whitepaper': typeof DocsDetectionWhitepaperRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -170,6 +178,7 @@ export interface FileRoutesById {
   '/trust': typeof TrustRoute
   '/verify': typeof VerifyRoute
   '/docs/detection': typeof DocsDetectionRoute
+  '/docs/detection-whitepaper': typeof DocsDetectionWhitepaperRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -191,6 +200,7 @@ export interface FileRouteTypes {
     | '/trust'
     | '/verify'
     | '/docs/detection'
+    | '/docs/detection-whitepaper'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -210,6 +220,7 @@ export interface FileRouteTypes {
     | '/trust'
     | '/verify'
     | '/docs/detection'
+    | '/docs/detection-whitepaper'
   id:
     | '__root__'
     | '/'
@@ -229,6 +240,7 @@ export interface FileRouteTypes {
     | '/trust'
     | '/verify'
     | '/docs/detection'
+    | '/docs/detection-whitepaper'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -249,6 +261,7 @@ export interface RootRouteChildren {
   TrustRoute: typeof TrustRoute
   VerifyRoute: typeof VerifyRoute
   DocsDetectionRoute: typeof DocsDetectionRoute
+  DocsDetectionWhitepaperRoute: typeof DocsDetectionWhitepaperRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -372,6 +385,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DocsDetectionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/docs/detection-whitepaper': {
+      id: '/docs/detection-whitepaper'
+      path: '/docs/detection-whitepaper'
+      fullPath: '/docs/detection-whitepaper'
+      preLoaderRoute: typeof DocsDetectionWhitepaperRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -393,6 +413,7 @@ const rootRouteChildren: RootRouteChildren = {
   TrustRoute: TrustRoute,
   VerifyRoute: VerifyRoute,
   DocsDetectionRoute: DocsDetectionRoute,
+  DocsDetectionWhitepaperRoute: DocsDetectionWhitepaperRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

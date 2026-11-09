@@ -3,9 +3,9 @@
  *
  * The sweep is fire-and-forget and can take a while (one relay call per chat).
  * Keeping its progress in a component's local state loses it the moment the
- * user navigates away and back (unmount → state reset), and lets them start a
+ * user navigates away and back (unmount -> state reset), and lets them start a
  * second concurrent sweep. So the run state lives here, keyed by scope, and the
- * button subscribes via useSyncExternalStore — the status survives navigation
+ * button subscribes via useSyncExternalStore - the status survives navigation
  * and a re-entered screen shows the live progress or the final result.
  *
  * Mirrors the chatRunner pattern (module state + listener set).
@@ -55,7 +55,7 @@ export function getSweepState(scope: RagScope, kind: SweepKind = "chats"): Sweep
 }
 
 /** Human summary of a finished sweep (moved here so it persists in the state).
- *  Localized via `tr` (module-level, no hook) — see i18n.tsx. */
+ *  Localized via `tr` (module-level, no hook) - see i18n.tsx. */
 function summarize(res: { analyzed: number; failed: number; suggestions: number }): string {
   const parts: string[] = [];
   if (res.suggestions > 0) {
@@ -80,7 +80,7 @@ function summarize(res: { analyzed: number; failed: number; suggestions: number 
 }
 
 /** Start a sweep for `opts.scope` unless one is already running there for the
- *  same source. The onProgress in `opts` is ignored — progress is routed to the
+ *  same source. The onProgress in `opts` is ignored - progress is routed to the
  *  module state. */
 export function startSweep(opts: SweepOptions & { kind?: SweepKind }): void {
   const kind: SweepKind = opts.kind ?? "chats";

@@ -4,15 +4,15 @@
  * PRF-only by design: the wrap key for the Master Key is derived from the
  * authenticator's PRF output, which lives in the device's secure hardware and
  * is released only after on-device user verification. Devices/browsers without
- * the PRF extension (e.g. iOS < 18) are NOT offered a weaker fallback — the
+ * the PRF extension (e.g. iOS < 18) are not offered a weaker fallback - the
  * feature simply isn't available there (fail honest, zero-knowledge intact).
  *
  * Raw WebAuthn API on purpose (no @simplewebauthn dependency): there is no
- * server ceremony to encode/verify — the session cookie is the auth factor and
+ * server ceremony to encode/verify - the session cookie is the auth factor and
  * the PRF ceremony is purely key release, so the whole surface is one create()
  * and one get(). rp.id is deliberately never set: it defaults to the effective
  * domain, which works for app.quon.example.com and localhost dev alike (a future
- * domain move fails honest → password fallback → re-enroll).
+ * domain move fails honest -> password fallback -> re-enroll).
  *
  * Note on synced passkeys (iCloud Keychain / Google Password Manager): the
  * credential and its PRF secret may sync across the user's own devices. That
@@ -20,7 +20,7 @@
  * enrollment marker, so nothing surfaces there unless the user enrolls.
  */
 
-/** User canceled / dismissed the platform prompt — callers reset silently. */
+/** User canceled / dismissed the platform prompt - callers reset silently. */
 export class BioCancelledError extends Error {
   constructor() {
     super("biometric prompt was cancelled");
@@ -28,7 +28,7 @@ export class BioCancelledError extends Error {
   }
 }
 
-/** The authenticator lacks PRF support — feature not available, fail honest. */
+/** The authenticator lacks PRF support - feature not available, fail honest. */
 export class BioPrfUnavailableError extends Error {
   constructor() {
     super("this authenticator does not support the PRF extension");
@@ -36,7 +36,7 @@ export class BioPrfUnavailableError extends Error {
   }
 }
 
-// --- base64url (unpadded), standalone — usable before sodium init ----------
+// --- base64url (unpadded), standalone - usable before sodium init ----------
 export function bytesToB64url(bytes: Uint8Array): string {
   let bin = "";
   for (const b of bytes) bin += String.fromCharCode(b);
@@ -60,7 +60,7 @@ export function webauthnAvailable(): boolean {
 }
 
 /** Face ID / Touch ID / fingerprint (a user-verifying PLATFORM authenticator)
- *  exists on this device. False on any error — feature hides, never breaks. */
+ *  exists on this device. False on any error - feature hides, never breaks. */
 export async function platformAuthenticatorAvailable(): Promise<boolean> {
   if (!webauthnAvailable()) return false;
   try {
@@ -70,7 +70,7 @@ export async function platformAuthenticatorAvailable(): Promise<boolean> {
   }
 }
 
-// The PRF extension isn't in TS's lib.dom yet across our toolchain — minimal
+// The PRF extension isn't in TS's lib.dom yet across our toolchain - minimal
 // local shapes for the two calls we make.
 interface PrfExtensionResults {
   prf?: { enabled?: boolean; results?: { first?: ArrayBuffer } };
@@ -86,7 +86,7 @@ function isCancel(err: unknown): boolean {
 }
 
 /** Create the platform passkey for this device and report whether it supports
- *  PRF. PRF *results* are deliberately not requested here — several platforms
+ *  PRF. PRF *results* are deliberately not requested here - several platforms
  *  (notably iOS) only return them on get(), so enrollment is create-then-get. */
 export async function createBioCredential(
   userId: string,
@@ -98,7 +98,7 @@ export async function createBioCredential(
     cred = (await navigator.credentials.create({
       publicKey: {
         challenge,
-        rp: { name: "QUON" }, // rp.id omitted — effective domain (see header)
+        rp: { name: "QUON" }, // rp.id omitted - effective domain (see header)
         user: {
           id: new TextEncoder().encode(userId),
           name: email,

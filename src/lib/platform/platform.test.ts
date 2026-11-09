@@ -27,8 +27,8 @@ afterEach(() => {
   delete (globalThis as unknown as Record<string, unknown>).Capacitor;
 });
 
-/** The Android shell (Capacitor). Its bridge object is ALSO present when the
- *  same bundle is opened in a browser tab — only `isNativePlatform()` decides. */
+/** The Android shell (Capacitor). Its bridge object is also present when the
+ *  same bundle is opened in a browser tab - only `isNativePlatform()` decides. */
 describe("the Capacitor shell", () => {
   it("is native only when the bridge says so", () => {
     resetForTest();
@@ -91,7 +91,7 @@ describe("the Capacitor shell", () => {
     const heads: Array<(d: Record<string, unknown>) => void> = [];
     provideStreamHttpPlugin(fake);
     try {
-      // Never the (patched) global fetch — that one buffers.
+      // Never the (patched) global fetch - that one buffers.
       globalThis.fetch = (() => {
         throw new Error("global fetch must not be used for a streamed response");
       }) as typeof globalThis.fetch;
@@ -103,7 +103,7 @@ describe("the Capacitor shell", () => {
     }
   });
 
-  it("on the web, streamingFetch IS the plain fetch (it already streams)", () => {
+  it("on the web, streamingFetch is the plain fetch (it already streams)", () => {
     resetForTest();
     const plain = ((..._a: unknown[]) =>
       Promise.resolve(new Response("x"))) as typeof globalThis.fetch;
@@ -111,7 +111,7 @@ describe("the Capacitor shell", () => {
     expect(streamingFetch()).toBe(plain);
   });
 
-  it("has no mail / files / embed host yet — those stay null, like the web", () => {
+  it("has no mail / files / embed host yet: those stay null, like the web", () => {
     resetForTest();
     (globalThis as unknown as Record<string, unknown>).Capacitor = {
       isNativePlatform: () => true,
@@ -122,15 +122,15 @@ describe("the Capacitor shell", () => {
 });
 
 /**
- * Regression (2026-08-05): the seam used to need an install step that the
- * router kicked off WITHOUT awaiting. The first health poll won that race, went
- * out through the browser fetch, and was refused by CORS — the shipped macOS
- * app showed "QUON nicht erreichbar" against a healthy API. Asking for the
- * capability must be enough, with nothing having run first.
+ * An install step the router kicks off without awaiting loses the race against
+ * the first health poll: that poll goes out through the browser fetch, is
+ * refused by CORS, and the native app shows "QUON nicht erreichbar" against a
+ * healthy API. Asking for the capability must be enough, with nothing having
+ * run first.
  */
 describe("the native capability cannot be raced", () => {
   it("routes natively on the very first call, with no install step", () => {
-    // Deliberately NOT calling provideHttp: this is a cold start.
+    // Deliberately not calling provideHttp: this is a cold start.
     resetForTest();
     (globalThis as unknown as Record<string, unknown>).__TAURI_INTERNALS__ = {};
     expect(http().unrestricted).toBe(true);
@@ -173,7 +173,7 @@ describe("http capability", () => {
     expect(await (await cap.fetch("https://example.com/x")).text()).toBe("native");
   });
 
-  it("survives being destructured — the default must stay bound", async () => {
+  it("survives being destructured: the default must stay bound", async () => {
     // An unbound globalThis.fetch throws "Illegal invocation" in some engines,
     // and every call site destructures.
     const spy = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response("ok"));
@@ -184,7 +184,7 @@ describe("http capability", () => {
 });
 
 describe("mail capability", () => {
-  it("is null on the web — a browser has no TCP, the source simply doesn't exist", () => {
+  it("is null on the web: a browser has no TCP, the source simply doesn't exist", () => {
     resetForTest();
     expect(mail()).toBeNull();
   });
@@ -227,7 +227,7 @@ describe("mail capability", () => {
 });
 
 describe("embed capability", () => {
-  it("is null on the web — the browser worker path stays as before", () => {
+  it("is null on the web: the browser worker path stays as before", () => {
     resetForTest();
     expect(embed()).toBeNull();
   });

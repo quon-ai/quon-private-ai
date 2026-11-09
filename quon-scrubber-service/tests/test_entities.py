@@ -1,4 +1,4 @@
-"""Entity-type registry (entities.py) — the single source of truth.
+"""Entity-type registry (entities.py) - the single source of truth.
 
 Guards two things: (1) the derived views stay consistent, (2) cross-tier
 drift: every catalog type must have a presentation style in the frontend

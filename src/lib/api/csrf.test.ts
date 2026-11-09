@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { captureCsrf, clearCsrf, csrfToken } from "./csrf";
 
-/** Forget the module's in-memory copy without touching localStorage — what an
+/** Forget the module's in-memory copy without touching localStorage - what an
  *  app restart looks like from the module's point of view. */
 async function reload() {
   vi.resetModules();
@@ -38,7 +38,7 @@ function res(setCookie?: string | string[]): Response {
 }
 
 /**
- * The suite runs in `node` (no DOM) on purpose — see vitest.config.ts. A
+ * The suite runs in `node` (no DOM) on purpose - see vitest.config.ts. A
  * two-line cookie stub keeps it that way; the code only ever reads
  * `document.cookie` as a string.
  */
@@ -64,7 +64,7 @@ describe("web", () => {
     expect(csrfToken()).toBe("web-token");
   });
 
-  it("ignores set-cookie entirely — the cookie jar is authoritative", () => {
+  it("ignores set-cookie entirely: the cookie jar is authoritative", () => {
     setCookieJar("quon_csrf=web-token");
     captureCsrf(res("quon_csrf=from-header; Path=/"));
     expect(csrfToken()).toBe("web-token");
@@ -116,11 +116,11 @@ describe("native", () => {
   });
 
   /**
-   * Measured against the real macOS app (2026-08-05): the host's cookie jar
-   * persists the 30-day session cookie across a restart, so the app comes back
-   * ALREADY signed in — but the server only sends `quon_csrf` when it issues a
-   * session. A token kept only in memory is gone by then, and the first write
-   * of the new run would 403 while everything looked fine.
+   * In the macOS app the host's cookie jar persists the 30-day session cookie
+   * across a restart, so the app comes back already signed in - but the server
+   * only sends `quon_csrf` when it issues a session. A token kept only in memory
+   * is gone by then, and the first write of the new run would 403 while
+   * everything looked fine.
    */
   it("survives an app restart, because the session cookie does", async () => {
     captureCsrf(res("quon_csrf=persisted; Path=/"));

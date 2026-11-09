@@ -44,7 +44,7 @@ const PAGE_TITLE_KEYS: Record<
   "/settings": "nav.settings",
 };
 
-/** Below this, a push is over before a banner could inform anyone — showing one
+/** Below this, a push is over before a banner could inform anyone - showing one
  *  would just blink on every ordinary save. */
 const SYNC_BANNER_MIN_ITEMS = 10;
 
@@ -58,7 +58,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const pageTitle = pageTitleKey ? t(pageTitleKey) : "QUON";
   const wasReady = useRef(false);
 
-  // Apply the device's text-size preference to the document root — on boot
+  // Apply the device's text-size preference to the document root - on boot
   // (defaults to "standard" until the encrypted local cache opens post-unlock,
   // see quonStore.ts's `fontScale` docstring) and again on every change from
   // Settings, so it takes effect immediately without a reload.
@@ -74,18 +74,18 @@ export function AppShell({ children }: { children: ReactNode }) {
     // "previous session never shut down cleanly" marker (diagLog.ts). Installed
     // here so it also covers the locked/unlock screens this shell wraps.
     installDiagCapture();
-    // Attribute reload boots (the "black flash" report) — see reloadReason.ts.
+    // Attribute reload boots (the "black flash" report) - see reloadReason.ts.
     explainBoot();
   }, []);
 
-  // Start/stop the sync engine with the unlocked state; bounce "/" → dashboard.
+  // Start/stop the sync engine with the unlocked state; bounce "/" -> dashboard.
   useEffect(() => {
     if (status === "ready" && user) {
       // Per-account local-data isolation. If the data cached in this browser
       // belongs to a different (or unknown, e.g. first load after this fix)
-      // account, purge it + the sync cursors BEFORE pulling this account's — so a
+      // account, purge it + the sync cursors before pulling this account's - so a
       // new/other account in a shared browser never inherits the previous
-      // account's cached chats / memory / documents. Same account → no wipe
+      // account's cached chats / memory / documents. Same account -> no wipe
       // (incremental sync resumes from the cursors).
       const ACTIVE_USER_KEY = "quon_active_user";
       let prevUser: string | null = null;
@@ -102,9 +102,9 @@ export function AppShell({ children }: { children: ReactNode }) {
       }
       startSync();
       // One diagnostic line with the numbers a crash report needs (counts and
-      // megabytes only — bootSummary.ts). Fire-and-forget after hydration.
+      // megabytes only - bootSummary.ts). Fire-and-forget after hydration.
       void logBootSummary();
-      // MUST run after stopSync() above: stopSync (a different/unknown previous
+      // Must run after stopSync() above: stopSync (a different/unknown previous
       // account, incl. every brand-new account's very first ready transition)
       // calls resetState(), which would otherwise wipe the onboarding step this
       // sets right back to its "already seen" defaults.
@@ -119,7 +119,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   // Offline mode: the shell renders from the encrypted local caches; the
   // reconnect watcher (authStore) upgrades in place when the network returns.
-  // One quiet, persistent line — not a scary error: nothing is wrong, and the
+  // One quiet, persistent line - not a scary error: nothing is wrong, and the
   // send path is already fail-closed while the scrubber is unreachable.
   const offlineBanner = offline ? (
     <div className="flex items-center justify-center gap-2 border-b border-quon-yellow/30 bg-quon-yellow/10 px-3 py-1.5 text-[11px] font-medium text-quon-yellow">
@@ -128,7 +128,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     </div>
   ) : null;
 
-  // Sync used to be entirely invisible — a push that failed looked exactly like
+  // Sync used to be entirely invisible - a push that failed looked exactly like
   // a push that wasn't needed, which is how an oversized chat could wedge a
   // whole collection unnoticed. Two states earn a line here.
   const sync = useSyncExternalStore(subscribeSyncStatus, getSyncStatus, getSyncStatusServer);
@@ -142,16 +142,16 @@ export function AppShell({ children }: { children: ReactNode }) {
     </div>
   ) : sync.busy && sync.total > SYNC_BANNER_MIN_ITEMS ? (
     // Transient: only for a push big enough to be felt. A routine save is one
-    // or two blobs and finishes inside the debounce — banner-ing that would
+    // or two blobs and finishes inside the debounce - banner-ing that would
     // blink on every edit.
     <div className="flex items-center justify-center gap-2 border-b border-quon-border bg-quon-surface px-3 py-1.5 text-[11px] font-medium text-quon-muted">
       <RefreshCw className="h-3.5 w-3.5 shrink-0 animate-spin" />
-      {/* ⚠️ Show a fraction ONLY when it can actually advance. Progress is
+      {/* Show a fraction only when it can actually advance. Progress is
           observable at batch granularity, so a push that fits in one batch sat
-          at "(0/29)" for its whole duration — reported as meaningless, rightly:
+          at "(0/29)" for its whole duration - reported as meaningless, rightly:
           it named neither what was syncing nor how far along it was. Below one
           batch we say what is happening and how much there is, and let the
-          spinner carry "still working". */}
+          spinner carry "still working".*/}
       {sync.total > PUSH_BATCH_SIZE
         ? t("nav.syncBusyProgress", { done: sync.done, total: sync.total })
         : t("nav.syncBusy", { count: sync.total })}

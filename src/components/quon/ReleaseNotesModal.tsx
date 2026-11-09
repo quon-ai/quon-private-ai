@@ -9,7 +9,7 @@ import { getUnseenRelease, markReleaseSeen, type Release } from "@/lib/releases"
 /**
  * One-time "What's new" popup. Shows the latest release once per device (tracked
  * in localStorage), then never again. Mount it once inside the authenticated app
- * shell — it self-gates and renders nothing when there's nothing new.
+ * shell - it self-gates and renders nothing when there's nothing new.
  */
 export function ReleaseNotesModal() {
   const { t } = useT();

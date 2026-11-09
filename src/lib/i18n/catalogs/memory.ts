@@ -1,6 +1,6 @@
 /**
  * "memory" namespace UI strings. Keys are prefixed `memory.*`. Keep `en` and `de`
- * in sync — a missing German key is a compile error via catalog.ts's typing.
+ * in sync - a missing German key is a compile error via catalog.ts's typing.
  * (Populated by the i18n string-externalization pass.)
  */
 export const memory = {
@@ -8,7 +8,7 @@ export const memory = {
     // "Learn from chats" sweep runner status (memorySweepRunner.ts, module-level)
     "memory.sweep.looking": "Looking for new chat content…",
     "memory.sweep.analyzing": "Analyzing {n} of {total} chats…",
-    // The document sweep reuses the sweep runner but NOT its noun — it says
+    // The document sweep reuses the sweep runner but not its noun - it says
     // "chats" otherwise, which is what the user sees while it reads documents.
     "memory.sweep.analyzingDocs": "Analyzing {n} of {total} documents…",
     "memory.sweep.checking": "Checking against your memory…",
@@ -55,7 +55,7 @@ export const memory = {
     "memory.pin": "Always use as context",
     "memory.unpin": "Don't always use as context",
     "memory.pinnedBadge": "always in context",
-    // Maintenance row (P5 lifecycle) — quiet unless something needs attention
+    // Maintenance row (P5 lifecycle) - quiet unless something needs attention
     "memory.maintRowConflicts.one": "1 conflict",
     "memory.maintRowConflicts.other": "{count} conflicts",
     "memory.maintRowDupes.one": "1 possible duplicate",
@@ -106,8 +106,8 @@ export const memory = {
     "memory.learnFromChats": "Learn from chats",
     "memory.learnFromDocuments": "Learn from documents",
     "memory.learnNewBadge": "{count} new",
-    // The link out of the sweep result. Without it the review queue — which
-    // lives on another screen — is unreachable from where the sweep was run.
+    // The link out of the sweep result. Without it the review queue - which
+    // lives on another screen - is unreachable from where the sweep was run.
     "memory.reviewWaiting": "{count} to review",
     "memory.longFactHint":
       "Long texts are saved as a note — facts are short, standalone statements.",

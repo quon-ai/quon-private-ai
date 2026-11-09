@@ -18,7 +18,7 @@ test("memories can be exported to a Markdown file", async ({ page }) => {
   await page.getByRole("button", { name: "Save" }).click();
   await expect(page.getByText(fact)).toBeVisible({ timeout: 60_000 });
 
-  // Export → a real browser download named quon-erinnerungen.md.
+  // Export -> a real browser download named quon-erinnerungen.md.
   const [download] = await Promise.all([
     page.waitForEvent("download"),
     page.getByRole("button", { name: "Export" }).click(),
@@ -26,7 +26,7 @@ test("memories can be exported to a Markdown file", async ({ page }) => {
   expect(download.suggestedFilename()).toBe("quon-erinnerungen.md");
 
   // CLEAN UP: remove the created memory. Shared-account residue makes every
-  // later chat-send spec run retrieval (embedder init inside the send) — the
+  // later chat-send spec run retrieval (embedder init inside the send) - the
   // class that made the webkit pass time out (it inherits chromium's leftovers).
   await page
     .locator("div.rounded-xl")

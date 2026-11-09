@@ -13,18 +13,18 @@ type ServerEntry = {
 };
 
 // --- Content-Security-Policy (enforcing, nonce-based) ----------------------
-// The Master Key lives in sessionStorage, so XSS is THE attack that matters —
+// The Master Key lives in sessionStorage, so XSS is the attack that matters -
 // a strict CSP is the highest-leverage mitigation. TanStack Start emits dynamic
 // inline scripts (hydration state, stream chunks), which rules out a static
 // header: we mint a nonce per request, hand it to the router (which tags every
-// inline script it injects — see router.tsx), and put the same nonce in this
+// inline script it injects - see router.tsx), and put the same nonce in this
 // header. The client picks the nonce up from the <meta property="csp-nonce">
 // tag rendered by the root shell.
 //
 // Enabled only in production builds (vite dev needs eval/inline for HMR).
 // QUON_CSP=off is the emergency escape hatch; QUON_CSP_CONNECT_EXTRA appends
 // origins to connect-src (e.g. "http://localhost:8000" when testing the prod
-// bundle locally against a separate-origin API — in real deploys the API is
+// bundle locally against a separate-origin API - in real deploys the API is
 // same-origin behind /api).
 const CSP_ENABLED = import.meta.env.PROD && process.env.QUON_CSP !== "off";
 
@@ -48,7 +48,7 @@ function newNonce(): string {
 function buildCsp(nonce: string, userExtra: string | null): string {
   // Two extra-connect sources, deliberately separate: the OPERATOR's env var
   // (whole-instance, e.g. the operator's own Paperless) and the USER's cookie
-  // (per-browser, strictly ONE shape-validated origin — see lib/cspExtra.ts
+  // (per-browser, strictly one shape-validated origin - see lib/cspExtra.ts
   // for the rules and the honestly-stated costs).
   // The user cookie exists for the Paperless connector; a build without
   // connectors has no reason to widen its CSP for it.
@@ -69,20 +69,20 @@ function buildCsp(nonce: string, userExtra: string | null): string {
     // nonce stays the real barrier against script injection and QUON evaluates no
     // user-controlled string as code, so the marginal risk is low. Clean long-term
     // fix: isolate the OCR engine in a separate-origin sandbox iframe (its own,
-    // eval-allowing CSP) — see .claude/plans/ocr-hybrid-fallback.md §"CSP".
+    // eval-allowing CSP).
     `script-src 'self' 'nonce-${nonce}' 'wasm-unsafe-eval' 'unsafe-eval'`,
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com",
     "img-src 'self' data: blob:",
     // huggingface.co + CDN mirrors: embedding model download; cdn.jsdelivr.net:
     // Transformers.js + PaddleOCR ONNX-runtime WASM binaries;
-    // paddle-model-ecology…bcebos.com: photo-OCR model tars (lib/documents/ocr.ts).
+    // paddle-model-ecology...bcebos.com: photo-OCR model tars (lib/documents/ocr.ts).
     "connect-src 'self' https://huggingface.co https://cdn-lfs.huggingface.co" +
       " https://cdn-lfs-us-1.huggingface.co https://cdn.jsdelivr.net" +
       // The browser-direct connectors widen the egress allowlist; an edition
       // without them (FEATURES.connectors=false) must not carry the hosts.
       // Dropbox: the two API hosts. OneDrive (Microsoft Graph): the download
-      // hosts are wildcards on purpose — `@microsoft.graph.downloadUrl` points
+      // hosts are wildcards on purpose - `@microsoft.graph.downloadUrl` points
       // at a per-request CDN host, *.files.1drv.com for personal accounts and
       // <tenant>.sharepoint.com for work/school ones, so no fixed origin can
       // cover it; login.microsoftonline.com is the PKCE token exchange.
@@ -100,7 +100,7 @@ function buildCsp(nonce: string, userExtra: string | null): string {
   ].join("; ");
 }
 
-/** Attach the enforcing CSP header (HTML responses only — assets/API don't
+/** Attach the enforcing CSP header (HTML responses only - assets/API don't
  *  execute scripts). Rebuilds the Response to keep the streamed body intact. */
 function withCsp(response: Response, nonce: string, userExtra: string | null): Response {
   if (!CSP_ENABLED) return response;
@@ -127,7 +127,7 @@ async function getServerEntry(): Promise<ServerEntry> {
 }
 
 // h3 swallows in-handler throws into a normal 500 Response with body
-// {"unhandled":true,"message":"HTTPError"} — try/catch alone never fires for those.
+// {"unhandled":true,"message":"HTTPError"} - try/catch alone never fires for those.
 async function normalizeCatastrophicSsrResponse(response: Response): Promise<Response> {
   if (response.status < 500) return response;
   const contentType = response.headers.get("content-type") ?? "";
@@ -152,7 +152,7 @@ export default {
     const nonce = newNonce();
     const cookieHeader = request.headers.get("cookie");
     const lang = langFromCookieHeader(cookieHeader) ?? DEFAULT_LANG;
-    // User-chosen extra connect-src origin (own Paperless on the hosted app) —
+    // User-chosen extra connect-src origin (own Paperless on the hosted app) -
     // validated hard in cspExtraFromCookieHeader; malformed cookies are ignored.
     const userExtra = cspExtraFromCookieHeader(cookieHeader);
     return langStore.run(lang, () =>

@@ -12,7 +12,7 @@ The minted secret is returned only once on creation; we seal it at rest with
 ``crypto_server.seal`` and store the stable ``hash`` for later monitor/patch/delete.
 The provisioning key lives server-side only (``OPENROUTER_PROVISIONING_KEY``).
 
-Self-hosted QUON Home typically has no provisioning key — :func:`is_enabled`
+Self-hosted QUON Home typically has no provisioning key - :func:`is_enabled`
 returns False there and onboarding falls back to BYOK.
 """
 
@@ -115,7 +115,7 @@ async def ensure_user_key(user_id: str) -> bool:
 
     Returns True if the user has (or now has) a provisioned key, False when
     provisioning is disabled (self-hosted BYOK). Raises :class:`ProvisioningError`
-    when provisioning is enabled but the API call fails — the caller keeps the
+    when provisioning is enabled but the API call fails - the caller keeps the
     account *pending* (fails closed) so it never goes active without a usable key.
     """
     with db.get_conn() as c:
@@ -156,7 +156,7 @@ async def ensure_user_key(user_id: str) -> bool:
 def get_user_key_secret(user_id: str) -> str | None:
     """Unseal and return the user's OpenRouter sub-key secret, or None.
 
-    Server-side only — the relay uses this to call OpenRouter on the user's
+    Server-side only - the relay uses this to call OpenRouter on the user's
     behalf. Never expose the result to the browser.
     """
     with db.get_conn() as c:

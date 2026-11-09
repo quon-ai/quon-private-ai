@@ -3,11 +3,11 @@ import { test, expect } from "@playwright/test";
 import { login, sharedCreds } from "./helpers/account";
 
 /**
- * Feedback #88: „Meine Projekte werden nicht mehr angezeigt obwohl ich welche
- * habe". The browser evicted the IndexedDB cache; the sync cursors in
- * localStorage survived; the device asked the server only for "changes since
- * N" and never saw its projects again. After an eviction the next boot must
- * re-pull everything.
+ * „Meine Projekte werden nicht mehr angezeigt obwohl ich welche habe": the
+ * browser evicted the IndexedDB cache; the sync cursors in localStorage
+ * survived; the device asked the server only for "changes since N" and never
+ * saw its projects again. After an eviction the next boot must re-pull
+ * everything.
  *
  * Simulated exactly: create a project (synced to the throwaway server), delete
  * the local database while leaving localStorage alone, reload.
@@ -20,7 +20,7 @@ test("a project survives the browser evicting the local database", async ({ page
   // Wait for the PROJECT's push, not just any push: prefs sync first, and the
   // project blob follows after a 1.5 s debounce. On WebKit the reload below
   // kills an in-flight push, so waiting for the wrong one made the server
-  // never see the project — the re-pull was then correct in finding nothing.
+  // never see the project - the re-pull was then correct in finding nothing.
   const pushed = page.waitForResponse(
     (r) =>
       r.url().includes("/sync/push") &&
@@ -30,7 +30,7 @@ test("a project survives the browser evicting the local database", async ({ page
   await page.getByRole("button", { name: "New project" }).click();
   await page.getByPlaceholder(/Project name/).fill(name);
   await page.getByRole("button", { name: "Create" }).click();
-  expect((await pushed).ok()).toBe(true); // the blob is on the server — the only copy that must survive
+  expect((await pushed).ok()).toBe(true); // the blob is on the server - the only copy that must survive
 
   // Create navigated to the project's detail page; go back to the LIST now,
   // before the eviction, so the reload below lands on the list.

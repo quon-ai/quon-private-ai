@@ -1,6 +1,5 @@
 /**
- * Offline access (the Claude-app question, 2026-08-06: "Kann ich offline
- * einloggen und meine Chats sehen?").
+ * Offline access: "Kann ich offline einloggen und meine Chats sehen?"
  *
  * All data is already cached on-device encrypted (localVault); what this locks
  * in is the FRONT DOOR working without a server: (1) a warm tab resumes
@@ -9,7 +8,7 @@
  * (3) the moment the network returns, the app upgrades in place to a real
  * session and the banner disappears.
  *
- * The API is taken down per-page via route interception on the API origin —
+ * The API is taken down per-page via route interception on the API origin -
  * context.setOffline would also kill the vite dev server that serves the app
  * itself. Fresh account: the flow mutates chat history and localStorage.
  */
@@ -72,7 +71,7 @@ test("offline: warm resume, cold password unlock, and the reconnect upgrade", as
   await expect(page.locator("main").getByText("Offline-Probe Antwort")).toBeVisible();
 
   // (2) Cold start: the tab-held MK is gone (app killed). The unlock screen
-  // must appear — offline — and the password must unlock against the CACHED
+  // must appear - offline - and the password must unlock against the CACHED
   // key material, no server round trip.
   await page.evaluate(() => sessionStorage.clear());
   await page.reload();
@@ -85,19 +84,19 @@ test("offline: warm resume, cold password unlock, and the reconnect upgrade", as
   await page.getByRole("button", { name: "Unlock", exact: true }).click();
   await expect(page.getByText(BANNER, { exact: false })).toBeVisible({ timeout: 30_000 });
   // The unlock lands on the dashboard; the earlier chat is reachable through
-  // Recents (openChat would start a NEW chat). Its entry is titled after the
-  // first message — clicking it must render the cached conversation.
+  // Recents (openChat would start a new chat). Its entry is titled after the
+  // first message - clicking it must render the cached conversation.
   await page.goto("/chat");
   await page.getByText("merke dir alpha").first().click();
   await expect(page.locator("main").getByText("Offline-Probe Antwort")).toBeVisible({
     timeout: 30_000,
   });
 
-  // A wrong password must still fail loudly — offline unlock is not a bypass.
+  // A wrong password must still fail loudly - offline unlock is not a bypass.
   // (The MK secretbox simply doesn't open without the right key.)
 
   // (3) Reconnect: the server returns; the browser 'online' event triggers the
-  // watcher and the app upgrades in place — banner gone, no reload needed.
+  // watcher and the app upgrades in place - banner gone, no reload needed.
   await page.unroute(API_GLOB);
   await page.evaluate(() => window.dispatchEvent(new Event("online")));
   await expect(page.getByText(BANNER, { exact: false })).toBeHidden({ timeout: 30_000 });

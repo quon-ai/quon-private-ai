@@ -1,16 +1,15 @@
 /**
- * ONE health poll for the whole app.
+ * one health poll for the whole app.
  *
- * `useQuonHealth` used to own its state per component: every mounted consumer
- * (sidebar pill, header badge, the chat screen, settings cards) ran its own
- * 30 s poll with its own failure counter. Two consequences, both seen in the
- * field (feedback #87, 2026-10-10): the sidebar said „Geschützt" while the
- * header badge was red at the same moment — one instance's probe had timed
- * out on a slow mobile radio, another's had not even returned yet — and the
- * backend saw six `/health` requests in the same second from one client.
+ * If every mounted consumer of `useQuonHealth` (sidebar pill, header badge,
+ * the chat screen, settings cards) ran its own 30 s poll with its own failure
+ * counter, two things follow: the sidebar says „Geschützt" while the header
+ * badge is red at the same moment - one instance's probe timed out on a slow
+ * mobile radio, another's has not even returned yet - and the backend sees
+ * six `/health` requests in the same second from one client.
  *
  * The store is framework-free so the invariant is unit-tested with fake
- * timers: N subscribers ⇒ one request per interval, and every subscriber sees
+ * timers: N subscribers => one request per interval, and every subscriber sees
  * the same snapshot. The flip rules (`shouldFlipToOffline`) are unchanged.
  */
 
@@ -24,13 +23,12 @@ export interface HealthSnapshot {
 /**
  * Decide whether a failed health poll should flip the badge to offline.
  *
- * Forgives exactly ONE failure: the stale catch-up poll fired immediately after
+ * Forgives exactly one failure: the stale catch-up poll fired immediately after
  * the tab resumes from background (mobile suspends JS entirely, so a real,
- * already-recovered scrubber can still look briefly offline on resume — the
- * 2026-07-02 "health fix"). It must NOT forgive a failure on a normal foreground
- * poll: that grace period used to apply unconditionally, so a genuine outage on
- * an already-open tab could leave the badge green for up to two poll intervals
- * (report #5, 2026-07-15).
+ * already-recovered scrubber can still look briefly offline on resume). It
+ * must not forgive a failure on a normal foreground poll: a grace period that
+ * applies unconditionally lets a genuine outage on an already-open tab leave
+ * the badge green for up to two poll intervals.
  */
 export function shouldFlipToOffline(params: {
   visibilityHidden: boolean;
@@ -40,7 +38,7 @@ export function shouldFlipToOffline(params: {
   consecutiveFails: number;
 }): boolean {
   const { visibilityHidden, isResumePoll, everSucceeded, consecutiveFails } = params;
-  if (visibilityHidden) return false; // ignore while backgrounded — see above
+  if (visibilityHidden) return false; // ignore while backgrounded - see above
   if (isResumePoll && everSucceeded && consecutiveFails < 2) return false; // forgive one stale wake-up poll
   return true;
 }
@@ -48,7 +46,7 @@ export function shouldFlipToOffline(params: {
 export interface HealthStoreDeps {
   check: () => Promise<HealthStatus>;
   intervalMs: number;
-  /** `document.visibilityState === "hidden"` — injectable for tests. */
+  /** `document.visibilityState === "hidden"` - injectable for tests. */
   isHidden: () => boolean;
   /** Report a failed poll (console.warn in the app; silent in tests). */
   onFailure?: (consecutiveFails: number, hidden: boolean, resume: boolean, err: unknown) => void;
@@ -64,7 +62,7 @@ export interface HealthStore {
 const INITIAL: HealthSnapshot = { health: null, failed: false };
 
 /** A resume re-poll fired this soon after the last probe has nothing to catch
- *  up on — `focus` and `visibilitychange` both fire on a fresh boot, and that
+ *  up on - `focus` and `visibilitychange` both fire on a fresh boot, and that
  *  turned one boot probe into three. */
 export const MIN_RESUME_GAP_MS = 5_000;
 
@@ -118,7 +116,7 @@ export function createHealthStore(deps: HealthStoreDeps): HealthStore {
     if (timer) return;
     timer = setInterval(() => void poll(), deps.intervalMs);
     // A remount right after an unmount (StrictMode's double effect in dev, a
-    // route transition that swaps the shell) keeps the answer it already has —
+    // route transition that swaps the shell) keeps the answer it already has -
     // re-probing on every remount was the other source of the boot burst.
     if (Date.now() - lastPollAt >= MIN_RESUME_GAP_MS) void poll();
   }
@@ -144,7 +142,7 @@ export function createHealthStore(deps: HealthStoreDeps): HealthStore {
     getSnapshot: () => snapshot,
     onActive() {
       if (!timer) return;
-      if (Date.now() - lastPollAt < MIN_RESUME_GAP_MS) return; // just probed — nothing to catch up
+      if (Date.now() - lastPollAt < MIN_RESUME_GAP_MS) return; // just probed - nothing to catch up
       consecutiveFails = 0;
       resumeGrace = true;
       void poll();

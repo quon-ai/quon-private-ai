@@ -3,13 +3,13 @@
  * strings (ApiError.message) and English provider-error strings over the chat
  * stream. We map the known, stable strings to catalog keys; anything unmapped
  * falls through to the raw English text (rare edge cases stay English, by
- * design). Matching is on the trimmed exact string — if a backend message is
- * reworded, update BOTH here and the errors catalog (a unit test guards this).
+ * design). Matching is on the trimmed exact string - if a backend message is
+ * reworded, update both here and the errors catalog (a unit test guards this).
  */
 import { ApiError } from "@/lib/api/http";
 import type { MessageKey } from "./catalog";
 
-// Backend detail string (exact) → catalog key.
+// Backend detail string (exact) -> catalog key.
 const DETAIL_TO_KEY: Record<string, MessageKey> = {
   "invalid email or password": "errors.invalidCredentials",
   "email not verified": "errors.emailNotVerified",
@@ -34,7 +34,7 @@ const DETAIL_TO_KEY: Record<string, MessageKey> = {
   "unsupported image type — send a JPEG, PNG or WebP": "errors.unsupportedImage",
   "no AI access key for this provider": "errors.noProviderKey",
   "this connection has no API key configured": "errors.connectionNoKey",
-  // Own-key verification at save time (openrouter_keycheck.py, #84/#91).
+  // Own-key verification at save time (openrouter_keycheck.py).
   "That is not an OpenRouter key — an OpenRouter key starts with sk-or-… (openrouter.ai → Keys). A key from OpenAI or Anthropic does not work here.":
     "errors.ownKeyNotOpenRouter",
   "OpenRouter does not know this key — check it at openrouter.ai → Keys.": "errors.ownKeyUnknown",
@@ -42,7 +42,7 @@ const DETAIL_TO_KEY: Record<string, MessageKey> = {
     "errors.ownKeyUnverified",
 };
 
-// Provider-relay strings (provider.py friendly_provider_error) → catalog key.
+// Provider-relay strings (provider.py friendly_provider_error) -> catalog key.
 // Matched by a distinctive substring so upstream punctuation drift is tolerated.
 const PROVIDER_SUBSTRING_TO_KEY: Array<[string, MessageKey]> = [
   ["rate-limiting", "errors.providerRateLimited"],

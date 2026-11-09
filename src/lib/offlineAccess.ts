@@ -1,33 +1,34 @@
 /**
- * Offline access — unlock and read your data with no server in reach.
+ * Offline access - unlock and read your data with no server in reach.
  *
  * Everything the app shows is already cached on this device, encrypted at rest
- * under a key derived from the Master Key (localVault). What was missing for a
- * Claude-app-like offline experience was purely the FRONT DOOR: `initAuth`
- * needed `/auth/me` and `unlock()` needed `/auth/keymaterial`, so a dead
- * network meant "QUON nicht erreichbar" even though every byte of data was
- * sitting locally. This module caches exactly the front-door material:
+ * under a key derived from the Master Key (localVault). The only thing between
+ * the user and that data when the network is down is the front door:
+ * `initAuth` needs `/auth/me` and `unlock()` needs `/auth/keymaterial`, so
+ * without a cache a dead network means "QUON nicht erreichbar" even though
+ * every byte of data is sitting locally. This module caches exactly the
+ * front-door material:
  *
  * - a minimal user profile (to render the shell and pick the right caches),
  * - the password key material (kdf salt/params + `wrap_pw`),
- * - optionally the biometric key material (`wrap_bio` + `prf_salt`) — the PRF
+ * - optionally the biometric key material (`wrap_bio` + `prf_salt`) - the PRF
  *   ceremony itself is fully local, so with this cached, Face ID/fingerprint
  *   unlock works offline too.
  *
  * PLAIN localStorage on purpose: it must be readable before any key exists.
  * What that means, honestly (also in docs/threat-model.md): `wrap_pw` is a
- * secretbox ciphertext whose key is Argon2id(password) — caching it lets
+ * secretbox ciphertext whose key is Argon2id(password) - caching it lets
  * someone with disk access mount an OFFLINE dictionary attack on the account
  * password. That is the same trade-off every local password-manager vault
  * (Bitwarden, 1Password) makes, and the KDF parameters are chosen to make it
  * expensive. `wrap_bio` opens only with the physical authenticator's PRF
  * output; kdf salt/params are handed to anyone who knows the email anyway.
- * Nothing here weakens the server-side zero-knowledge model — the server
+ * Nothing here weakens the server-side zero-knowledge model - the server
  * still only ever sees ciphertext.
  *
  * Lifecycle: written on every successful login/unlock (so it tracks password
  * changes), refreshed on biometric prefetch, erased on logout and on account
- * deletion. Lock ≠ logout: locking keeps the bundle, exactly like the OS
+ * deletion. Lock != logout: locking keeps the bundle, exactly like the OS
  * keychain keeps a vault.
  */
 
@@ -36,7 +37,7 @@ import type { BioKeyMaterial, KeyMaterial, MeResponse } from "./api/authApi";
 const STORAGE_KEY = "quon_offline_v1";
 
 /** The slice of the profile the shell needs to render before a server round
- *  trip. Deliberately NOT the full MeResponse: nothing here may gate a
+ *  trip. Deliberately not the full MeResponse: nothing here may gate a
  *  security decision, it only labels the UI and selects the right caches. */
 export interface OfflineProfile {
   id: string;
@@ -74,7 +75,7 @@ function write(s: Stored): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
   } catch {
-    /* private mode / quota — offline access degrades, online is unaffected */
+    /* private mode / quota - offline access degrades, online is unaffected */
   }
 }
 
@@ -97,7 +98,7 @@ export function saveOfflineBundle(user: MeResponse, km: KeyMaterial): void {
 }
 
 /** Store/refresh the biometric front door (fetched by the unlock screen's
- *  prefetch while online). No-op if the account has no bundle yet — the bio
+ *  prefetch while online). No-op if the account has no bundle yet - the bio
  *  material alone can't render the shell. */
 export function saveOfflineBio(userId: string, credentialId: string, km: BioKeyMaterial): void {
   const s = read();
@@ -122,7 +123,7 @@ export function getOfflineBundle(userId: string): OfflineBundle | null {
   return b && typeof b.user?.id === "string" && b.km?.wrap_pw ? b : null;
 }
 
-/** The bundle of the account that last unlocked on this device — what a cold
+/** The bundle of the account that last unlocked on this device - what a cold
  *  offline boot has to go on (there is no /auth/me to name the user). */
 export function getLastOfflineBundle(): OfflineBundle | null {
   const s = read();

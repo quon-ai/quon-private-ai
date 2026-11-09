@@ -1,10 +1,10 @@
 """Persistence path of the operator runtime settings.
 
-In Docker the store must live on the data volume (RUNTIME_SETTINGS_PATH) — the
+In Docker the store must live on the data volume (RUNTIME_SETTINGS_PATH) - the
 in-image module-directory default is recreated from the build context on every
-`up --build`, which silently reverted all Settings-UI edits (live incident:
-an operator-added model vanished from the catalog after each deploy, resetting
-users' model selection through the client's validity check)."""
+`up --build`, which silently reverts every Settings-UI edit: an operator-added
+model vanishes from the catalog after each deploy, resetting users' model
+selection through the client's validity check."""
 
 from __future__ import annotations
 
@@ -44,7 +44,7 @@ def test_first_boot_migrates_the_legacy_module_file(monkeypatch, tmp_path):
     try:
         monkeypatch.setattr(ss, "_LEGACY_STORE_PATH", legacy)
         assert ss.get_openrouter_models() == ["openrouter/fusion"]  # seeded from legacy
-        assert store.exists()  # …and persisted to the volume path
+        assert store.exists()  # ...and persisted to the volume path
     finally:
         _reload_with_env(monkeypatch, None)
 

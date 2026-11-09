@@ -2,15 +2,15 @@
 # QUON ships (npm frontend, pip backend, and the GitHub Actions we pin). Security
 # updates are raised immediately regardless of the schedule.
 #
-# ⚠️ SCHEDULED FOR SATURDAY NIGHT, AND STAGGERED, ON PURPOSE. There is ONE
+# Scheduled for Saturday night, and staggered, on purpose. There is one
 # self-hosted runner and E2E takes ~40-55 min, so a dependabot PR raised on a
-# working day sits directly in front of a main deploy — measured queue waits of
-# 64 and 70 minutes for jobs behind one. Grouping (below) already cut the PR
-# COUNT after the 20-PR pile-up of 2026-08-12; this cuts the COLLISION.
+# working day sits directly in front of a main deploy: measured queue waits of
+# 64 and 70 minutes for the jobs behind one. Grouping (below) cuts the PR
+# count; this cuts the collision.
 #
 # The ecosystems are two hours apart so their runs do not queue behind each
-# other either. Dependabot PRs deliberately keep E2E — a dependency bump is
-# exactly where a cross-browser suite earns its cost — so the fix is when they
+# other either. Dependabot PRs deliberately keep E2E - a dependency bump is
+# exactly where a cross-browser suite earns its cost - so the fix is when they
 # run, never whether they are tested.
 version: 2
 updates:
@@ -22,10 +22,10 @@ updates:
       time: "03:00"
       timezone: "Europe/Berlin"
     open-pull-requests-limit: 10
-    # ONE grouped PR for all minor/patch bumps (dev AND runtime), majors stay
-    # individual. The old policy — every runtime bump its own PR — produced 20
-    # open PRs whose workflows queued 19 jobs deep on the single runner lane
-    # (2026-08-12). Review effort belongs on majors; minors are reviewed by CI.
+    # One grouped PR for all minor/patch bumps (dev and runtime), majors stay
+    # individual. One PR per runtime bump produces twenty open PRs at once,
+    # whose workflows queue twenty jobs deep on the single runner lane.
+    # Review effort belongs on majors; minors are reviewed by CI.
     groups:
       minor-and-patch:
         applies-to: version-updates

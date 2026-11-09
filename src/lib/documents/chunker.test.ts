@@ -20,7 +20,7 @@ describe("chunkText", () => {
     expect(chunks[0]).toEqual({ text: "Just a short note.", index: 0 });
   });
 
-  it("bounds chunk size even with NO sentence/paragraph breaks (the OOM regression)", () => {
+  it("bounds chunk size even with no sentence/paragraph breaks (the OOM regression)", () => {
     // A table/data dump: one long run with no '.', '!', '?', or blank lines.
     const noBreaks = "col1\tval1 ".repeat(2000); // ~18k chars, single 'paragraph'
     const chunks = chunkText(noBreaks);

@@ -20,7 +20,7 @@ function toTerms(text: string): string[] {
 
 /**
  * A textarea list that persists reliably on mobile. `onBlur` alone is flaky on
- * touch devices — a keyboard dismiss or app-switch may never fire it — so we also
+ * touch devices - a keyboard dismiss or app-switch may never fire it - so we also
  * debounce-save while typing and flush on unmount (leaving Settings) and on
  * tab-hide / pagehide (backgrounding the browser).
  */
@@ -128,10 +128,10 @@ export function RedactionListsCard() {
         <p className="mt-1.5 text-[10px] text-quon-muted">
           {t("settings.savedAutoCaseInsensitive")}
         </p>
-        {/* Feedback #53 asked the sharp question: "wie gehst du selber mit den
-            Daten bei Immer-schwärzen um?" — these are BY DEFINITION the user's
-            most sensitive terms, so the honest mechanics belong right here, not
-            in a doc nobody reads while doubting. */}
+        {/* The sharp question is "wie gehst du selber mit den Daten bei
+            Immer-schwärzen um?" - these are by definition the user's most
+            sensitive terms, so the honest mechanics belong right here, not in
+            a doc nobody reads while doubting. */}
         <p className="mt-2 text-[10px] leading-snug text-quon-muted">
           {t("settings.redactListsHonesty")}{" "}
           <Link to="/trust" className="font-semibold text-quon-indigo hover:text-quon-indigo-hover">

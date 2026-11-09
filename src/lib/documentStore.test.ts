@@ -80,7 +80,7 @@ describe("renameDocument", () => {
     expect(pushed[0].updatedAt).toBeGreaterThan(1);
   });
 
-  it("keeps chunks, embeddings and the connector source — a rename is a label change only", () => {
+  it("keeps chunks, embeddings and the connector source: a rename is a label change only", () => {
     upsertDocument(
       doc({
         chunks: [{ index: 0, text: "chunk", embedding: [0.1] }],
@@ -118,7 +118,7 @@ describe("setDocumentProject (move between project scopes)", () => {
     expect(getDocument("d1")?.projectId).toBeUndefined();
   });
 
-  it("bumps updatedAt and fires the sync push — the latest scope wins across devices (LWW)", () => {
+  it("bumps updatedAt and fires the sync push: the latest scope wins across devices (LWW)", () => {
     upsertDocument(doc({ updatedAt: 1 }));
     const pushed: DocItem[] = [];
     const off = documentSyncStore.onChange((d) => pushed.push(d));
@@ -129,7 +129,7 @@ describe("setDocumentProject (move between project scopes)", () => {
     expect(pushed[0].updatedAt).toBeGreaterThan(1);
   });
 
-  it("is pure scope reassignment — chunks/embeddings survive the move (no re-embed)", () => {
+  it("is pure scope reassignment: chunks/embeddings survive the move (no re-embed)", () => {
     upsertDocument(doc({ chunks: [{ index: 0, text: "chunk", embedding: [0.1, 0.2] }] }));
     setDocumentProject("d1", "p1");
     expect(getDocument("d1")?.chunks).toEqual([{ index: 0, text: "chunk", embedding: [0.1, 0.2] }]);
@@ -180,7 +180,7 @@ describe("per-document redact terms", () => {
   });
 
   it("collectRedactTerms unions across documents, de-duped", () => {
-    // This is what the SEND merges into always_redact — the enforcement input.
+    // This is what the SEND merges into always_redact - the enforcement input.
     upsertDocument(doc({ id: "d1", redactTerms: ["Anna Muster", "48213"] }));
     upsertDocument(doc({ id: "d2", filename: "g.txt", redactTerms: ["anna muster", "Q7TR41"] }));
     expect(collectRedactTerms(["d1", "d2", "missing"])).toEqual(["Anna Muster", "48213", "Q7TR41"]);

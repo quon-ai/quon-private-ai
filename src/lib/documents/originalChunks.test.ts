@@ -1,7 +1,7 @@
 /**
- * Chunking/reassembly for synced original bytes: the split→concat round-trip
+ * Chunking/reassembly for synced original bytes: the split->concat round-trip
  * must be byte-exact for every size shape (single chunk, exact multiple,
- * remainder), since decryption authenticates the reassembled whole file — any
+ * remainder), since decryption authenticates the reassembled whole file - any
  * ordering or boundary bug would (correctly) fail closed into the text view.
  */
 import { describe, expect, it } from "vitest";
@@ -74,7 +74,7 @@ describe("originalChunkId", () => {
   });
 
   it("stays within the server's 128-char blob-id budget for realistic ids", () => {
-    // createDocumentId() → `doc_<epoch-ms>_<5 chars>` (~22 chars).
+    // createDocumentId() -> `doc_<epoch-ms>_<5 chars>` (~22 chars).
     const id = originalChunkId(`doc_${Date.now()}_abcde`, 999);
     expect(id.length).toBeLessThanOrEqual(128);
   });

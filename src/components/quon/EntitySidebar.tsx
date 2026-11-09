@@ -14,15 +14,15 @@ interface RedactionDetailProps {
   fallbackMode?: boolean;
   /** why the AI enrichment was skipped (e.g. "timeout", "budget") */
   skipReason?: string | null;
-  /** true when the input had no case signal — NER names were deferred to the LLM */
+  /** true when the input had no case signal - NER names were deferred to the LLM */
   lowCaseSignal?: boolean;
   className?: string;
   /**
-   * Present only on a message that had ≥1 redaction and is not itself already an
+   * Present only on a message that had >=1 redaction and is not itself already an
    * unfiltered resend. One-shot escape hatch for a false-positive redaction (e.g.
-   * German "Wann einnehmen?" mis-flagged as a PERSON): resends the ORIGINAL text
+   * German "Wann einnehmen?" mis-flagged as a PERSON): resends the original text
    * of this one message as a new turn, skipping detection entirely for that send.
-   * Deliberately not a permanent allow-list — see unfilteredResend.ts.
+   * Deliberately not a permanent allow-list - see unfilteredResend.ts.
    */
   onResendWithoutFilter?: () => void;
   /** True while a generation is already running for this chat. */
@@ -33,9 +33,9 @@ interface RedactionDetailProps {
 }
 
 /**
- * The redaction DETAIL for one message: the per-entity list (value ↔ placeholder),
+ * The redaction DETAIL for one message: the per-entity list (value <-> placeholder),
  * the fallback-mode notice, and the original/anonymized view toggle. The trigger
- * that opens it now lives on the message bubble itself (see UserBubble) — this is
+ * that opens it now lives on the message bubble itself (see UserBubble) - this is
  * only the expanded body, so the composer chrome stays compact. Privacy invariant:
  * the bubble always states the redaction count without a click; this reveals what
  * exactly was replaced when the user asks for it.
@@ -53,12 +53,12 @@ export function RedactionDetail({
   onNeverRedact,
 }: RedactionDetailProps) {
   const { t } = useT();
-  // Two-step consent: the first click only arms the confirm state — nothing is
+  // Two-step consent: the first click only arms the confirm state - nothing is
   // sent until the second, explicit click. Resets whenever this message's own
   // redaction set changes identity (a different bubble reusing the component).
   const [armed, setArmed] = useState(false);
-  // Values released via the per-row action — swap the row's action into a
-  // confirmation so the tap visibly DID something, without a toast layer.
+  // Values released via the per-row action - swap the row's action into a
+  // confirmation so the tap visibly did something, without a toast layer.
   const [released, setReleased] = useState<Set<string>>(() => new Set());
   return (
     <div
@@ -122,12 +122,11 @@ export function RedactionDetail({
                     )}
                   </div>
                 </div>
-                {/* Beta feedback 2026-08-23: in Filter mode there was NO way to
-                    say "this was wrong" — the one-tap release existed only in
-                    the document viewer and Review. This panel opens from the
-                    "N redacted" line in EVERY mode, so the per-value release
-                    lives here. Honest about its scope: this message is already
-                    sent; the release applies from the next send on. */}
+                {/* The one-tap release otherwise lives in the document viewer
+                    and in Review, which Filter mode skips. This panel opens from
+                    the "N redacted" line in every mode, so the per-value release
+                    lives here too. Honest about its scope: this message is
+                    already sent; the release applies from the next send on. */}
                 {onNeverRedact &&
                   (released.has(entity.value.toLowerCase()) ? (
                     <span className="shrink-0 text-[10px] text-quon-green">

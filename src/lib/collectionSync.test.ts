@@ -2,8 +2,8 @@
  * Push planning: the logic that decides whether a collection keeps syncing or
  * wedges.
  *
- * The bug these lock in: the relay rejects a blob over 4 MiB — and a batch over
- * 500 changes — with a WHOLE-REQUEST 413 (`quon-scrubber-service/sync.py:249`,
+ * The bug these lock in: the relay rejects a blob over 4 MiB - and a batch over
+ * 500 changes - with a WHOLE-REQUEST 413 (`quon-scrubber-service/sync.py:249`,
  * `:264`). The client caught that with a bare `catch` that re-queued everything,
  * so one oversized chat re-sent the same doomed payload forever and its entire
  * collection stopped syncing, silently. A long RAG-heavy chat reaches the cap
@@ -14,7 +14,7 @@ import { describe, expect, it } from "vitest";
 import { MAX_BLOB_BYTES, PUSH_BATCH_SIZE, b64Bytes, planPush } from "./collectionSync";
 import type { BlobIn } from "./api/syncApi";
 
-/** A blob whose ciphertext base64-decodes to EXACTLY `bytes` — the boundary
+/** A blob whose ciphertext base64-decodes to exactly `bytes` - the boundary
  *  cases are the point, so the helper must not round to a 3-byte group. */
 function blob(id: string, bytes: number): BlobIn {
   const groups = Math.ceil(bytes / 3);
@@ -63,7 +63,7 @@ describe("planPush", () => {
 
     expect(oversized.map((o) => o.change.id)).toEqual(["huge-chat"]);
     expect(oversized[0].bytes).toBeGreaterThan(MAX_BLOB_BYTES);
-    // …and the healthy siblings still go out. This is the whole fix: one
+    // ...and the healthy siblings still go out. This is the whole fix: one
     // impossible blob must not stop the rest of the collection.
     expect(batches.flat().map((c) => c.id)).toEqual(["a", "b"]);
   });

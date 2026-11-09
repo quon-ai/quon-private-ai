@@ -4,14 +4,14 @@
  * Both exist because `saveChatSession` runs once per streamed token (ScreenChat
  * persists on every `messages` change). Before this, each token re-rendered the
  * sidebar/dashboard/projects AND synchronously re-serialized + re-encrypted the
- * WHOLE history into localStorage — measured at ~8 ms / ~62 ms / ~221 ms for a
+ * whole history into localStorage - measured at ~8 ms / ~62 ms / ~221 ms for a
  * light / mid / heavy history.
  *
  * Runs in the default `node` environment on purpose: under jsdom, libsodium
  * rejects the realm's Uint8Array ("unsupported input type for message"), so
  * encryptJSON throws, sealLocal swallows it, nothing is ever written and every
  * assertion here would pass vacuously. A real cache key is required for the
- * same reason — sealLocal returns null while locked.
+ * same reason - sealLocal returns null while locked.
  */
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -77,7 +77,7 @@ describe("emit gate", () => {
   });
 
   it("emits when the title is still being derived from the first message", () => {
-    // Early in a chat the derived title changes as the first message grows —
+    // Early in a chat the derived title changes as the first message grows -
     // the sidebar must follow that.
     const cb = vi.fn();
     const off = subscribeChatHistory(cb);
@@ -91,14 +91,14 @@ describe("emit gate", () => {
 describe("coalescer", () => {
   it("folds a burst of streamed tokens into a single write", () => {
     const spy = vi.spyOn(localStorage, "setItem");
-    saveChatSession("c1", turn(1), { bump: true }); // structural → immediate
+    saveChatSession("c1", turn(1), { bump: true }); // structural -> immediate
     spy.mockClear();
 
     for (let i = 2; i <= 50; i++) saveChatSession("c1", turn(i), { bump: false });
     expect(spy).not.toHaveBeenCalled(); // still pending
 
     vi.advanceTimersByTime(500);
-    expect(spy).toHaveBeenCalledTimes(1); // 49 tokens → one write
+    expect(spy).toHaveBeenCalledTimes(1); // 49 tokens -> one write
     spy.mockRestore();
   });
 
@@ -123,14 +123,14 @@ describe("coalescer", () => {
   });
 
   it("flush is a no-op when nothing is pending", () => {
-    saveChatSession("c1", turn(1), { bump: true }); // structural → already written
+    saveChatSession("c1", turn(1), { bump: true }); // structural -> already written
     const spy = vi.spyOn(localStorage, "setItem");
     flushChatHistoryWrite();
     expect(spy).not.toHaveBeenCalled();
     spy.mockRestore();
   });
 
-  it("does not lose the last token — the trailing write persists final state", () => {
+  it("does not lose the last token: the trailing write persists final state", () => {
     saveChatSession("c1", turn(1), { bump: true });
     const spy = vi.spyOn(localStorage, "setItem");
     saveChatSession("c1", turn(9), { bump: false });

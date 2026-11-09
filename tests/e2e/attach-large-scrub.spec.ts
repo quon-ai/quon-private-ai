@@ -7,7 +7,7 @@ import { clickSend, login, openChat, sharedCreds } from "./helpers/account";
  * is scrubbed as several PARALLEL /scrub requests and merged value-aware
  * (scrubChunked.ts), instead of one long /scrub that tips over the edge timeout.
  * This asserts the end-to-end result: the send SUCCEEDS and the same repeated
- * person collapses to ONE placeholder across the pieces (never the raw name) in
+ * person collapses to one placeholder across the pieces (never the raw name) in
  * the outgoing relay body. Backend runs LLM-off, so NER supplies the PERSON.
  */
 test("a large attachment is split, scrubbed in parallel, and merged to one placeholder", async ({
@@ -36,7 +36,7 @@ test("a large attachment is split, scrubbed in parallel, and merged to one place
   await login(page, sharedCreds());
   await openChat(page);
 
-  // A >12k document repeating the same name in many paragraphs → splits into
+  // A >12k document repeating the same name in many paragraphs -> splits into
   // multiple scrub pieces, each seeing "Anna Müller".
   const para = "Angebot: Anna Müller ist Vertragspartnerin dieses Angebots.\n\n";
   const bigText = para.repeat(400); // ~24k chars
@@ -59,13 +59,13 @@ test("a large attachment is split, scrubbed in parallel, and merged to one place
   // The outgoing relay body carries the merged placeholder, never the real name.
   expect(body).toContain("[PERSON_1]");
   expect(body).not.toContain("Anna Müller");
-  // Value-aware merge: only ONE person placeholder index is used for the one
+  // Value-aware merge: only one person placeholder index is used for the one
   // person, even though the text was scrubbed in several independent pieces.
   const personIdx = new Set([...body.matchAll(/\[PERSON_(\d+)\]/g)].map((m) => m[1]));
   expect([...personIdx]).toEqual(["1"]);
 
   // Fails-on-old guard: the ~24k attachment was scrubbed as SEVERAL /scrub calls
-  // (≥3 pieces of 8k), not one long request. The pre-fix code sent the whole
-  // attachment as a single /scrub → far fewer calls.
+  // (>=3 pieces of 8k), not one long request. The pre-fix code sent the whole
+  // attachment as a single /scrub -> far fewer calls.
   expect(scrubCalls).toBeGreaterThanOrEqual(3);
 });

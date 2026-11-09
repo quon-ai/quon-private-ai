@@ -8,7 +8,7 @@ import { useT } from "@/lib/i18n/i18n";
 /**
  * Reusable per-type on/off checklist over the server entity catalog (GET
  * /entities, single source of truth). CUSTOM (the on-device always-redact list)
- * is never shown — it isn't a detector toggle. `disabled` is the drop-list;
+ * is never shown - it isn't a detector toggle. `disabled` is the drop-list;
  * `onToggle(type, enabled)` is called on each change. Used by the global
  * settings card and the per-project override editor.
  */

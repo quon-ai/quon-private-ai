@@ -9,7 +9,7 @@ const CATALOG = [
 ];
 
 describe("correctedModelId", () => {
-  it("does NOT reset before the real catalog has loaded (the reload-clobber bug)", () => {
+  it("does not reset before the real catalog has loaded (the reload-clobber bug)", () => {
     // On reload `models` is the bundled placeholder whose ids differ from the
     // saved connection-scoped id. Judging against it must be a no-op.
     const placeholder = [{ id: "openai/gpt-4o" }, { id: "openrouter/auto" }];

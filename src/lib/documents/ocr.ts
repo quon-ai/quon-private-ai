@@ -1,40 +1,39 @@
 /**
  * On-device photo OCR (zero-knowledge: the photo never leaves the device by
  * default; `ocrPhotoCloud` is the explicit, per-photo opt-in escalation for
- * hard cases — see .claude/plans/ocr-hybrid-fallback.md).
+ * hard cases).
  *
  * Engine: PaddleOCR PP-OCRv6 **tiny** (det ~1.7 MB + rec ~4.3 MB) via the
  * official browser SDK (`@paddleocr/paddleocr-js`, ONNX Runtime Web). The v6
  * unified model covers German AND English in one dictionary (ä/ö/ü/ß/€
- * verified — our own eval measured CER 0 on a printed German letter and ≤2%
- * on photo-simulated contracts, Chromium AND WebKit; see
- * `.claude/plans/research-2026-07-06.md` §5). Handwriting is NOT reliable
- * (PP-OCRv6 tiny scores ~39% on Paddle's own handwritten-English benchmark;
- * no browser-viable model for German handwriting exists) — the UI must keep
- * the result editable and say so.
+ * verified - our own eval measured CER 0 on a printed German letter and <=2%
+ * on photo-simulated contracts, Chromium AND WebKit). Handwriting is not
+ * reliable (PP-OCRv6 tiny scores ~39% on Paddle's own handwritten-English
+ * benchmark; no browser-viable model for German handwriting exists) - the UI
+ * must keep the result editable and say so.
  *
- * WebKit/iOS hardening (researched 2026-07-06):
- * - backend is forced to plain **WASM** — the ORT WebGPU/JSEP path is unstable
+ * WebKit/iOS hardening:
+ * - backend is forced to plain **WASM** - the ORT WebGPU/JSEP path is unstable
  *   on WebKit (reload loops on 26.2+, crash-after-N-inferences: onnxruntime
  *   #26827/#27584), and tiny is ~1 s/page on WASM anyway.
- * - `wasmPaths` pins the **non-JSEP** ORT binaries explicitly: ORT ≥1.21
+ * - `wasmPaths` pins the **non-JSEP** ORT binaries explicitly: ORT >=1.21
  *   otherwise loads the JSEP build even in pure-CPU mode, which melts down
  *   WebKit 26.2+ merely on load. `onnxruntime-web` is pinned exactly in
  *   package.json so these files always match the bundled JS API.
- * - `numThreads: 1` — QUON serves no COOP/COEP headers (cross-origin
+ * - `numThreads: 1` - QUON serves no COOP/COEP headers (cross-origin
  *   isolation would break the HuggingFace/CDN model loads), so ORT would
  *   fall back to 1 thread anyway; setting it silences the console warning.
  *
- * CSP: the ORT runtime is **self-hosted from our own origin** (`/ort/…`, copied
- * from node_modules by scripts/copy-ort.mjs on predev/prebuild), NOT a CDN. The
+ * CSP: the ORT runtime is **self-hosted from our own origin** (`/ort/...`, copied
+ * from node_modules by scripts/copy-ort.mjs on predev/prebuild), not a CDN. The
  * enforcing CSP (src/server.ts) allows scripts only from 'self', and ORT loads
- * its glue via a dynamic `import()` — a cross-origin CDN would need the CDN in
+ * its glue via a dynamic `import()` - a cross-origin CDN would need the CDN in
  * `script-src`, i.e. executing third-party JS with full page access. Same-origin
  * keeps `script-src 'self'` intact and removes the runtime jsdelivr dependency.
- * (The PaddleOCR MODEL tars still come from the Paddle CDN on first use — cached
+ * (The PaddleOCR MODEL tars still come from the Paddle CDN on first use - cached
  * by the browser, carry no user data; self-hosting those is a follow-up.)
  *
- * This module is heavy — import it lazily (`await import(...)`), like
+ * This module is heavy - import it lazily (`await import(...)`), like
  * extract.ts.
  */
 
@@ -59,7 +58,7 @@ type OcrEngine = Awaited<
 // pinned non-JSEP files here; the .mjs resolves its sibling .wasm relative to its
 // own URL, so both must live together under /ort/. ABSOLUTE URLs (origin-prefixed)
 // on purpose: ORT dynamic-imports the .mjs inside the PaddleOCR Web Worker, and a
-// root-relative "/ort/…" resolves against the worker's base URL — an absolute URL
+// root-relative "/ort/..." resolves against the worker's base URL - an absolute URL
 // is unambiguous in both page and worker contexts. (Guarded for SSR/Node import.)
 const ORT_ORIGIN = typeof location !== "undefined" ? location.origin : "";
 const NON_JSEP_WASM_PATHS = {
@@ -73,7 +72,7 @@ const NON_JSEP_WASM_PATHS = {
 export const OCR_MAX_SIDE = 2000;
 
 export interface PhotoOcrResult {
-  /** Recognized lines joined top-to-bottom — ready for the edit step. */
+  /** Recognized lines joined top-to-bottom - ready for the edit step. */
   text: string;
   lineCount: number;
   /** Mean per-line recognition confidence (0..1); low values should make the
@@ -83,7 +82,7 @@ export interface PhotoOcrResult {
 
 export type PhotoOcrPhase = "model" | "recognize";
 
-/** Scale (w, h) to fit within maxSide, never upscaling. Pure — unit-tested. */
+/** Scale (w, h) to fit within maxSide, never upscaling. Pure - unit-tested. */
 export function fitWithin(
   width: number,
   height: number,
@@ -95,7 +94,7 @@ export function fitWithin(
   return { width: Math.max(1, Math.round(width * f)), height: Math.max(1, Math.round(height * f)) };
 }
 
-// One engine per session — models stay warm for follow-up photos.
+// One engine per session - models stay warm for follow-up photos.
 let enginePromise: Promise<OcrEngine> | null = null;
 
 /** Init must never wedge the feature: a hung model download / WASM init would
@@ -105,7 +104,7 @@ const INIT_TIMEOUT_MS = 90_000;
 
 function getEngine(): Promise<OcrEngine> {
   // SDK import stays dynamic so this module itself is cheap to import (and
-  // testable in Node — the SDK expects a browser).
+  // testable in Node - the SDK expects a browser).
   enginePromise ??= Promise.race([
     import("@paddleocr/paddleocr-js").then(({ PaddleOCR }) =>
       PaddleOCR.create({
@@ -132,9 +131,9 @@ function getEngine(): Promise<OcrEngine> {
   return enginePromise;
 }
 
-/** What the bytes actually are, by magic numbers — extensions and MIME lie
+/** What the bytes actually are, by magic numbers - extensions and MIME lie
  *  (Android sharing hands over HEIF bytes named .jpg; cloud-backed Google
- *  Photos picks can arrive truncated/empty). Pure — unit-tested. */
+ *  Photos picks can arrive truncated/empty). Pure - unit-tested. */
 export function sniffImageFormat(bytes: Uint8Array): string {
   if (bytes.length === 0) return "leer/empty";
   if (bytes.length >= 8 && bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e)
@@ -152,7 +151,7 @@ export function sniffImageFormat(bytes: Uint8Array): string {
   if (bytes.length >= 6 && bytes[0] === 0x47 && bytes[1] === 0x49 && bytes[2] === 0x46)
     return "gif";
   if (bytes.length >= 12 && bytes[4] === 0x66 && bytes[5] === 0x74 && bytes[6] === 0x79) {
-    // ISO-BMFF "ftyp" — brand at bytes 8..11 tells HEIF vs AVIF apart.
+    // ISO-BMFF "ftyp" - brand at bytes 8..11 tells HEIF vs AVIF apart.
     const brand = String.fromCharCode(bytes[8], bytes[9], bytes[10], bytes[11]);
     if (brand.startsWith("avi")) return "avif";
     return `heif (${brand.trim()})`;
@@ -160,9 +159,9 @@ export function sniffImageFormat(bytes: Uint8Array): string {
   return "unbekannt/unknown";
 }
 
-/** Last-resort decode via an <img> element — a different decoder pipeline that
+/** Last-resort decode via an <img> element - a different decoder pipeline that
  *  sometimes accepts files createImageBitmap rejects (color-profile / gainmap
- *  oddities). Deliberately onload+drawImage, NOT img.decode(): Chromium defers
+ *  oddities). Deliberately onload+drawImage, not img.decode(): Chromium defers
  *  decode() indefinitely for hidden pages (the documented gotcha). */
 function decodeViaImgElement(bytes: Uint8Array): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
@@ -179,8 +178,8 @@ function decodeViaImgElement(bytes: Uint8Array): Promise<HTMLImageElement> {
 }
 
 /** Decode an image file EXIF-upright and downscaled onto a canvas.
- *  createImageBitmap decodes off the main thread AND — unlike `img.decode()`,
- *  which Chromium defers indefinitely for hidden pages — keeps working when
+ *  createImageBitmap decodes off the main thread AND - unlike `img.decode()`,
+ *  which Chromium defers indefinitely for hidden pages - keeps working when
  *  the tab is backgrounded mid-scan. `imageOrientation: "from-image"` honours
  *  EXIF; the plain retry covers engines that reject the option.
  *
@@ -190,10 +189,10 @@ function decodeViaImgElement(bytes: Uint8Array): Promise<HTMLImageElement> {
  *  its own honest message instead of a generic decode error; (b) on decode
  *  failure an <img>-element fallback tries a second decoder pipeline; (c) the
  *  final error names the SNIFFED format + size and lands in the technical log
- *  (diagLog) — so the next report tells us exactly what arrived. */
+ *  (diagLog) - so the next report tells us exactly what arrived. */
 async function decodeToCanvas(file: Blob): Promise<HTMLCanvasElement> {
   // Read the bytes up front. A picker handing over a dead content:// reference
-  // fails HERE, distinguishably, not as a bogus "decode" error.
+  // fails here, distinguishably, not as a bogus "decode" error.
   let bytes: Uint8Array;
   try {
     bytes = new Uint8Array(await file.arrayBuffer());
@@ -230,7 +229,7 @@ async function decodeToCanvas(file: Blob): Promise<HTMLCanvasElement> {
     }
   } catch (err) {
     // Second decoder pipeline before giving up (loses EXIF rotation for the
-    // rare files that need it — an upright-ish scan beats no scan).
+    // rare files that need it - an upright-ish scan beats no scan).
     try {
       const img = await decodeViaImgElement(bytes);
       return draw(img, img.naturalWidth, img.naturalHeight);
@@ -247,7 +246,7 @@ async function decodeToCanvas(file: Blob): Promise<HTMLCanvasElement> {
 }
 
 /** A copy of the canvas turned clockwise by `deg` (the frame swaps sides for
- *  a quarter turn). The original is untouched — the first pass's canvas is
+ *  a quarter turn). The original is untouched - the first pass's canvas is
  *  reused for every retry. */
 export function rotateCanvas(source: HTMLCanvasElement, deg: Rotation): HTMLCanvasElement {
   if (deg === 0) return source;
@@ -265,7 +264,7 @@ export function rotateCanvas(source: HTMLCanvasElement, deg: Rotation): HTMLCanv
 
 /**
  * Run the engine, and if the page reads as sideways or upside down, run it
- * again on the rotated canvas and keep the best pass (ocrOrientation.ts —
+ * again on the rotated canvas and keep the best pass (ocrOrientation.ts -
  * the engine has no angle classifier, so a landscape scan otherwise comes
  * back as garbage). `blankIsLikely` is for scanned-PDF pages, where an empty
  * result is a blank page rather than a sideways one.
@@ -297,7 +296,7 @@ async function predictUpright(
 }
 
 /** Base64-encode bytes chunked (String.fromCharCode has an argument limit;
- *  spreading a whole photo would overflow the stack). Pure — unit-tested. */
+ *  spreading a whole photo would overflow the stack). Pure - unit-tested. */
 export function bytesToB64(bytes: Uint8Array): string {
   let binary = "";
   const CHUNK = 0x8000;
@@ -308,8 +307,8 @@ export function bytesToB64(bytes: Uint8Array): string {
 }
 
 /** Prepare a photo for the explicit cloud escalation: decode EXIF-upright,
- *  downscale to the same ≤2000 px cap as the on-device path and re-encode as
- *  JPEG. The canvas round-trip strips ALL metadata (EXIF incl. GPS) before
+ *  downscale to the same <=2000 px cap as the on-device path and re-encode as
+ *  JPEG. The canvas round-trip strips all metadata (EXIF incl. GPS) before
  *  anything leaves the device. Returns base64 for the JSON API. */
 export async function photoToUploadB64(file: Blob): Promise<string> {
   const canvas = await decodeToCanvas(file);
@@ -322,7 +321,7 @@ export async function photoToUploadB64(file: Blob): Promise<string> {
 
 /** Escalate one photo to the cloud model (server relays it once, ZDR routing,
  *  nothing stored). Caller is responsible for having obtained explicit user
- *  consent — this function must never run automatically. */
+ *  consent - this function must never run automatically. */
 export async function ocrPhotoCloud(file: Blob): Promise<{ text: string; model: string }> {
   const { ocrCloudTranscribe } = await import("@/lib/quonApi");
   return ocrCloudTranscribe(await photoToUploadB64(file));
@@ -332,7 +331,7 @@ export async function ocrPhotoCloud(file: Blob): Promise<{ text: string; model: 
  *  (model download offline, undecodable image, no text found). */
 /**
  * OCR an already-rendered canvas (e.g. a pdf.js page render for a scanned
- * PDF). Unlike `ocrPhoto` this does NOT throw when no text is found — a blank
+ * PDF). Unlike `ocrPhoto` this does not throw when no text is found - a blank
  * page in a scanned document is legitimate, the caller just gets "".
  */
 export async function ocrCanvas(canvas: HTMLCanvasElement): Promise<PhotoOcrResult> {

@@ -15,12 +15,12 @@ def test_register_open_when_no_invite_code(quon_client, monkeypatch):
 def test_register_requires_correct_invite_code(quon_client, monkeypatch):
     monkeypatch.setattr(settings, "signup_invite_code", "letmein")
 
-    # missing code → rejected
+    # missing code -> rejected
     assert quon_client.post("/auth/register", json=register_body("a@quon.local")).status_code == 403
-    # wrong code → rejected
+    # wrong code -> rejected
     wrong = {**register_body("a@quon.local"), "invite_code": "nope"}
     assert quon_client.post("/auth/register", json=wrong).status_code == 403
-    # correct code → created
+    # correct code -> created
     ok = {**register_body("a@quon.local"), "invite_code": "letmein"}
     assert quon_client.post("/auth/register", json=ok).status_code == 201
 

@@ -3,9 +3,9 @@ import { test, expect } from "@playwright/test";
 import { login, openChat, sharedCreds } from "./helpers/account";
 
 /**
- * Feedback #54: "a status indicator whether local detection works — later in
- * the chat is a bit late — and a link to the docs." Both live under the
- * detection types now. On the E2E stack the scrubber is up, so the line reads
+ * "A status indicator whether local detection works - later in the chat is a
+ * bit late - and a link to the docs." Both live under the detection types. On
+ * the E2E stack the scrubber is up, so the line reads
  * as the healthy state and names the engines; offline/degraded copy is covered
  * by the header badge's own tests.
  */
@@ -23,11 +23,11 @@ test("the Detection tab states the engine status and links to how detection work
 });
 
 /**
- * The composer mic is a POINTER to the keyboard's dictation, not an engine
- * (2026-09-06). It must therefore render on EVERY browser — no capability
- * gate — and tapping it must explain, in info tone, where that key is. The
- * operator's two reports were the reason: unavailable in the installed iPhone
- * app, `network` on macOS, and where the Web Speech API did work it uploaded
+ * The composer mic is a pointer to the keyboard's dictation, not an engine.
+ * It must therefore render on every browser - no capability gate - and tapping
+ * it must explain, in info tone, where that key is. An in-app engine is the
+ * wrong tool here: the Web Speech API is unavailable in the installed iPhone
+ * app, errors with `network` on macOS, and where it does work it uploads
  * unscrubbed audio to Apple/Google.
  */
 test("the mic explains the keyboard's dictation instead of running an engine", async ({ page }) => {

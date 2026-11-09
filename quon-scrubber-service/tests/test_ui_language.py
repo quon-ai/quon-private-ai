@@ -55,13 +55,13 @@ def test_verification_email_language_flows_from_register(quon_client):
     body = register_body("de-mail@quon.local")
     body["language"] = "de"
     quon_client.post("/auth/register", json=body)
-    # The register→_issue_email_token→send_verification chain forwards the chosen
+    # The register->_issue_email_token->send_verification chain forwards the chosen
     # language (conftest records the lang arg the send received).
     assert quon_client.captured_lang["de-mail@quon.local"] == "de"
 
 
 def test_email_templates_are_bilingual():
-    """send_verification picks the DE vs EN subject; unknown → German default."""
+    """send_verification picks the DE vs EN subject; unknown -> German default."""
     import email_service
 
     sent: list = []
@@ -75,4 +75,4 @@ def test_email_templates_are_bilingual():
         email_service._send = orig
     assert sent[0] == "Verify your QUON account"
     assert sent[1] == "Bestätige dein QUON-Konto"
-    assert sent[2] == "Bestätige dein QUON-Konto"  # None → German default
+    assert sent[2] == "Bestätige dein QUON-Konto"  # None -> German default

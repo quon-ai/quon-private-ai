@@ -1,6 +1,6 @@
 /**
  * "docs" namespace UI strings. Keys are prefixed `docs.*`. Keep `en` and `de`
- * in sync — a missing German key is a compile error via catalog.ts's typing.
+ * in sync - a missing German key is a compile error via catalog.ts's typing.
  * (Populated by the i18n string-externalization pass.)
  */
 export const docs = {
@@ -16,7 +16,7 @@ export const docs = {
     "docs.ocrLoadReaderError":
       "Couldn't load the on-device text reader ({detail}). Check your connection and retry — the photo has not left this device.",
     "docs.ocrNoText": "No readable text found in this photo. Try better light or a closer shot.",
-    // ScreenDocuments — page chrome
+    // ScreenDocuments - page chrome
     "docs.title": "Documents",
     "docs.subtitle":
       "Chat with your files. Extracted and embedded on-device, then stored as ciphertext — never sent to the cloud in the clear.",
@@ -32,10 +32,10 @@ export const docs = {
     "docs.detectRunning": "Running your filter over the document…",
     "docs.detectSlow": "still working — long documents take a while",
     "docs.detectDone": "{count} distinct values marked — everything unmarked would be sent as-is.",
-    // #71 ("found it more by accident") and #70 ("I still don't understand what
-    // happens where"): the marks are INTERACTIVE, and nothing said so. The
-    // toggle also needs a visible label — an icon with only a `title` is a
-    // hover tooltip, which a touch device can never show.
+    // The marks are interactive, and without this line nothing says so (users
+    // "found it more by accident"). The toggle also needs a visible label - an
+    // icon with only a `title` is a hover tooltip, which a touch device can
+    // never show.
     "docs.detectLabel": "Detection",
     "docs.detectHowto":
       "Select any text to redact it yourself · tap a mark to keep that value after all",
@@ -53,7 +53,7 @@ export const docs = {
     "docs.urlHint":
       "The page's text is imported as a document. Note: QUON's server fetches the URL — it sees the address and the public page content (not your private data).",
     "docs.urlError": "Couldn't import that page.",
-    // ScreenDocuments — originals-sync quota banner (non-blocking; indexing/search
+    // ScreenDocuments - originals-sync quota banner (non-blocking; indexing/search
     // unaffected). Title is bold, body continues the sentence.
     "docs.quotaTitle.one": "One original couldn't be synced",
     "docs.quotaTitle.other": "{count} originals couldn't be synced",
@@ -61,7 +61,7 @@ export const docs = {
       "— storage quota reached (200 MB). The document itself is synced and searchable; the original file stays on this device. Delete old documents to free space.",
     "docs.quotaBody.other":
       "— storage quota reached (200 MB). The documents themselves are synced and searchable; the original files stay on this device. Delete old documents to free space.",
-    // ScreenDocuments — over-cap originals (never synced) + storage line
+    // ScreenDocuments - over-cap originals (never synced) + storage line
     "docs.tooBigTitle": "Too large to sync:",
     "docs.tooBigBody":
       "files over 50 MB keep their original only on this device. The text is synced and searchable everywhere.",
@@ -70,14 +70,14 @@ export const docs = {
     "docs.deviceLocalTitle": "Original kept on this device:",
     "docs.deviceLocalBody":
       "this phone hasn't enough memory to upload a file this large safely. The text is synced and searchable everywhere; open the document on a computer once to sync the original.",
-    // ScreenDocuments — search
+    // ScreenDocuments - search
     "docs.searchPlaceholder": "Search all your documents…",
     "docs.clearSearchAria": "Clear search",
     "docs.resultCount.one": "{count} result",
     "docs.resultCount.other": "{count} results",
     "docs.matchPercent": "match {percent}%",
     "docs.noMatches": "No matches.",
-    // ScreenDocuments — document list
+    // ScreenDocuments - document list
     "docs.yourDocuments": "Your Documents",
     "docs.emptyState": "No documents yet. Upload one to get started.",
     "docs.viewDocumentTitle": "View document",
@@ -160,7 +160,7 @@ export const docs = {
     "docs.ocrLoadReaderError":
       "Die geräteinterne Texterkennung konnte nicht geladen werden ({detail}). Prüfe deine Verbindung und versuche es erneut — das Foto hat dieses Gerät nicht verlassen.",
     "docs.ocrNoText": "Kein lesbarer Text in diesem Foto. Versuch mehr Licht oder geh näher ran.",
-    // ScreenDocuments — page chrome
+    // ScreenDocuments - page chrome
     "docs.title": "Dokumente",
     "docs.subtitle":
       "Chatte mit deinen Dateien. Alles wird auf deinem Gerät ausgelesen und eingebettet, dann verschlüsselt gespeichert — nie unverschlüsselt in die Cloud.",
@@ -193,14 +193,14 @@ export const docs = {
     "docs.urlHint":
       "Der Text der Seite wird als Dokument importiert. Hinweis: QUONs Server ruft die URL ab — er sieht die Adresse und den öffentlichen Seiteninhalt (nicht deine privaten Daten).",
     "docs.urlError": "Seite konnte nicht importiert werden.",
-    // ScreenDocuments — originals-sync quota banner
+    // ScreenDocuments - originals-sync quota banner
     "docs.quotaTitle.one": "Ein Original konnte nicht synchronisiert werden",
     "docs.quotaTitle.other": "{count} Originale konnten nicht synchronisiert werden",
     "docs.quotaBody.one":
       "— Speicherlimit erreicht (200 MB). Das Dokument selbst ist synchronisiert und durchsuchbar; die Originaldatei bleibt auf diesem Gerät. Lösch alte Dokumente, um Platz zu schaffen.",
     "docs.quotaBody.other":
       "— Speicherlimit erreicht (200 MB). Die Dokumente selbst sind synchronisiert und durchsuchbar; die Originaldateien bleiben auf diesem Gerät. Lösch alte Dokumente, um Platz zu schaffen.",
-    // ScreenDocuments — over-cap originals (never synced) + storage line
+    // ScreenDocuments - over-cap originals (never synced) + storage line
     "docs.tooBigTitle": "Zu groß zum Synchronisieren:",
     "docs.tooBigBody":
       "Dateien über 50 MB behalten ihr Original nur auf diesem Gerät. Der Text ist überall synchronisiert und durchsuchbar.",
@@ -209,14 +209,14 @@ export const docs = {
     "docs.deviceLocalTitle": "Original bleibt auf diesem Gerät:",
     "docs.deviceLocalBody":
       "dieses Handy hat zu wenig Speicher, um eine so große Datei sicher hochzuladen. Der Text ist überall synchronisiert und durchsuchbar; öffne das Dokument einmal am Computer, dann wird das Original synchronisiert.",
-    // ScreenDocuments — search
+    // ScreenDocuments - search
     "docs.searchPlaceholder": "Alle deine Dokumente durchsuchen…",
     "docs.clearSearchAria": "Suche löschen",
     "docs.resultCount.one": "{count} Ergebnis",
     "docs.resultCount.other": "{count} Ergebnisse",
     "docs.matchPercent": "{percent} % Übereinstimmung",
     "docs.noMatches": "Keine Treffer.",
-    // ScreenDocuments — document list
+    // ScreenDocuments - document list
     "docs.yourDocuments": "Deine Dokumente",
     "docs.emptyState": "Noch keine Dokumente. Lad eins hoch, um loszulegen.",
     "docs.viewDocumentTitle": "Dokument ansehen",

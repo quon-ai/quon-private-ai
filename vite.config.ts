@@ -1,17 +1,14 @@
 /**
- * Vite config — plain, no wrapper.
+ * Vite config - plain, no wrapper.
  *
- * This used to go through `@lovable.dev/vite-tanstack-config`, the scaffolding
- * preset QUON was generated from. Lovable is no longer used, and the wrapper
- * was not free: it pinned peer ranges that forced `--legacy-peer-deps` on every
- * install, it injected dev plugins meant for the Lovable sandbox (asset proxy,
- * error-report bridges), and it hid the plugin order behind a package — so
- * "why does the build do that?" had no answer in this repo.
+ * No scaffolding preset in between: a wrapper package pins peer ranges that
+ * force `--legacy-peer-deps` on every install, injects dev plugins meant for
+ * someone else's sandbox (asset proxy, error-report bridges), and hides the
+ * plugin order behind a package, so "why does the build do that?" has no
+ * answer in this repo.
  *
- * Everything below reproduces what the wrapper actually produced, verified by
- * dumping its resolved config for both `build/production` and `serve/development`
- * before deleting it. Plugin ORDER is load-bearing: tailwind → tsconfig-paths →
- * tanstackStart → nitro (build only) → react.
+ * Plugin order is load-bearing: tailwind -> tsconfig-paths -> tanstackStart ->
+ * nitro (build only) -> react.
  */
 import { createReadStream, existsSync, readFileSync, statSync } from "node:fs";
 import { dirname, join, normalize, resolve } from "node:path";
@@ -29,7 +26,7 @@ const ROOT = dirname(fileURLToPath(import.meta.url));
  * E2E-only: serve the mirrored embedding-model files (tests/e2e/.models, see
  * scripts/fetch-e2e-models.mjs) under /e2e-models so the ~20 document-heavy
  * specs stop re-downloading ~100MB from huggingface.co per browser context.
- * Enabled ONLY by the Playwright webServer (QUON_E2E_LOCAL_MODELS=1); inert in
+ * Enabled only by the Playwright webServer (QUON_E2E_LOCAL_MODELS=1); inert in
  * normal dev and structurally absent from production builds (configureServer
  * is a dev-server hook). Misses 302-redirect to huggingface.co, so a stale or
  * missing mirror degrades to the old slow path, never to a broken suite.
@@ -49,7 +46,7 @@ const e2eLocalModels = (): PluginOption => ({
       const rel = normalize((req.url ?? "/").split("?")[0]).replace(/^([/\\.])+/, "");
       const file = join(root, rel);
       if (!file.startsWith(root) || !existsSync(file) || !statSync(file).isFile()) {
-        // Miss → let the browser fetch the real thing from HF (CORS-permissive).
+        // Miss -> let the browser fetch the real thing from HF (CORS-permissive).
         res.statusCode = 302;
         res.setHeader("location", `https://huggingface.co/${rel}`);
         res.end();
@@ -65,8 +62,8 @@ const e2eLocalModels = (): PluginOption => ({
 
 /**
  * The build id written by scripts/write-version.mjs (a `prebuild`/`predev`
- * step), inlined so the running app knows which build it IS. It compares that
- * against the deployed public/version.json to offer a reload — see
+ * step), inlined so the running app knows which build it is. It compares that
+ * against the deployed public/version.json to offer a reload - see
  * src/lib/appVersion.ts. Falls back to "dev" when the stamp is missing, which
  * disables the check rather than claiming a wrong version.
  */
@@ -82,9 +79,9 @@ function buildId(): string {
 export default defineConfig(async ({ command, mode }): Promise<UserConfig> => {
   // VITE_* values are inlined explicitly, not left to Vite's implicit
   // import.meta.env: the SSR/nitro server bundle is built separately and must
-  // see the SAME values as the client, or the app would call one API URL in the
+  // see the same values as the client, or the app would call one API URL in the
   // browser and another during SSR. The wrapper did this too.
-  // .env files first, then EXPORTED VITE_* vars on top — an explicitly exported
+  // .env files first, then EXPORTED VITE_* vars on top - an explicitly exported
   // value must win, which loadEnv alone does not do (it reads files only). The
   // e2e suite relies on exactly that: playwright.config.ts starts vite with
   // VITE_QUON_API_URL=http://localhost:8011 to point the app at the throwaway
@@ -128,55 +125,54 @@ export default defineConfig(async ({ command, mode }): Promise<UserConfig> => {
         "react/jsx-dev-runtime",
         // Pre-bundle the heavy Memory/Documents libs at dev-server start.
         // Otherwise Vite discovers them on first dynamic import and triggers a
-        // full page reload to re-optimize — which can orphan an in-flight
+        // full page reload to re-optimize - which can orphan an in-flight
         // document ingest. (Irrelevant to production, where deps are bundled
         // ahead of time.)
         "pdfjs-dist",
-        // The WORKER is a subpath entry — including the package root does NOT
+        // The worker is a subpath entry: including the package root does not
         // cover it, and its first lazy import (first attach of a PDF) still
-        // triggered the discover→re-optimize→full-reload that wipes the staged
-        // attachment mid-flight. Found via the E2E trace on 2026-09-06: the
-        // .vite/deps fetch for pdf__worker__min__mjs, three HMR reconnects,
-        // and a chip that never came back.
+        // triggers the discover->re-optimize->full-reload that wipes the staged
+        // attachment mid-flight (in a trace: the .vite/deps fetch for
+        // pdf__worker__min__mjs, three HMR reconnects, and a chip that never
+        // comes back).
         "pdfjs-dist/build/pdf.worker.min.mjs",
         "mammoth",
         "@huggingface/transformers",
         // The photo-OCR SDK: its first lazy import (first scan in a dev
-        // session) hit the same discover→re-optimize→reload, which the scan
-        // dialog then reported as "QUON was updated in the meantime" — found
-        // 2026-09-14 by the real-engine orientation spec, where every case
-        // died the same way before the engine ever ran.
+        // session) hits the same discover->re-optimize->reload, which the scan
+        // dialog then reports as "QUON was updated in the meantime"; the
+        // real-engine orientation spec dies that way before the engine runs.
         "@paddleocr/paddleocr-js",
       ],
     },
     ssr: {
-      // The frontend image is dist/ and nothing else — no node_modules — so
+      // The frontend image is dist/ and nothing else, no node_modules, so
       // the SSR bundle must carry every package it imports. Vite's default
       // leaves dependencies external (fine for a server with node_modules,
-      // fatal here): a fresh self-host install died on its first request with
-      // ERR_MODULE_NOT_FOUND for "h3-v2", TanStack's aliased h3 import, on
-      // 2026-11-02. `true` bundles all of them; scripts/check-ssr-externals.mjs
-      // fails the gate if a bare import ever survives again.
+      // fatal here): a fresh self-host install dies on its first request with
+      // ERR_MODULE_NOT_FOUND for an aliased import such as "h3-v2", TanStack's
+      // h3 alias. `true` bundles all of them; scripts/check-ssr-externals.mjs
+      // fails the gate if a bare import ever survives.
       //
-      // BUILD ONLY. In `vite dev` the SSR side runs through Vite's module
+      // Build only. In `vite dev` the SSR side runs through Vite's module
       // runner, which cannot inline a CommonJS package: with noExternal on, the
-      // first request died with "ReferenceError: module is not defined" in
+      // first request dies with "ReferenceError: module is not defined" in
       // react/index.js, and the E2E suite (whose web server is `vite dev`)
-      // failed in 6 minutes on the first public CI run, 2026-11-02. Dev keeps
-      // Vite's default (dependencies external, loaded from node_modules).
+      // goes with it. Dev keeps Vite's default (dependencies external, loaded
+      // from node_modules).
       noExternal: command === "build" ? true : undefined,
     },
 
     server: {
       host: "::",
-      // strictPort: fail loudly instead of walking to the next free port. The
-      // silent walk landed a second dev server on :8081 — the mini PC's
-      // frontend port and one the bash-guard blocks the gate on — so "which
-      // server am I looking at" became unanswerable and the guard fired against
-      // the wrong process. QUON_DEV_PORT lets a parallel session pick its own.
+      // strictPort: fail loudly instead of walking to the next free port. A
+      // silent walk once landed a second dev server on :8081, the port of the
+      // production frontend in the local deploy setup, and "which server am I
+      // looking at" became unanswerable. QUON_DEV_PORT lets a parallel checkout
+      // pick its own port.
       port: Number(process.env.QUON_DEV_PORT ?? 8080),
       strictPort: true,
-      // Proxy /api → the scrubber backend so the browser talks to a single
+      // Proxy /api -> the scrubber backend so the browser talks to a single
       // origin in dev (matches the Caddy /api/* setup in prod). This makes the
       // session cookie + readable CSRF cookie first-party, so auth works
       // without CORS.
@@ -193,7 +189,7 @@ export default defineConfig(async ({ command, mode }): Promise<UserConfig> => {
     preview: {
       // `vite preview` behind a reverse proxy needs the public hostname
       // allow-listed (Host-header check). Comma-separated env override;
-      // unset → the check is disabled (preview binds localhost and sits
+      // unset -> the check is disabled (preview binds localhost and sits
       // behind the operator's proxy, so this is an acceptable default).
       allowedHosts: process.env.QUON_ALLOWED_HOSTS
         ? process.env.QUON_ALLOWED_HOSTS.split(",").map((h) => h.trim())
@@ -208,15 +204,15 @@ export default defineConfig(async ({ command, mode }): Promise<UserConfig> => {
         // SSR error wrapper). nitro/vite builds from this.
         server: { entry: "server" },
         // NATIVE (Tauri) BUILD: emit a prerendered SPA shell instead of relying
-        // on the SSR server at runtime. A desktop app ships static files —
-        // there is no Node process to render per request — and QUON is
+        // on the SSR server at runtime. A desktop app ships static files -
+        // there is no Node process to render per request - and QUON is
         // client-heavy anyway (crypto, sync, IndexedDB, embeddings all run in
         // the page).
         //
-        // What SSR does today and why losing it is fine HERE: it mints the CSP
+        // What SSR does today and why losing it is fine here: it mints the CSP
         // nonce and reads the `quon_lang` cookie. A native shell has no CSP at
         // all, and the language falls back to the device preference
-        // (getLangPref: cookie → localStorage → "de"). Both handshakes are
+        // (getLangPref: cookie -> localStorage -> "de"). Both handshakes are
         // optional lookups (`__quonCspNonce?.()`), so they simply return
         // undefined.
         //

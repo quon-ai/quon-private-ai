@@ -2,14 +2,14 @@
 /**
  * Real-Safari smoke test.
  *
- * Playwright's WebKit is close to Safari but not identical — it did NOT reproduce
+ * Playwright's WebKit is close to Safari but not identical - it did not reproduce
  * the iOS PDF bug (a ReadableStream async-iteration gap); only *real* Safari did.
- * This drives ACTUAL Safari via safaridriver through the browser-API-heavy flow
- * (pdf.js extract → chunk → in-browser embed) so that class of bug can't ship.
+ * This drives actual Safari via safaridriver through the browser-API-heavy flow
+ * (pdf.js extract -> chunk -> in-browser embed) so that class of bug can't ship.
  *
  * Run before mini-PC deploys: `npm run smoke:safari`
  *
- * Prereqs (one-time): `sudo safaridriver --enable`, then Safari → Develop →
+ * Prereqs (one-time): `sudo safaridriver --enable`, then Safari -> Develop ->
  * "Allow Remote Automation". A dev server must be running (default :8080) so the
  * un-bundled `/src` modules can be imported. Override with SMOKE_URL=...
  */

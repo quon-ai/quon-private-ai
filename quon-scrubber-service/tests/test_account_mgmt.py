@@ -1,7 +1,7 @@
 """Account self-service: change email, change password, delete account.
 
 These guard the zero-knowledge invariants: change-password must re-wrap only
-(Master Key unchanged → recovery wrap untouched, synced data still decryptable),
+(Master Key unchanged -> recovery wrap untouched, synced data still decryptable),
 require the current password, and invalidate other sessions; delete must verify
 the password and cascade the account away.
 """
@@ -49,9 +49,9 @@ def test_change_password_wrong_current_rejected_no_mutation(quon_client):
 def test_change_password_requires_csrf_and_session(quon_client):
     c = quon_client
     make_active_user(c, "cp2@x.de")
-    # session present but no CSRF header → 403
+    # session present but no CSRF header -> 403
     assert c.post("/auth/change-password", json=_new_pw_body()).status_code == 403
-    # anonymous → 401
+    # anonymous -> 401
     c2 = _fresh_client()
     assert c2.post("/auth/change-password", json=_new_pw_body()).status_code == 401
 
@@ -127,7 +127,7 @@ def test_change_email_request_taken_active_is_silent(quon_client, monkeypatch):
 
     r = c.post("/auth/change-email/request", json={"new_email": "taken@x.de"}, headers=csrf)
     assert r.status_code == 200 and r.json()["ok"] is True
-    # No token issued for a taken address → nothing to confirm (anti-enumeration).
+    # No token issued for a taken address -> nothing to confirm (anti-enumeration).
     assert ("change_email", "taken@x.de") not in c.captured
 
 
@@ -136,14 +136,14 @@ def test_change_email_confirm_race_conflict(quon_client, monkeypatch):
     _capture_email_change(monkeypatch, c.captured)
     csrf = make_active_user(c, "racer@x.de")
 
-    # Request while target is free → token issued.
+    # Request while target is free -> token issued.
     assert c.post("/auth/change-email/request", json={"new_email": "contested@x.de"}, headers=csrf).status_code == 200
     token = c.captured[("change_email", "contested@x.de")]
 
     # Someone else grabs the address before confirm.
     make_active_user(c, "contested@x.de")
 
-    # Confirm now clashes → 409, no silent overwrite.
+    # Confirm now clashes -> 409, no silent overwrite.
     assert c.post("/auth/change-email/confirm", json={"token": token}).status_code == 409
 
 
@@ -168,7 +168,7 @@ if __name__ == "__main__":  # pragma: no cover
 
 # --- recovery rotation ------------------------------------------------------
 # The old phrase is never stored (ZK), so "lost my phrase" is served by rotating
-# to a NEW one while unlocked. Must be password-gated (a hijacked session alone
+# to a new one while unlocked. Must be password-gated (a hijacked session alone
 # must not brick or take over the recovery path) and atomic.
 
 
@@ -197,7 +197,7 @@ def test_rotate_recovery_wrong_password_rejected_no_mutation(quon_client):
     csrf = make_active_user(c, "rr1@x.de")
     r = c.post("/auth/recovery/rotate", json=_rotate_body(current=b"Z" * 32), headers=csrf)
     assert r.status_code == 403
-    # Recovery material untouched — the original phrase still works. (Recovery
+    # Recovery material untouched - the original phrase still works. (Recovery
     # material has no logged-in read endpoint by design; assert at the DB.)
     assert _recovery_row("rr1@x.de") == (b"R" * 16, b"X" * 48)
 
@@ -208,9 +208,9 @@ def test_rotate_recovery_success_swaps_only_recovery_material(quon_client):
     r = c.post("/auth/recovery/rotate", json=_rotate_body(), headers=csrf)
     assert r.status_code == 200 and r.json() == {"ok": True}
 
-    # New recovery material stored…
+    # New recovery material stored...
     assert _recovery_row("rr2@x.de") == (b"r" * 16, b"y" * 48)
-    # …password wrap and login untouched, session still alive.
+    # ...password wrap and login untouched, session still alive.
     assert c.get("/auth/keymaterial").json()["wrap_pw"] == b64(b"W" * 48)
     assert c.get("/auth/me").status_code == 200
 

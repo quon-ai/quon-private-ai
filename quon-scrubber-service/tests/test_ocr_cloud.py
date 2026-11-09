@@ -1,6 +1,6 @@
 """Tests for the cloud OCR fallback: the /ocr/cloud endpoint wiring (auth,
-validation, error mapping) and ocr_cloud.transcribe (payload shape — ZDR
-routing pinned, data-URL image, user's key — and upstream error handling).
+validation, error mapping) and ocr_cloud.transcribe (payload shape - ZDR
+routing pinned, data-URL image, user's key - and upstream error handling).
 No network is touched."""
 
 from __future__ import annotations
@@ -136,7 +136,7 @@ class _FakeResponse:
 
 
 class _FakeClient:
-    """Stands in for httpx.AsyncClient — records the POST, returns a canned
+    """Stands in for httpx.AsyncClient - records the POST, returns a canned
     response or raises a canned exception."""
 
     def __init__(self, response: _FakeResponse | None = None, exc: Exception | None = None):
@@ -144,7 +144,7 @@ class _FakeClient:
         self.exc = exc
         self.calls: list[dict] = []
 
-    def __call__(self, *args, **kwargs):  # AsyncClient(timeout=...) → self
+    def __call__(self, *args, **kwargs):  # AsyncClient(timeout=...) -> self
         return self
 
     async def __aenter__(self):

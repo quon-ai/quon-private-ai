@@ -11,7 +11,7 @@
 import { synonymsOf } from "./synonyms";
 
 // Common German + English function words that carry no topical signal. Kept
-// small and high-frequency on purpose — this is a precision aid, not a full IR
+// small and high-frequency on purpose - this is a precision aid, not a full IR
 // stopword list.
 const STOPWORDS = new Set([
   // German
@@ -181,23 +181,23 @@ export function contentTerms(s: string): string[] {
     .filter((w) => w.length > 2 && !STOPWORDS.has(w));
 }
 
-/** Minimum length (chars) BOTH sides of a pair must have before a substring
+/** Minimum length (chars) both sides of a pair must have before a substring
  *  relationship counts as a shared subword anchor (see `subwordMatch`).
- *  German compounds carry their base noun verbatim — "Nettoeinkommen"
- *  contains "Einkommen" — which is what lets a query for "Einkommen" anchor a
+ *  German compounds carry their base noun verbatim - "Nettoeinkommen"
+ *  contains "Einkommen" - which is what lets a query for "Einkommen" anchor a
  *  note that only ever says "Nettoeinkommen" (`contentTerms` tokenises on
  *  non-letters only, so it never splits the compound; the production miss
  *  this fixes: see rag.test.ts's income regression). Deliberately >= 5:
  *  STOPWORDS already strips short function words before either side reaches
  *  here, and this extra floor keeps a coincidental short overlap
- *  ("ein"/"rat") from anchoring two unrelated words — exactly the
+ *  ("ein"/"rat") from anchoring two unrelated words - exactly the
  *  false-anchor class the STOPWORDS comment above warns about for casual
  *  queries ("kann"/"machen"/... are filtered before this runs at all). */
 export const SUBWORD_MIN_LEN = 5;
 
 /** True when `a` and `b` (already-lowercased content terms) count as the same
- *  topic for anchoring purposes: an exact match, or — for tokens long enough
- *  to carry real meaning (both >= SUBWORD_MIN_LEN) — one is a substring of
+ *  topic for anchoring purposes: an exact match, or - for tokens long enough
+ *  to carry real meaning (both >= SUBWORD_MIN_LEN) - one is a substring of
  *  the other. */
 export function subwordMatch(a: string, b: string): boolean {
   if (a === b) return true;
@@ -209,10 +209,10 @@ export function subwordMatch(a: string, b: string): boolean {
  * Fraction of the query's content terms that appear in `text` (0..1), counting
  * a subword/compound match (see `subwordMatch`) OR a curated synonym/
  * morphological-variant match (see `./synonyms`) as a hit too. Synonym
- * expansion is QUERY-SIDE ONLY and deliberately does not change the
+ * expansion is QUERY-SIDE only and deliberately does not change the
  * denominator: each original query term still contributes at most one hit,
  * whether satisfied by the literal word, a subword match, or one of its
- * curated synonyms — so a term with many curated synonyms can't inflate
+ * curated synonyms - so a term with many curated synonyms can't inflate
  * `coverage` past what a single literal keyword match would score (the
  * LEX_BOOST/floor calibration in ./rerank stays valid unchanged). Pass the
  * pre-tokenised query terms so it isn't recomputed per candidate.
@@ -230,10 +230,10 @@ export function lexicalCoverage(queryTerms: Set<string>, text: string): number {
 }
 
 /**
- * Rank ALL candidates by lexical coverage against the query, best first,
+ * Rank all candidates by lexical coverage against the query, best first,
  * dropping zero-coverage items. Unlike `lexicalCoverage` (a per-candidate
- * score used to re-rank an already-chosen shortlist), this ranks the WHOLE
- * pool — it is the lexical channel fed into RRF fusion (see `./fusion` +
+ * score used to re-rank an already-chosen shortlist), this ranks the whole
+ * pool - it is the lexical channel fed into RRF fusion (see `./fusion` +
  * `../rag.ts`), so a candidate the vector stage would never shortlist can
  * still enter retrieval on the strength of a keyword/subword match alone.
  */

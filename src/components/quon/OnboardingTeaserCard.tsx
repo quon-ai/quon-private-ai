@@ -8,7 +8,7 @@ import { Notice } from "./Notice";
 
 /**
  * Onboarding step 2: one dismissible inline card surfacing the two things
- * worth knowing beyond the core redact/send loop — Review mode and Memory &
+ * worth knowing beyond the core redact/send loop - Review mode and Memory &
  * Projects. Not a tour: each row is a single fact + a "Show me" shortcut: it
  * is not required reading and never gates anything.
  */

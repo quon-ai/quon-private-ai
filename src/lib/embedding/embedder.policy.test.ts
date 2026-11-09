@@ -5,10 +5,10 @@ import type { HeavyWorkPolicy } from "@/lib/deviceClass";
 /**
  * The embedder under the device policy (deviceClass.ts): a constrained device
  * must never load the worker ahead of need, must embed in small batches, and
- * must let the worker go once idle — the footprint that got iPhone pages
- * killed at boot (#68, #76). The worker itself is faked: what matters here is
- * WHEN it is created, how many inputs each message carries, and that it is
- * terminated after the idle time.
+ * must let the worker go once idle - the footprint that gets iPhone pages
+ * killed at boot. The worker itself is faked: what matters here is when it is
+ * created, how many inputs each message carries, and that it is terminated
+ * after the idle time.
  */
 
 let policy: HeavyWorkPolicy;
@@ -79,7 +79,7 @@ async function fresh() {
 }
 
 describe("embedder under the device policy", () => {
-  it("normal device: warmEmbedder starts the worker at once, and logs NOTHING — loading is ordinary here", async () => {
+  it("normal device: warmEmbedder starts the worker at once, and logs nothing: loading is ordinary here", async () => {
     policy = NORMAL;
     const m = await fresh();
     m.warmEmbedder();
@@ -98,13 +98,13 @@ describe("embedder under the device policy", () => {
     expect(appended.some((l) => l.includes("embedder: loading (policy=constrained)"))).toBe(true);
   });
 
-  it("constrained device: warmEmbedder is a no-op — no worker until something needs it", async () => {
+  it("constrained device: warmEmbedder is a no-op: no worker until something needs it", async () => {
     policy = CONSTRAINED;
     const m = await fresh();
     m.warmEmbedder();
     m.warmEmbedder();
     expect(FakeWorker.instances).toHaveLength(0);
-    // …and a real request still works, loading on demand.
+    // ...and a real request still works, loading on demand.
     const vec = await m.embedText("hallo");
     expect(vec).toEqual([0.1, 0.2]);
     expect(FakeWorker.instances).toHaveLength(1);

@@ -56,9 +56,9 @@ describe("projectStore CRUD", () => {
 describe("projectStore sync (LWW, no echo)", () => {
   it("applyRemoteProject honors last-write-wins by updatedAt", () => {
     upsertProject(p("p1", 5, "current"));
-    applyRemoteProject(p("p1", 3, "stale")); // older → ignored
+    applyRemoteProject(p("p1", 3, "stale")); // older -> ignored
     expect(getProject("p1")?.name).toBe("current");
-    applyRemoteProject(p("p1", 9, "newer")); // newer → applied
+    applyRemoteProject(p("p1", 9, "newer")); // newer -> applied
     expect(getProject("p1")?.name).toBe("newer");
   });
 
@@ -76,7 +76,7 @@ describe("projectStore sync (LWW, no echo)", () => {
     const offD = projectSyncStore.onDelete((ids) => deleted.push(ids));
     upsertProject(p("p1", 1));
     deleteProject("p1");
-    applyRemoteProject(p("p2", 1)); // must NOT fire onChange
+    applyRemoteProject(p("p2", 1)); // must not fire onChange
     expect(changed).toEqual(["p1"]);
     expect(deleted).toEqual([["p1"]]);
     offC();
@@ -136,8 +136,8 @@ describe("nextProjectColor", () => {
   });
 
   it("avoids a duplicate after a delete-then-create (the reported bug)", () => {
-    // Had indigo/green/yellow/sky/rose, deleted 'yellow' → these four remain.
-    // Round-robin by count (len=4) would pick sky again → collision. Least-used
+    // Had indigo/green/yellow/sky/rose, deleted 'yellow' -> these four remain.
+    // Round-robin by count (len=4) would pick sky again -> collision. Least-used
     // picks 'yellow' (the freed slot) instead.
     const remaining = [p("indigo"), p("green"), p("sky"), p("rose")];
     expect(nextProjectColor(remaining)).toBe("yellow");
@@ -145,11 +145,11 @@ describe("nextProjectColor", () => {
 
   it("only repeats once every colour is in use, and then the least-used one", () => {
     const all = PROJECT_COLORS.map((c) => p(c)); // one of each
-    expect(nextProjectColor(all)).toBe(PROJECT_COLORS[0]); // all tied → first
-    expect(nextProjectColor([...all, p("indigo")])).toBe(PROJECT_COLORS[1]); // indigo now 2 → next
+    expect(nextProjectColor(all)).toBe(PROJECT_COLORS[0]); // all tied -> first
+    expect(nextProjectColor([...all, p("indigo")])).toBe(PROJECT_COLORS[1]); // indigo now 2 -> next
   });
 
   it("treats an unset colour as indigo", () => {
-    expect(nextProjectColor([{}, {}])).toBe("green"); // 2× indigo → green is least-used
+    expect(nextProjectColor([{}, {}])).toBe("green"); // 2x indigo -> green is least-used
   });
 });

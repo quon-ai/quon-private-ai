@@ -42,12 +42,12 @@ test("project chats collapse by default in the sidebar and expand on click", asy
   await clickSend(page);
   await expect(page.locator("main").getByText("ok").last()).toBeVisible({ timeout: 30_000 });
 
-  // While we're in the project its chats auto-expand → the toggle offers to HIDE.
+  // While we're in the project its chats auto-expand -> the toggle offers to HIDE.
   await expect(page.getByRole("button", { name: `Hide chats in ${projectName}` })).toBeVisible({
     timeout: 30_000,
   });
 
-  // Reload on the projects list (project not active) → collapsed by default.
+  // Reload on the projects list (project not active) -> collapsed by default.
   await page.goto("/projects");
   await page.reload();
   const expandBtn = page.getByRole("button", { name: `Show chats in ${projectName}` });
@@ -55,7 +55,7 @@ test("project chats collapse by default in the sidebar and expand on click", asy
   // The chat link is hidden while the group is collapsed.
   await expect(page.getByRole("link", { name: new RegExp(chatMsg) })).toHaveCount(0);
 
-  // Expand → the toggle flips to HIDE and the chat link appears.
+  // Expand -> the toggle flips to HIDE and the chat link appears.
   await expandBtn.click();
   await expect(page.getByRole("button", { name: `Hide chats in ${projectName}` })).toBeVisible();
   await expect(page.getByRole("link", { name: new RegExp(chatMsg) })).toBeVisible();

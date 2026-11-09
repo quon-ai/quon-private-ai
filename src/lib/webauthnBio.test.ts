@@ -1,5 +1,5 @@
 /** The base64url helpers back credential-id handling for WebAuthn (unpadded,
- *  URL-safe — the format credential.id natively uses). The ceremony functions
+ *  URL-safe - the format credential.id natively uses). The ceremony functions
  *  themselves need a real authenticator and are covered by the chromium e2e. */
 import { describe, expect, it } from "vitest";
 
@@ -11,7 +11,7 @@ describe("webauthnBio base64url", () => {
       new Uint8Array([]),
       new Uint8Array([0]),
       new Uint8Array([251, 255, 191]), // produces +/ chars in plain base64
-      crypto.getRandomValues(new Uint8Array(33)), // non-multiple-of-3 → padding
+      crypto.getRandomValues(new Uint8Array(33)), // non-multiple-of-3 -> padding
     ];
     for (const bytes of cases) {
       const s = bytesToB64url(bytes);
@@ -21,7 +21,7 @@ describe("webauthnBio base64url", () => {
   });
 
   it("decodes WebAuthn-style unpadded ids", () => {
-    // "test" → dGVzdA (unpadded)
+    // "test" -> dGVzdA (unpadded)
     expect(new TextDecoder().decode(b64urlToBytes("dGVzdA"))).toBe("test");
   });
 });

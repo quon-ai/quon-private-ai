@@ -105,8 +105,8 @@ function MemoryText({ text }: { text: string }) {
   );
 }
 
-/** Above this many characters a NEW memory is almost certainly pasted content
- *  (a report, an article, a mail thread) — saving opens the triage dialog
+/** Above this many characters a new memory is almost certainly pasted content
+ *  (a report, an article, a mail thread) - saving opens the triage dialog
  *  (save as document / distill facts / note anyway) instead of saving directly.
  *  Long items also get the "large" badge + one-click move to Documents. */
 const PASTE_TRIAGE_CHARS = 800;
@@ -122,7 +122,7 @@ function textAsDocumentFile(text: string, label?: string): { file: File; filenam
   return { file: new File([text], filename, { type: "text/plain" }), filename };
 }
 
-/** Serialize memories to a single Markdown file (facts as "**key** — text",
+/** Serialize memories to a single Markdown file (facts as "**key** - text",
  *  notes as-is), with tags. Built on-device from decrypted items; nothing
  *  leaves the browser. */
 function memoriesToMarkdown(items: MemoryItem[]): string {
@@ -166,7 +166,7 @@ export function ScreenMemory({
   const suggestions = useMemorySuggestions().filter(scoped);
   // The sweep buttons sit at the top; the queue they fill is far below and can
   // be off-screen entirely on a phone. Scroll it into view rather than leaving
-  // the user to guess where the result went (reported 2026-08-04).
+  // the user to guess where the result went.
   const reviewRef = useRef<HTMLDivElement | null>(null);
   const showReview = () =>
     reviewRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -223,13 +223,13 @@ export function ScreenMemory({
   }
 
   // Pin a short curated fact so it's always offered as chat context, bypassing
-  // the relevance gate (see rag.ts). Text is untouched → embedding/chunks stay
+  // the relevance gate (see rag.ts). Text is untouched -> embedding/chunks stay
   // valid (spread preserves every field), so no re-embedding is triggered.
   function togglePin(m: MemoryItem) {
     upsertMemoryItem({ ...m, pinned: !m.pinned, updatedAt: Date.now() });
   }
 
-  // Save the form — a new item, or an edit of an existing one (same id, so sync
+  // Save the form - a new item, or an edit of an existing one (same id, so sync
   // LWW replaces it everywhere; the text is re-embedded since it changed).
   async function performSave() {
     const text = draft.trim();
@@ -250,7 +250,7 @@ export function ScreenMemory({
     upsertMemoryItem({
       ...original, // keeps createdAt, projectId and any provenance fields on edit
       id: original?.id ?? createMemoryId(),
-      // Long texts are always notes — see kindForText (the retrieval gate trusts
+      // Long texts are always notes - see kindForText (the retrieval gate trusts
       // the short fact tier more than free-form pastes).
       kind: kindForText(text, draftKind),
       key: draftKey.trim() || undefined,
@@ -258,7 +258,7 @@ export function ScreenMemory({
       tags,
       embedding,
       // Chunks from the pre-edit text would be stale (and ensureEmbeddingsCurrent
-      // only rebuilds when they're MISSING) — drop them; the next mount or the
+      // only rebuilds when they're missing) - drop them; the next mount or the
       // chat's retrieval self-heal re-chunks the new text. Same as keepSuggestion.
       chunks: undefined,
       dim: embedding ? EMBED_DIM : undefined,
@@ -274,7 +274,7 @@ export function ScreenMemory({
   async function handleSave() {
     const text = draft.trim();
     if (!text || saving) return;
-    // A big pasted text is almost never a memory — offer the better homes first.
+    // A big pasted text is almost never a memory - offer the better homes first.
     // Edits of existing items skip the triage (the badge in the list covers them).
     if (!editingId && text.length > PASTE_TRIAGE_CHARS) {
       setTriageNotice(null);
@@ -309,7 +309,7 @@ export function ScreenMemory({
     }
   }
 
-  /** Triage: distill short facts from the paste (scrub → relay → local re-hydrate,
+  /** Triage: distill short facts from the paste (scrub -> relay -> local re-hydrate,
    *  same ZK pipeline as "Learn from chats") into the review queue. */
   async function triageExtractFacts() {
     if (triageBusy) return;
@@ -327,7 +327,7 @@ export function ScreenMemory({
         neverRedact,
       });
       if (added === 0) {
-        // Nothing new (all duplicates / nothing durable) — keep the dialog open
+        // Nothing new (all duplicates / nothing durable) - keep the dialog open
         // so the user can still pick document or note.
         setTriageNotice(t("memory.pasteTriage.nothingFound"));
         return;
@@ -408,7 +408,7 @@ export function ScreenMemory({
   }
 
   /** Accept a suggestion into Memory: create a new item, or update the one it
-   *  refines (same id → sync LWW replaces it everywhere). Embeds like handleSave;
+   *  refines (same id -> sync LWW replaces it everywhere). Embeds like handleSave;
    *  chunks are rebuilt by ensureEmbeddingsCurrent on the next mount. Returns the
    *  saved item so Edit can reopen it in the form. */
   async function keepSuggestion(s: MemorySuggestion): Promise<MemoryItem> {
@@ -431,11 +431,11 @@ export function ScreenMemory({
       text: s.text,
       tags: target ? [...new Set([...target.tags, ...s.tags])] : s.tags,
       embedding,
-      chunks: undefined, // stale for the new text — rebuilt on the next mount
+      chunks: undefined, // stale for the new text - rebuilt on the next mount
       dim: embedding ? EMBED_DIM : undefined,
       embModel: embedding ? EMBED_MODEL : undefined,
       projectId: target ? target.projectId : s.projectId,
-      // Paste-distilled suggestions have neither source — they're "manual".
+      // Paste-distilled suggestions have neither source - they're "manual".
       source: s.sourceDocId ? "document" : s.sourceSessionId ? "chat" : "manual",
       sourceSessionId: s.sourceSessionId,
       sourceDocId: s.sourceDocId,
@@ -482,7 +482,7 @@ export function ScreenMemory({
     for (const s of suggestions) deleteMemorySuggestion(s.id);
   }
 
-  // Superseded/archived items are hidden from the main list (and search) —
+  // Superseded/archived items are hidden from the main list (and search) -
   // they live in the ArchivedMemoriesSection drawer at the bottom instead.
   const shown = (results ?? items).filter((m) => scoped(m) && isActiveMemory(m));
   const factCount = useMemo(
@@ -656,7 +656,7 @@ export function ScreenMemory({
         </DialogContent>
       </Dialog>
 
-      {/* Large-paste triage — a big new text is almost never a memory. Offer the
+      {/* Large-paste triage - a big new text is almost never a memory. Offer the
           better homes first; "note anyway" stays available (honestly labeled). */}
       <Dialog open={triageOpen} onOpenChange={(o) => !o && !triageBusy && setTriageOpen(false)}>
         <DialogContent className="max-w-md">
@@ -730,7 +730,7 @@ export function ScreenMemory({
         </DialogContent>
       </Dialog>
 
-      {/* Review queue — suggestions mined from chats ("Learn from chats").
+      {/* Review queue - suggestions mined from chats ("Learn from chats").
           Keep upserts to Memory, Edit keeps then reopens the form, Discard drops. */}
       {suggestions.length > 0 && (
         <div
@@ -877,7 +877,7 @@ export function ScreenMemory({
         </div>
       )}
 
-      {/* Maintenance row (P5) — renders nothing unless conflicts/attic/tidy exist */}
+      {/* Maintenance row (P5) - renders nothing unless conflicts/attic/tidy exist */}
       <MemoryHealthRow projectId={projectId} />
       <PinCrowdingHint projectId={projectId} />
 
@@ -977,7 +977,7 @@ export function ScreenMemory({
             </div>
           </div>
         ))}
-        {/* Recovery drawer for superseded/archived items — quiet text link only */}
+        {/* Recovery drawer for superseded/archived items - quiet text link only */}
         <ArchivedMemoriesSection projectId={projectId} />
       </div>
     </div>

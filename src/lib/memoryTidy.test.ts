@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // No network in tests: the scrub + relay calls are mocked; everything else
-// (stores, dedup, clustering) runs for real, in memory — same pattern as
+// (stores, dedup, clustering) runs for real, in memory - same pattern as
 // memoryExtract.test.ts.
 vi.mock("./quonApi", async (importOriginal) => {
   const actual = await importOriginal<typeof import("./quonApi")>();
@@ -89,8 +89,8 @@ beforeEach(() => {
 // ---------------------------------------------------------------------------
 
 describe("planTidy (pure clustering, no network)", () => {
-  it("clusters ≥3 active items connected by cosine ≥ SIM_UPDATE", () => {
-    // All pairwise-identical vectors → one connected component of 3.
+  it("clusters >=3 active items connected by cosine >= SIM_UPDATE", () => {
+    // All pairwise-identical vectors -> one connected component of 3.
     upsertMemoryItem(memItem("a", "K1", "text a", [1, 0, 0]));
     upsertMemoryItem(memItem("b", "K2", "text b", [1, 0, 0]));
     upsertMemoryItem(memItem("c", "K3", "text c", [1, 0, 0]));
@@ -101,7 +101,7 @@ describe("planTidy (pure clustering, no network)", () => {
     expect(plan.estimatedRelayCalls).toBe(1);
   });
 
-  it("does NOT cluster a pair (< 3 members) on similarity alone", () => {
+  it("does not cluster a pair (< 3 members) on similarity alone", () => {
     upsertMemoryItem(memItem("a", "K1", "text a", [1, 0, 0]));
     upsertMemoryItem(memItem("b", "K2", "text b", [1, 0, 0]));
     expect(planTidy(undefined).clusters).toEqual([]);
@@ -109,7 +109,7 @@ describe("planTidy (pure clustering, no network)", () => {
 
   it("does not connect items below SIM_UPDATE", () => {
     upsertMemoryItem(memItem("a", "K1", "text a", [1, 0, 0]));
-    upsertMemoryItem(memItem("b", "K2", "text b", [0, 1, 0])); // orthogonal — cosine 0
+    upsertMemoryItem(memItem("b", "K2", "text b", [0, 1, 0])); // orthogonal - cosine 0
     upsertMemoryItem(memItem("c", "K3", "text c", [1, 0, 0]));
     // "a" and "c" are similar but that's still only 2 connected members.
     expect(planTidy(undefined).clusters).toEqual([]);
@@ -125,13 +125,13 @@ describe("planTidy (pure clustering, no network)", () => {
   });
 
   it("does not double-count a key-conflict pair already inside a similarity cluster", () => {
-    // 3 items, all near-identical cosine (one sim cluster), two of them ALSO
+    // 3 items, all near-identical cosine (one sim cluster), two of them also
     // share a key with different text (would otherwise also be a conflict pair).
     upsertMemoryItem(memItem("a", "Adresse", "Hamburg", [1, 0, 0]));
     upsertMemoryItem(memItem("b", "Adresse", "Berlin", [1, 0, 0]));
     upsertMemoryItem(memItem("c", "Sonstiges", "unrelated but similar vector", [1, 0, 0]));
     const plan = planTidy(undefined);
-    expect(plan.clusters).toHaveLength(1); // not 2 — the pair is subsumed
+    expect(plan.clusters).toHaveLength(1); // not 2 - the pair is subsumed
     expect(plan.clusters[0].reason).toBe("similarity");
   });
 
@@ -139,7 +139,7 @@ describe("planTidy (pure clustering, no network)", () => {
     upsertMemoryItem(memItem("a", "K1", "text a", [1, 0, 0]));
     upsertMemoryItem(memItem("b", "K2", "text b", [1, 0, 0]));
     upsertMemoryItem(memItem("c", "K3", "text c", [1, 0, 0], { status: "superseded" }));
-    // Only 2 ACTIVE connected members — below the ≥3 similarity threshold.
+    // Only 2 ACTIVE connected members - below the >=3 similarity threshold.
     expect(planTidy(undefined).clusters).toEqual([]);
   });
 
@@ -174,13 +174,13 @@ describe("runTidy (mocked scrub/relay, real queue)", () => {
     expect(sug.mode).toBe("merge");
     expect(new Set(sug.targetIds)).toEqual(new Set(["a", "b"]));
     expect(sug.text).toBe("Berlin (aktuell)");
-    // Nothing was written to Memory itself — still just 2 (untouched) items.
+    // Nothing was written to Memory itself - still just 2 (untouched) items.
     expect(getAllMemory()).toHaveLength(2);
     expect(getMemoryItem("a")?.status).toBeUndefined();
     expect(getMemoryItem("b")?.status).toBeUndefined();
   });
 
-  it("re-hydrates placeholders locally — the relay only ever saw scrubbed text", async () => {
+  it("re-hydrates placeholders locally: the relay only ever saw scrubbed text", async () => {
     upsertMemoryItem(memItem("a", "Person", "Anna Müller arbeitet bei Contoso", [1, 0, 0]));
     upsertMemoryItem(memItem("b", "Person", "Anna arbeitet bei Contoso GmbH", [1, 0, 0]));
     scrubMock.mockResolvedValue(
@@ -207,7 +207,7 @@ describe("runTidy (mocked scrub/relay, real queue)", () => {
     expect(getAllMemorySuggestions()[0].text).toBe("Anna Müller arbeitet bei Contoso");
   });
 
-  it("fails soft per cluster — one cluster's relay failure doesn't abort the rest", async () => {
+  it("fails soft per cluster: one cluster's relay failure doesn't abort the rest", async () => {
     upsertMemoryItem(memItem("a", "K", "a", [1, 0, 0]));
     upsertMemoryItem(memItem("b", "K", "b", [1, 0, 0]));
     upsertMemoryItem(memItem("c", "K2", "c", [1, 0, 0]));
@@ -228,9 +228,9 @@ describe("runTidy (mocked scrub/relay, real queue)", () => {
     expect(res).toEqual({ suggested: 1, failed: 1 });
   });
 
-  it("skips a cluster whose members no longer have ≥2 active items (edited/removed since planning)", async () => {
+  it("skips a cluster whose members no longer have >=2 active items (edited/removed since planning)", async () => {
     upsertMemoryItem(memItem("a", "K", "a", [1, 0, 0]));
-    // "b" was deleted after planning — only 1 active member left.
+    // "b" was deleted after planning - only 1 active member left.
     const res = await runTidy({ scope: undefined, model: "m", clusters: [cluster(["a", "b"])] });
     expect(res).toEqual({ suggested: 0, failed: 0 });
     expect(scrubMock).not.toHaveBeenCalled();
@@ -275,7 +275,7 @@ describe("runTidy (mocked scrub/relay, real queue)", () => {
   });
 });
 
-describe("applyMergeSuggestion (P5 — reversible accept)", () => {
+describe("applyMergeSuggestion (P5: reversible accept)", () => {
   it("creates one new active item and supersedes every targetId", async () => {
     upsertMemoryItem(memItem("a", "Adresse", "Hamburg", [1, 0, 0]));
     upsertMemoryItem(memItem("b", "Adresse", "Berlin", [1, 0, 0]));
@@ -299,7 +299,7 @@ describe("applyMergeSuggestion (P5 — reversible accept)", () => {
     expect(getMemoryItem("a")?.supersededBy).toBe(merged.id);
     expect(getMemoryItem("b")?.status).toBe("superseded");
     expect(getMemoryItem("b")?.supersededBy).toBe(merged.id);
-    // Nothing deleted — both originals still exist in the store.
+    // Nothing deleted - both originals still exist in the store.
     expect(getAllMemory().map((m) => m.id)).toEqual(expect.arrayContaining(["a", "b", merged.id]));
 
     // The suggestion is consumed.

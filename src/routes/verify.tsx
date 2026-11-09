@@ -39,7 +39,7 @@ function VerifyPage() {
         setState("ok");
         // A brand-new invitee who registered from a /join link lands here on a
         // fresh page load (possibly a different tab) with no memory of that
-        // URL — resume it now instead of the normal dashboard landing, with
+        // URL - resume it now instead of the normal dashboard landing, with
         // the invite fragment restored. The still-`locked` session means
         // AppShell shows the unlock screen next; once unlocked it's already
         // on /join and ScreenJoinShare takes over. See pendingJoin.ts.

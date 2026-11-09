@@ -2,7 +2,7 @@
 
 Proof of consent = version + timestamp (migration 0008). The checkbox in the
 client gates the request; the server persists whatever version is sent so we can
-later show WHICH wording a given account agreed to and WHEN.
+later show which wording a given account agreed to and when.
 """
 
 from __future__ import annotations
@@ -34,7 +34,7 @@ def test_register_records_accepted_terms_version(quon_client):
 
 def test_register_without_version_records_no_acceptance(quon_client):
     """Backward-compat: a payload without terms_version stores NULL, not a wrong
-    version — never a false record of consent."""
+    version - never a false record of consent."""
     c = quon_client
     r = c.post("/auth/register", json=register_body("noterms@x.de"))
     assert r.status_code == 201

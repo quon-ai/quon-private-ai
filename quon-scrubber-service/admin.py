@@ -1,4 +1,4 @@
-"""Operator admin API — metadata-level user management, never content.
+"""Operator admin API - metadata-level user management, never content.
 
 Auth: a session whose account has ``role='admin'`` (normal cookie+CSRF path,
 so all admin endpoints inherit session expiry, CSRF and rate limits), OR the
@@ -6,7 +6,7 @@ so all admin endpoints inherit session expiry, CSRF and rate limits), OR the
 the role column). Every mutation is written to ``admin_audit``.
 
 The zero-knowledge model is untouched: everything served here is metadata the
-server necessarily has (email, status, byte counts, budgets) — content stays
+server necessarily has (email, status, byte counts, budgets) - content stays
 ciphertext. There is deliberately no admin password reset that preserves data
 (impossible by design: the Master Key derives from the user's password) and no
 impersonation.
@@ -39,7 +39,7 @@ async def require_admin_actor(
 ) -> str:
     """Resolve the acting admin: session user with role=admin (preferred) or
     the ADMIN_TOKEN bearer ('token'). 403 otherwise."""
-    # Break-glass token path first — header-authenticated, no cookie involved,
+    # Break-glass token path first - header-authenticated, no cookie involved,
     # hence not CSRF-able. Needed to bootstrap the first admin on an existing
     # instance and as CLI fallback.
     token = settings.admin_token.strip()
@@ -48,7 +48,7 @@ async def require_admin_actor(
         return "token"
 
     # Session path: full cookie+CSRF pipeline via auth.current_user.
-    import auth  # late import — auth imports config early; avoid cycles at module load
+    import auth  # late import - auth imports config early; avoid cycles at module load
 
     try:
         user = await auth.current_user(request)
@@ -114,7 +114,7 @@ class InviteInfo(BaseModel):
     created_at: int
     expires_at: int
     used_at: int | None = None
-    # plaintext code — ONLY set on the create response (hash-stored otherwise)
+    # plaintext code - only set on the create response (hash-stored otherwise)
     code: str | None = None
 
 
@@ -285,12 +285,12 @@ async def set_entitlements(
 
 @router.delete("/admin/users/{user_id}")
 async def delete_user(user_id: str, actor: str = Depends(require_admin_actor)) -> dict:
-    """Permanently delete an account and ALL its data (irrecoverable — the
+    """Permanently delete an account and all its data (irrecoverable - the
     content is ciphertext only the user's keys could open, so there is nothing
     to export or restore). Best-effort revokes the OpenRouter sub-key first;
     the users-row delete then FK-cascades every dependent row (keys, sessions,
     tokens, blobs, sub-key, settings, entitlements, MCP servers). Admins delete
-    their OWN account via the normal self-service flow (password-verified) —
+    their own account via the normal self-service flow (password-verified) - 
     not here (self-guard)."""
     import openrouter_provisioning as prov
 

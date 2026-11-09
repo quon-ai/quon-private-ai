@@ -1,8 +1,8 @@
 /**
  * Device-local enrollment marker for biometric unlock.
  *
- * PLAIN localStorage on purpose (precedent: `quon_active_user` in AppShell) —
- * it must be readable BEFORE unlock, when the encrypted quonStore is still
+ * PLAIN localStorage on purpose (precedent: `quon_active_user` in AppShell) -
+ * it must be readable before unlock, when the encrypted quonStore is still
  * sealed. It holds no secrets: just "this device enrolled credential X for
  * user Y", so ScreenUnlock knows to offer the button and which credential to
  * assert. The actual wrap of the Master Key lives server-side (/auth/bio) and
@@ -36,7 +36,7 @@ function writeMap(map: MarkerMap): void {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(map));
   } catch {
-    /* private mode / quota — feature degrades to password unlock */
+    /* private mode / quota - feature degrades to password unlock */
   }
 }
 
@@ -59,18 +59,17 @@ export function clearBioMarker(userId: string): void {
 }
 
 // --- lost-passkey detection (failure streak) --------------------------------
-// Reported from a Pixel 10 (2026-08-06): an Android update deleted the OS
-// passkey while our marker and the server wrap row survived — so every unlock
-// auto-fired credentials.get() for a credential the device no longer has,
-// Android showed "kein Passkey vorhanden", and the app silently reset. WebAuthn
-// deliberately makes "credential missing" indistinguishable from "user
-// cancelled" (both NotAllowedError, for privacy), so the honest client-side
-// signal is a STREAK: consecutive failed/cancelled bio attempts with no
-// success. At the threshold the unlock screen stops auto-firing (no more OS
-// error sheet on every visit), shows a hint, and after the next password
-// unlock the dashboard offers to re-create the passkey. A real double-cancel
-// trips it too — the offer is dismissible and the streak resets, so the cost
-// of a false positive is one polite card.
+// An Android update can delete the OS passkey while our marker and the server
+// wrap row survive - every unlock then auto-fires credentials.get() for a
+// credential the device no longer has, Android shows "kein Passkey vorhanden",
+// and the app silently resets. WebAuthn deliberately makes "credential
+// missing" indistinguishable from "user cancelled" (both NotAllowedError, for
+// privacy), so the honest client-side signal is a streak: consecutive
+// failed/cancelled bio attempts with no success. At the threshold the unlock
+// screen stops auto-firing (no more OS error sheet on every visit), shows a
+// hint, and after the next password unlock the dashboard offers to re-create
+// the passkey. A real double-cancel trips it too - the offer is dismissible
+// and the streak resets, so the cost of a false positive is one polite card.
 const TROUBLE_KEY = "quon_bio_trouble_v1";
 
 /** Failed attempts after which we assume the passkey may be gone. */
@@ -92,7 +91,7 @@ function writeTrouble(map: Record<string, number>): void {
   try {
     localStorage.setItem(TROUBLE_KEY, JSON.stringify(map));
   } catch {
-    /* private mode / quota — detection degrades, unlock itself is unaffected */
+    /* private mode / quota - detection degrades, unlock itself is unaffected */
   }
 }
 
@@ -126,7 +125,7 @@ export function bioLooksBroken(userId: string): boolean {
 
 // --- one-time "enable biometric unlock?" offer -----------------------------
 // A separate plain-localStorage flag (per userId) so the post-first-login offer
-// is shown at most once per user per device — independent of whether they
+// is shown at most once per user per device - independent of whether they
 // enrolled. No secrets; same storage class as the marker above.
 const OFFER_KEY = "quon_bio_offer_v1";
 
@@ -143,7 +142,7 @@ function readOfferSet(): Record<string, true> {
 }
 
 /** True once the offer has been shown-and-dismissed (or enrolled) for this user
- *  on this device — the prompt must not reappear. */
+ *  on this device - the prompt must not reappear. */
 export function bioOfferDismissed(userId: string): boolean {
   return readOfferSet()[userId] === true;
 }
@@ -154,6 +153,6 @@ export function dismissBioOffer(userId: string): void {
     set[userId] = true;
     localStorage.setItem(OFFER_KEY, JSON.stringify(set));
   } catch {
-    /* private mode / quota — worst case the offer shows again, harmless */
+    /* private mode / quota - worst case the offer shows again, harmless */
   }
 }

@@ -1,6 +1,6 @@
 /**
  * Trigger a browser "save file" for in-memory data. Everything QUON exports is
- * built on-device from already-decrypted content — nothing leaves the browser,
+ * built on-device from already-decrypted content - nothing leaves the browser,
  * this just hands bytes to the OS download flow.
  */
 
@@ -13,7 +13,7 @@ export function downloadBlob(filename: string, blob: Blob): void {
   document.body.appendChild(a);
   a.click();
   a.remove();
-  // Revoke on the next tick — some browsers need the URL alive through the click.
+  // Revoke on the next tick - some browsers need the URL alive through the click.
   setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 

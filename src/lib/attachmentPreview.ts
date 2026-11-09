@@ -1,20 +1,20 @@
 /**
- * "Prüfen & schwärzen" on a STAGED chat attachment (#72): before a document
- * leaves the device, the user can open it in the real viewer — rendered PDF
- * pages, the detection preview, select-to-redact — from the composer chip, in
+ * "Prüfen & schwärzen" on a STAGED chat attachment: before a document
+ * leaves the device, the user can open it in the real viewer - rendered PDF
+ * pages, the detection preview, select-to-redact - from the composer chip, in
  * Filter mode as well as Review mode.
  *
  * Two kinds of source, decided here so ScreenChat and the viewer agree:
  *
- * - **library** — the attachment IS one Documents-library item. The viewer
+ * - **library** - the attachment is one Documents-library item. The viewer
  *   opens the DocItem itself, and a redaction made there is DURABLE
  *   (`DocItem.redactTerms`, enforced on every future send of that document).
- * - **ad-hoc** — everything else: a fresh upload (no DocItem exists yet), a
+ * - **ad-hoc** - everything else: a fresh upload (no DocItem exists yet), a
  *   Paperless pull (never stored in QUON), a combined multi-document
  *   attachment. The viewer opens the staged text (+ the file's bytes when we
  *   kept them), and a redaction made there is PER-SEND: it rides into this
  *   message's `always_redact` and is verified by scrubText like every other
- *   enforced term — but it is not remembered anywhere. The copy says so.
+ *   enforced term - but it is not remembered anywhere. The copy says so.
  *
  * A combined library attachment is deliberately ad-hoc: the button then says
  * "for this message", and saving a term durably onto documents behind a
@@ -47,7 +47,7 @@ export type PreviewSource =
 
 export type AdhocPreview = Extract<PreviewSource, { kind: "adhoc" }>;
 
-/** The ad-hoc shape of ANY staged attachment — also the fallback when a
+/** The ad-hoc shape of any staged attachment - also the fallback when a
  *  library item vanished under the chip (preview the staged text, never nothing). */
 export function adhocSourceFor(a: StagedAttachmentLike): AdhocPreview {
   return {

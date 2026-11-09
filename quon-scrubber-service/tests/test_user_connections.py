@@ -62,7 +62,7 @@ def test_update_without_key_keeps_it(quon_client, monkeypatch):
         headers=h,
         json={"label": "X", "base_url": "https://x/v1", "api_key": "sk-keep", "models": ["m1"]},
     )
-    # update models only (no api_key) → key stays
+    # update models only (no api_key) -> key stays
     r = quon_client.put(
         "/settings/my-connections/c1", headers=h, json={"models": ["m1", "m2"]}
     )

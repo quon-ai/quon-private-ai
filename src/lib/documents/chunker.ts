@@ -13,7 +13,7 @@ export interface TextChunk {
 const DEFAULT_MAX_CHARS = 512;
 const DEFAULT_OVERLAP = 64;
 
-/** Hard-split a string with no usable boundaries into ≤ maxChars pieces. */
+/** Hard-split a string with no usable boundaries into <= maxChars pieces. */
 function hardSplit(s: string, maxChars: number): string[] {
   const out: string[] = [];
   for (let i = 0; i < s.length; i += maxChars) out.push(s.slice(i, i + maxChars));

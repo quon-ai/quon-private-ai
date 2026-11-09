@@ -6,7 +6,7 @@ import { blobCount, clickSend, login, openChat, sharedCreds } from "./helpers/ac
 // a related question, and surfaced via the "Context used" chip.
 //
 // FIXME: flaky in this harness only. The flow needs the memory to survive the
-// memory→chat navigation (every screen change is a full document load here), but
+// memory->chat navigation (every screen change is a full document load here), but
 // the harness's IndexedDB cache no-ops and the server sync doesn't settle in time,
 // so the reloaded /chat starts with an empty store. The RAG retrieval LOGIC is
 // covered by unit tests (search/querySplit, search/rerank, search/vector). Re-enable

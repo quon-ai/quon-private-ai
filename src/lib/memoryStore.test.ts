@@ -56,7 +56,7 @@ describe("setMemoryProject (move between project scopes)", () => {
     expect(getMemoryItem("m1")?.projectId).toBeUndefined();
   });
 
-  it("bumps updatedAt and fires the sync push — the latest scope wins across devices (LWW)", () => {
+  it("bumps updatedAt and fires the sync push: the latest scope wins across devices (LWW)", () => {
     upsertMemoryItem(mem({ updatedAt: 1 }));
     const pushed: MemoryItem[] = [];
     const off = memorySyncStore.onChange((it) => pushed.push(it));
@@ -67,7 +67,7 @@ describe("setMemoryProject (move between project scopes)", () => {
     expect(pushed[0].updatedAt).toBeGreaterThan(1);
   });
 
-  it("is pure scope reassignment — embeddings survive the move (no re-embed)", () => {
+  it("is pure scope reassignment: embeddings survive the move (no re-embed)", () => {
     upsertMemoryItem(mem({ embedding: [0.1, 0.2], dim: 2, embModel: "test-model" }));
     setMemoryProject("m1", "p1");
     const moved = getMemoryItem("m1");
@@ -87,10 +87,10 @@ describe("setMemoryProject (move between project scopes)", () => {
   });
 });
 
-describe("MemoryItem.pinned — round-trips through the E2E-encrypted sync unchanged", () => {
+describe("MemoryItem.pinned: round-trips through the E2E-encrypted sync unchanged", () => {
   it("survives the exact encrypt/decrypt path collectionSync.ts uses to push/pull a memory item", async () => {
-    // encryptJSON/decryptJSON (collectionSync.ts) serialize the WHOLE item
-    // generically (JSON.stringify → secretbox), with no field allowlist —
+    // encryptJSON/decryptJSON (collectionSync.ts) serialize the whole item
+    // generically (JSON.stringify -> secretbox), with no field allowlist -
     // this proves a brand-new optional field needs no sync/crypto change and
     // no migration to reach another device.
     await ensureReady();
@@ -105,18 +105,18 @@ describe("MemoryItem.pinned — round-trips through the E2E-encrypted sync uncha
   it("is undefined (not dropped/errored) for existing items that never set it", async () => {
     await ensureReady();
     const key = new Uint8Array(32).fill(7);
-    const item = mem({}); // no `pinned` at all — the pre-existing shape
+    const item = mem({}); // no `pinned` at all - the pre-existing shape
     const roundTripped = decryptJSON<MemoryItem>(encryptJSON(item, key), key);
     expect(roundTripped.pinned).toBeUndefined();
   });
 });
 
 describe("isActiveMemory (P5 lifecycle)", () => {
-  it("absent status counts as active — every pre-P5 item", () => {
+  it("absent status counts as active: every pre-P5 item", () => {
     expect(isActiveMemory({ status: undefined })).toBe(true);
   });
 
-  it("superseded and archived are NOT active", () => {
+  it("superseded and archived are not active", () => {
     expect(isActiveMemory({ status: "superseded" })).toBe(false);
     expect(isActiveMemory({ status: "archived" })).toBe(false);
   });
@@ -130,13 +130,13 @@ describe("touchMemoryUsage (P5 usage tracking)", () => {
   beforeEach(() => vi.useFakeTimers());
   afterEach(() => vi.useRealTimers());
 
-  it("bumps lastUsedAt/useCount but NEVER updatedAt", () => {
+  it("bumps lastUsedAt/useCount but never updatedAt", () => {
     upsertMemoryItem(mem({ updatedAt: 5 }));
     touchMemoryUsage("m1");
     const item = getMemoryItem("m1");
     expect(item?.useCount).toBe(1);
     expect(item?.lastUsedAt).toBeGreaterThan(0);
-    expect(item?.updatedAt).toBe(5); // unchanged — see the doc comment on touchMemoryUsage
+    expect(item?.updatedAt).toBe(5); // unchanged - see the doc comment on touchMemoryUsage
 
     touchMemoryUsage("m1");
     expect(getMemoryItem("m1")?.useCount).toBe(2);
@@ -147,7 +147,7 @@ describe("touchMemoryUsage (P5 usage tracking)", () => {
     expect(getMemoryItem("nope")).toBeUndefined();
   });
 
-  it("batches multiple touches within the debounce window into ONE sync push", () => {
+  it("batches multiple touches within the debounce window into one sync push", () => {
     upsertMemoryItem(mem({ updatedAt: 5 }));
     const pushed: MemoryItem[] = [];
     const off = memorySyncStore.onChange((it) => pushed.push(it));
@@ -155,20 +155,20 @@ describe("touchMemoryUsage (P5 usage tracking)", () => {
     touchMemoryUsage("m1");
     touchMemoryUsage("m1");
     touchMemoryUsage("m1");
-    expect(pushed).toHaveLength(0); // debounced — nothing pushed yet
+    expect(pushed).toHaveLength(0); // debounced - nothing pushed yet
 
     vi.advanceTimersByTime(USAGE_PUSH_DEBOUNCE_MS);
     off();
-    expect(pushed).toHaveLength(1); // 3 touches → exactly 1 push
+    expect(pushed).toHaveLength(1); // 3 touches -> exactly 1 push
     expect(pushed[0].useCount).toBe(3);
-    // The pushed item's updatedAt is UNCHANGED — a stale-timestamp push can
+    // The pushed item's updatedAt is UNCHANGED - a stale-timestamp push can
     // never clobber a genuinely newer edit server-side (sync.py only rejects
     // an incoming write that is OLDER than what's stored).
     expect(pushed[0].updatedAt).toBe(5);
   });
 });
 
-describe("supersedeMemoryItem / reviveMemoryItem (P5 — reversible, never delete)", () => {
+describe("supersedeMemoryItem / reviveMemoryItem (P5: reversible, never delete)", () => {
   it("marks the loser superseded and records it on the winner's supersedes[]", () => {
     upsertMemoryItem(mem({ id: "old", updatedAt: 1 }));
     upsertMemoryItem(mem({ id: "new", updatedAt: 1 }));
@@ -179,7 +179,7 @@ describe("supersedeMemoryItem / reviveMemoryItem (P5 — reversible, never delet
     expect(old?.supersededBy).toBe("new");
     expect(isActiveMemory(old!)).toBe(false);
     expect(getMemoryItem("new")?.supersedes).toEqual(["old"]);
-    // Nothing is deleted — the item is still in the store.
+    // Nothing is deleted - the item is still in the store.
     expect(getAllMemory().map((m) => m.id)).toEqual(expect.arrayContaining(["old", "new"]));
   });
 
@@ -194,7 +194,7 @@ describe("supersedeMemoryItem / reviveMemoryItem (P5 — reversible, never delet
     expect(revived?.status).toBeUndefined();
     expect(revived?.supersededBy).toBeUndefined();
     // The winner's provenance trail is a historical record, not a live
-    // pointer — it is NOT retroactively cleaned up on revive.
+    // pointer - it is not retroactively cleaned up on revive.
     expect(getMemoryItem("new")?.supersedes).toEqual(["old"]);
   });
 
@@ -227,7 +227,7 @@ describe("archiveMemoryItem / confirmMemoryItem", () => {
     expect(isActiveMemory(getMemoryItem("a")!)).toBe(true);
   });
 
-  it("confirmMemoryItem bumps lastConfirmedAt but NOT updatedAt", () => {
+  it("confirmMemoryItem bumps lastConfirmedAt but not updatedAt", () => {
     upsertMemoryItem(mem({ id: "a", updatedAt: 5 }));
     confirmMemoryItem("a");
     const item = getMemoryItem("a");

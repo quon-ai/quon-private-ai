@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-/** Detection-preview highlighting core (feedback #55). What must never break:
+/** Detection-preview highlighting core. What must never break:
  *  longest-value-first matching (a contained "Anna" must not shadow
  *  "Anna Müller"), case-insensitivity (matches the backend's always-redact
  *  semantics), regex-metacharacter safety, and DOM idempotence. */
@@ -35,7 +35,7 @@ describe("segmentText", () => {
     ]);
   });
 
-  it("prefers the longest value — 'Anna' never splits 'Anna Müller'", () => {
+  it("prefers the longest value: 'Anna' never splits 'Anna Müller'", () => {
     const segs = segmentText("Anna Müller und Anna.", hits);
     expect(segs.map((s) => s.text)).toEqual(["Anna Müller", " und ", "Anna", "."]);
   });
@@ -69,7 +69,7 @@ describe("highlightDomText", () => {
     expect(n).toBe(2);
     const marks = [...root.querySelectorAll("mark[data-quon-hit]")];
     expect(marks.map((m) => m.getAttribute("data-quon-hit"))).toEqual(["PERSON", "EMAIL"]);
-    // Text content is unchanged — highlighting must never alter the document.
+    // Text content is unchanged - highlighting must never alter the document.
     expect(root.textContent).toBe("Hallo Anna Müller, Mail an kontakt@example.com.");
     // A second pass finds nothing new (marks are skipped).
     expect(highlightDomText(root, hits)).toBe(0);
@@ -80,7 +80,7 @@ describe("highlightDomText", () => {
 describe("injectManualHit", () => {
   // The document viewer's Text view "Immer schwärzen" action folds a
   // hand-redacted term into whatever the detection preview is currently
-  // showing — this is the pure transition behind that, decoupled from React.
+  // showing - this is the pure transition behind that, decoupled from React.
   const manual: DetectionHit = { value: "Anna Muster", type: "MANUAL" };
 
   it("turns marks on with just the one hit when detection is off", () => {
@@ -118,7 +118,7 @@ describe("injectManualHit", () => {
   it("de-dupes by (type, case-insensitive value) instead of adding a second copy", () => {
     const existing: DetectState = { status: "done", hits: [manual] };
     const next = injectManualHit(existing, { value: "ANNA MUSTER", type: "MANUAL" });
-    expect(next).toBe(existing); // unchanged — same reference, not just equal
+    expect(next).toBe(existing); // unchanged - same reference, not just equal
   });
 
   it("keeps two hits with the same value but different types", () => {
@@ -135,8 +135,8 @@ describe("injectManualHit", () => {
 });
 
 describe("hasPlaceableText", () => {
-  // Regression: Original view rendered a clean, unmarked page for a SCAN while
-  // Text view showed every hit — because "no text layer" and "no hits found"
+  // Regression: Original view rendered a clean, unmarked page for a scan while
+  // Text view showed every hit - because "no text layer" and "no hits found"
   // both came out as an empty rect list. These are different facts and the UI
   // has to be able to tell them apart.
   const item = (str: string) => ({ str });
@@ -150,7 +150,7 @@ describe("hasPlaceableText", () => {
   });
 
   it("is false for a scan carrying only a stamp or page number", () => {
-    // THE case a naive "has any text?" check gets wrong: these pages do have a
+    // The case a naive "has any text?" check gets wrong: these pages do have a
     // text layer, so the page would be treated as markable, the body text would
     // still have come from OCR, and the page would render clean again.
     expect(hasPlaceableText([item("Seite 3 von 12")])).toBe(false);
@@ -164,7 +164,7 @@ describe("hasPlaceableText", () => {
   });
 
   it("agrees with the threshold extraction used to route the page to OCR", () => {
-    // One predicate, one threshold — the viewer must not disagree with the
+    // One predicate, one threshold - the viewer must not disagree with the
     // decision that produced the text in the first place.
     const justUnder = [item("a".repeat(29))];
     const justOver = [item("a".repeat(30))];
@@ -178,9 +178,9 @@ describe("hasPlaceableText", () => {
 });
 
 describe("buildHighlightRegex word boundaries", () => {
-  // Beta, 2026-08-22: a financial report came back with half its words
-  // highlighted. The backend had matched nothing — find_spans is word-bounded
-  // and this regex was not, so one two-letter detection repainted the page.
+  // find_spans on the backend is word-bounded; if this regex were not, one
+  // two-letter detection ("Re") would repaint half the words of a financial
+  // report while the backend had matched nothing.
   it("does not match a short value inside longer words", () => {
     const text =
       "Basis & Rechnungsmethodik. Zum Erreichen der Altersgrenze von 65 Jahren " +

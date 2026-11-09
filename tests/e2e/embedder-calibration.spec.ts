@@ -3,36 +3,36 @@ import { test, expect } from "@playwright/test";
 import { cosine } from "../../src/lib/search/vector";
 
 /**
- * EMBEDDER CALIBRATION RATCHET — drift guard for every retrieval-gate threshold.
+ * EMBEDDER CALIBRATION RATCHET - drift guard for every retrieval-gate threshold.
  *
- * All retrieval/dedupe thresholds are calibrated against ONE hand measurement of
+ * All retrieval/dedupe thresholds are calibrated against one hand measurement of
  * the BROWSER WASM q8 embedder (Transformers.js, Xenova/paraphrase-multilingual-
  * MiniLM-L12-v2, 384-dim):
  *   - `ABS_FLOOR` 0.3, `NO_ANCHOR_SIM_FLOOR` 0.55, `STRICT_SIM_FLOOR` 0.4
- *     (src/lib/search/rerank.ts — the RAG relevance gate)
+ *     (src/lib/search/rerank.ts - the RAG relevance gate)
  *   - `SIM_SKIP` 0.92, `SIM_UPDATE` 0.78
- *     (src/lib/memoryExtract.ts — memory-suggestion dedupe)
+ *     (src/lib/memoryExtract.ts - memory-suggestion dedupe)
  *
- * ⚠️ Browser ≠ Node: the browser q8 distribution genuinely differs from Node
- * (unrelated German↔German pairs score up to ~0.41 in the browser vs ≤ ~0.25 in
- * Node fp32/q8 — reproduced live 2026-07-19). Node-side checks are therefore
- * WORTHLESS for these thresholds; this spec embeds through the app's real Web
- * Worker + WASM path in Chromium AND WebKit, which is the point.
+ * Browser != Node: the browser q8 distribution genuinely differs from Node
+ * (unrelated German<->German pairs score up to ~0.41 in the browser vs <= ~0.25 in
+ * Node fp32/q8). Node-side checks are therefore worthless for these thresholds;
+ * this spec embeds through the app's real Web Worker + WASM path in Chromium and
+ * WebKit, which is the point.
  *
  * What it does: embeds a fixed battery of sentence pairs with the app's own
  * `embedBatch` and asserts the cosine of each band stays inside a ratcheted
- * envelope (measured value ± ~0.05 margin — see the per-assert comments). A
+ * envelope (measured value ± ~0.05 margin - see the per-assert comments). A
  * transformers.js / onnxruntime / model-file bump that shifts the score
- * distribution fails here BEFORE it silently invalidates the gates.
+ * distribution fails here before it silently invalidates the gates.
  *
- * Measurement note (2026-07-22 baseline): chromium and webkit produce
- * BIT-IDENTICAL cosines (4 dp) for this battery — the ONNX WASM q8 path is
+ * Measurement note: chromium and webkit produce bit-identical cosines (4 dp)
+ * for this battery - the ONNX WASM q8 path is
  * deterministic across engines, so a chromium/webkit divergence here is itself
  * a red flag. This battery's hand-written unrelated pairs score near 0, well
- * below the ~0.41 the real production FP strings measured — the ratchet pins
- * THESE strings, the 0.50/0.55 guard lines still cover the production class.
+ * below the ~0.41 the real production FP strings measured - the ratchet pins
+ * these strings, the 0.50/0.55 guard lines still cover the production class.
  *
- * WHEN THIS FAILS: do NOT just widen the asserts. Re-run with the printed
+ * when this fails: do not just widen the asserts. Re-run with the printed
  * measured-values table, compare against the values pinned in the comments
  * below, and decide whether the gate thresholds in rerank.ts / memoryExtract.ts
  * must be recalibrated for the new distribution (then re-pin the bands here to
@@ -50,10 +50,10 @@ interface Pair {
   b: string;
 }
 
-// The fixed battery. Do not "improve" the wording — the asserted bands are
-// pinned to THESE exact strings.
+// The fixed battery. Do not "improve" the wording - the asserted bands are
+// pinned to these exact strings.
 const PAIRS: Pair[] = [
-  // --- UNRELATED German↔German (the NO_ANCHOR_SIM_FLOOR class: zero shared
+  // --- UNRELATED German<->German (the NO_ANCHOR_SIM_FLOOR class: zero shared
   // tokens, must stay clearly below 0.55). Includes the real production false
   // positive (microbiome lab report vs Talbach travel question, ~0.41).
   {
@@ -93,7 +93,7 @@ const PAIRS: Pair[] = [
     b: "Bis wann muss ich die Umsatzsteuervoranmeldung abgeben?",
   },
   // --- RELATED, same language, shared vocabulary (the class that must clear
-  // STRICT_SIM_FLOOR 0.4 comfortably — these are real "note vs question about
+  // STRICT_SIM_FLOOR 0.4 comfortably - these are real "note vs question about
   // the note" retrieval hits).
   {
     band: "related",
@@ -119,9 +119,9 @@ const PAIRS: Pair[] = [
     a: "My landlord raised the rent to 1,200 euros per month.",
     b: "How much rent do I pay per month?",
   },
-  // --- RELATED cross-language DE↔EN (no shared tokens; 2026-07-19 hand
-  // measurement put this band at roughly 0.37–0.51 — the reason tags/keys count
-  // as anchors in rerank.ts).
+  // --- RELATED cross-language DE<->EN (no shared tokens; a hand measurement on
+  // production strings put this band at roughly 0.37–0.51, the reason tags/keys
+  // count as anchors in rerank.ts).
   {
     band: "cross",
     label: "allergy fact (de) vs allergy question (en)",
@@ -147,7 +147,7 @@ const PAIRS: Pair[] = [
     b: "What is my favorite color?",
   },
   // --- NEAR-IDENTICAL rephrases (the SIM_UPDATE 0.78 class: same fact, trivial
-  // rewording — memoryExtract must see these as an "update", not a new item).
+  // rewording - memoryExtract must see these as an "update", not a new item).
   {
     band: "rephrase",
     label: "coffee fact, trivial reorder (de)",
@@ -166,8 +166,8 @@ const PAIRS: Pair[] = [
     a: "Anna Weber ist meine Steuerberaterin in München.",
     b: "Meine Steuerberaterin in München heißt Anna Weber.",
   },
-  // --- IDENTICAL text embedded twice, in different batch positions (the
-  // SIM_SKIP 0.92 class — also pins q8 batch-padding determinism: the two
+  // --- identical text embedded twice, in different batch positions (the
+  // SIM_SKIP 0.92 class - also pins q8 batch-padding determinism: the two
   // copies land in different sub-batches, so padding context differs).
   {
     band: "identical",
@@ -188,10 +188,10 @@ test("browser q8 embedder: cosine distribution stays inside the calibrated bands
 }) => {
   test.slow(); // first embed initialises the WASM model in the worker
 
-  // Any app page works — the embedder is a pure client module; no login needed.
+  // Any app page works - the embedder is a pure client module; no login needed.
   await page.goto("/");
 
-  // Load the app's REAL embedder module (worker + WASM + local model mirror)
+  // Load the app's real embedder module (worker + WASM + local model mirror)
   // through vite dev, which serves source modules at /src/... . The import is
   // issued as a string expression so Playwright's test transpiler can't rewrite
   // the dynamic import(); `void` keeps evaluate from trying to serialise the
@@ -214,7 +214,7 @@ test("browser q8 embedder: cosine distribution stays inside the calibrated bands
     cos: cosine(vectors[2 * i], vectors[2 * i + 1]),
   }));
 
-  // Compact measured-values table — the one-glance recalibration aid.
+  // Compact measured-values table - the one-glance recalibration aid.
   const table = results
     .map((r) => `  ${r.band.padEnd(10)} ${r.cos.toFixed(4)}  ${r.label}`)
     .join("\n");
@@ -226,12 +226,12 @@ test("browser q8 embedder: cosine distribution stays inside the calibrated bands
   const byBand = (band: Band) => results.filter((r) => r.band === band);
 
   // --- UNRELATED: must stay clearly below NO_ANCHOR_SIM_FLOOR (0.55).
-  // Re-measured 2026-08-15 after these fixtures were made synthetic, chromium
-  // AND webkit BIT-IDENTICAL (4 dp): 0.0209 / 0.0027 / -0.0290 / 0.0555 /
-  // 0.0126 / 0.0205 (max 0.0555). ⚠️ Far below the ~0.41 the production FP of
-  // this shape measured on 2026-07-19 — the real strings were longer/noisier
-  // than this battery; the 0.50 line is the never-cross guard for the gate,
-  // 0.10 is the drift ratchet for THESE strings.
+  // Measured with these synthetic fixtures, chromium and webkit bit-identical
+  // (4 dp): 0.0209 / 0.0027 / -0.0290 / 0.0555 / 0.0126 / 0.0205 (max 0.0555).
+  // Far below the ~0.41 that production false positives of this shape measure:
+  // the real strings are longer/noisier than this battery. The 0.50 line is
+  // the never-cross guard for the gate, 0.10 is the drift ratchet for these
+  // strings.
   //
   // Swapping a fixture MOVES these numbers: an uncommon word embeds noisily.
   // The first replacement drug tried here scored 0.1596 and broke the ratchet;
@@ -244,8 +244,8 @@ test("browser q8 embedder: cosine distribution stays inside the calibrated bands
   }
 
   // --- RELATED same-language: must clear STRICT_SIM_FLOOR (0.4) with margin.
-  // Measured 2026-07-22 (identical chromium/webkit): 0.6251 / 0.5611 / 0.6131 /
-  // 0.6096 (min 0.5611). Floor 0.50 = measured min − ~0.06 margin, comfortably
+  // Measured (identical chromium/webkit): 0.6251 / 0.5611 / 0.6131 /
+  // 0.6096 (min 0.5611). Floor 0.50 = measured min ~0.06 margin, comfortably
   // above STRICT_SIM_FLOOR 0.4.
   for (const r of byBand("related")) {
     expect(
@@ -254,10 +254,10 @@ test("browser q8 embedder: cosine distribution stays inside the calibrated bands
     ).toBeGreaterThan(0.5);
   }
 
-  // --- RELATED cross-language DE↔EN: the 2026-07-19 hand measurement said
-  // ~0.37–0.51; measured 2026-07-22 (identical chromium/webkit): 0.7651 /
+  // --- RELATED cross-language DE<->EN: the production hand measurement said
+  // ~0.37–0.51; this battery measures (identical chromium/webkit): 0.7651 /
   // 0.6725 / 0.4345 / 0.8040 (min 0.4345, max 0.8040). This battery's short
-  // factoid pairs mostly score ABOVE the documented band — which reinforces why
+  // factoid pairs mostly score above the documented band - which reinforces why
   // NO_ANCHOR_SIM_FLOOR 0.55 alone can't separate cross-language hits from FPs
   // and tags/keys must count as anchors. Band (0.38, 0.87) = extremes ± ~0.05.
   for (const r of byBand("cross")) {
@@ -268,16 +268,16 @@ test("browser q8 embedder: cosine distribution stays inside the calibrated bands
   }
 
   // --- NEAR-IDENTICAL rephrases: must clear SIM_UPDATE (0.78) so memoryExtract
-  // treats them as updates. Measured 2026-07-22 (identical chromium/webkit):
+  // treats them as updates. Measured (identical chromium/webkit):
   // 0.9753 / 0.9593 / 0.9598 (min 0.9593). 0.80 is the guard line (below it the
-  // dedupe design itself breaks); 0.90 is the drift ratchet (min − ~0.06).
+  // dedupe design itself breaks); 0.90 is the drift ratchet (min ~0.06).
   for (const r of byBand("rephrase")) {
     expect(r.cos, `rephrase must stay in SIM_UPDATE territory: ${r.label}`).toBeGreaterThan(0.8);
     expect(r.cos, `rephrase ratchet (measured ≥ 0.9593 − margin): ${r.label}`).toBeGreaterThan(0.9);
   }
 
-  // --- IDENTICAL text, different batch positions: must clear SIM_SKIP (0.92).
-  // Measured 2026-07-22: 1.0000 on both browsers (q8 batch padding did not
+  // --- identical text, different batch positions: must clear SIM_SKIP (0.92).
+  // Measured: 1.0000 on both browsers (q8 batch padding did not
   // perturb the vectors). Floor 0.95 per the SIM_SKIP guard.
   for (const r of byBand("identical")) {
     expect(r.cos, `identical text must stay in SIM_SKIP territory: ${r.label}`).toBeGreaterThan(

@@ -4,11 +4,11 @@
  *
  * Why not raw `npm audit --audit-level=high`: an advisory with **no fix
  * available** in an **unreachable** dependency keeps the gate red through no
- * action anyone can take — and a permanently red gate trains people to ignore
- * red, at which point it catches nothing (that is how four real advisories sat
- * unnoticed on main until 2026-08-13). npm has no built-in ignore mechanism,
- * so this wrapper adds one with the two properties an exception must have:
- * a WRITTEN reason and an EXPIRY, after which it must be re-justified.
+ * action anyone can take, and a permanently red gate trains people to ignore
+ * red, at which point it catches nothing and real advisories sit unnoticed
+ * behind the known one. npm has no built-in ignore mechanism, so this wrapper
+ * adds one with the two properties an exception must have: a written reason
+ * and an expiry, after which it must be re-justified.
  *
  * Fails on any high/critical advisory in production dependencies that is not
  * allow-listed. Prints allow-listed hits so they stay visible, never silent.
@@ -16,16 +16,15 @@
 
 import { execSync } from "node:child_process";
 
-/** GHSA id → { reason, expires (YYYY-MM-DD), addedBy } */
+/** GHSA id -> { reason, expires (YYYY-MM-DD), addedBy } */
 const ALLOW = new Map([
-  // Empty since 2026-10-30: the sharp/libvips exception (GHSA-f88m-g3jw-g9cj,
-  // 2026-08-13) ended when sharp 0.35.5 shipped the fix. Entry shape:
+  // Currently empty. Entry shape:
   //   ["GHSA-xxxx", { reason, expires: "YYYY-MM-DD", addedBy }]
 ]);
 
 let report;
 try {
-  // npm audit exits non-zero when advisories exist — capture output either way.
+  // npm audit exits non-zero when advisories exist - capture output either way.
   report = execSync("npm audit --omit=dev --json", {
     encoding: "utf8",
     maxBuffer: 64 * 1024 * 1024,

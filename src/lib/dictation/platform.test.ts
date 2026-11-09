@@ -22,7 +22,7 @@ describe("isIos", () => {
     expect(isIos(nav({ userAgent: IPHONE }))).toBe(true);
   });
 
-  it("recognises an iPad, which claims to be a Mac — touch points are the tell", () => {
+  it("recognises an iPad, which claims to be a Mac: touch points are the tell", () => {
     expect(isIos(nav({ userAgent: IPAD_AS_MAC, platform: "MacIntel", maxTouchPoints: 5 }))).toBe(
       true,
     );
@@ -33,7 +33,7 @@ describe("isIos", () => {
   });
 });
 
-describe("micPlatform — picks which keyboard instructions to show", () => {
+describe("micPlatform: picks which keyboard instructions to show", () => {
   it("names each platform", () => {
     expect(micPlatform(nav({ userAgent: IPHONE }))).toBe("ios");
     expect(micPlatform(nav({ userAgent: ANDROID }))).toBe("android");

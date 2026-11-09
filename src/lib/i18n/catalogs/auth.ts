@@ -1,12 +1,12 @@
 /**
  * "auth" namespace UI strings. Keys are prefixed `auth.*`. Keep `en` and `de`
- * in sync — a missing German key is a compile error via catalog.ts's typing.
+ * in sync - a missing German key is a compile error via catalog.ts's typing.
  * Covers ScreenAuth.tsx (login/register/forgot/unlock/recovery-kit),
  * ScreenJoinShare.tsx, and the routes verify/recover/change-email.
  *
  * A few sentences that wrap an inline element (a bold word, a dynamic value,
- * a <Link>) are split into "…Pre" / "…Bold" / "…Mid" / "…Post" keys so the
- * inline JSX can sit between translated fragments — there's no Trans-style
+ * a <Link>) are split into "...Pre" / "...Bold" / "...Mid" / "...Post" keys so the
+ * inline JSX can sit between translated fragments - there's no Trans-style
  * helper in this codebase, so this is the established pattern here.
  */
 export const auth = {
@@ -71,7 +71,7 @@ export const auth = {
     "auth.downloadKitPdf": "Download kit (PDF)",
     // Names the CONSEQUENCE, not the instruction. "I have saved it" is a box
     // people tick to get past a screen; irreversibility is what makes them
-    // stop and actually save the phrase. Deliberately blunt, and honest —
+    // stop and actually save the phrase. Deliberately blunt, and honest -
     // zero-knowledge means this is literally true, including for us.
     "auth.savedPhraseCheckbox":
       "If I lose my password AND these 12 words, my data is gone for good. QUON cannot recover it either.",
@@ -81,7 +81,7 @@ export const auth = {
     "auth.recoveryKitPdfGenerated": "Generated {date}",
     "auth.recoveryKitPdfIntro":
       "These 12 words are the ONLY way to recover your QUON account and decrypt your data if you forget your password. Keep this sheet somewhere safe and private. Anyone with these words can access your data — QUON cannot recover them for you.",
-    // {host} = the instance this account lives on, filled in at render time —
+    // {host} = the instance this account lives on, filled in at render time -
     // a self-hosted deployment must not print someone else's domain on its
     // users' recovery sheets.
     "auth.recoveryKitPdfCopyLine": "For copying — all twelve words in order, one line:",
@@ -105,7 +105,7 @@ export const auth = {
     "auth.showPassword": "Show password",
     "auth.hidePassword": "Hide password",
 
-    // Client-side error interpretations (not backend detail strings — see
+    // Client-side error interpretations (not backend detail strings - see
     // apiErrors.ts / errors.ts for those; these cover scrubber-down and
     // wrong-password heuristics that never come from the server)
     "auth.errScrubberUnreachable":

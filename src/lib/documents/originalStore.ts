@@ -1,11 +1,11 @@
 /**
- * Local cache of ORIGINAL uploaded file bytes, behind the document viewer's
+ * Local cache of original uploaded file bytes, behind the document viewer's
  * "real layout" mode (render the actual PDF pages / DOCX formatting instead of
  * the extracted plain text).
  *
- * Device-local and best-effort — the bytes live in their own IndexedDB object
+ * Device-local and best-effort - the bytes live in their own IndexedDB object
  * store ("originals", keyed by document id), sealed at rest under the local
- * cache key (idbPutBytes / localVault), and are NEVER part of the DocItem blob
+ * cache key (idbPutBytes / localVault), and are never part of the DocItem blob
  * that syncs to the server: item blobs stay small. Cross-device availability
  * comes from documents/originalSync.ts instead, which uploads the bytes as
  * separately-encrypted chunks (collection `originals`) and lazily re-fills this
@@ -18,7 +18,7 @@ import { idbClear, idbDelete, idbGetBytes, idbPutBytes } from "@/lib/idbStore";
 const IDB = "originals" as const;
 
 /** Per-file cap. Originals beyond this are neither cached nor synced (the text
- *  view still works) — it bounds the single-allocation encrypt/decrypt passes
+ *  view still works) - it bounds the single-allocation encrypt/decrypt passes
  *  (whole-file secretbox) and keeps one huge scan from eating the 200 MB
  *  per-user server quota or the origin's IndexedDB quota. Ingest surfaces
  *  over-cap files honestly instead of silently skipping them. */
@@ -28,10 +28,10 @@ export type OriginalKind = "pdf" | "docx" | "html" | "md" | "image";
 
 /** Which "Original" renderer the viewer has for a file, mirroring extract.ts's
  *  type detection. pdf/docx render from the original bytes; html renders the
- *  original bytes through the allowlist sanitizer (extracted text won't do —
+ *  original bytes through the allowlist sanitizer (extracted text won't do -
  *  its tags are already stripped); md renders straight from the extracted text
- *  (the text IS the source, so no bytes are ever needed); image is a scanned
- *  photo (OCR) rendered as-is — for photos the ORIGINAL is the source of
+ *  (the text is the source, so no bytes are ever needed); image is a scanned
+ *  photo (OCR) rendered as-is - for photos the original is the source of
  *  truth and the text is derived, so keeping the bytes matters most here.
  *  Null = no layout view exists (plain txt/csv/json/xml/etc.). */
 export function originalKind(mime: string, filename: string): OriginalKind | null {
@@ -59,7 +59,7 @@ export function shouldStoreOriginal(mime: string, filename: string, size: number
 export type SaveOriginalResult = "stored" | "toobig" | "skipped";
 
 /** Cache a just-uploaded file's bytes. Best-effort: never throws, and callers
- *  must not await it on the ingest critical path — a failure (locked vault,
+ *  must not await it on the ingest critical path - a failure (locked vault,
  *  quota, private mode) only costs the layout view. */
 export async function saveOriginal(id: string, file: File): Promise<SaveOriginalResult> {
   try {
@@ -74,7 +74,7 @@ export async function saveOriginal(id: string, file: File): Promise<SaveOriginal
 }
 
 /** Cache original bytes fetched from the sync relay (already type-gated at
- *  upload time on the source device — only the size cap is re-checked). */
+ *  upload time on the source device - only the size cap is re-checked). */
 export async function saveOriginalBytes(id: string, bytes: Uint8Array): Promise<boolean> {
   try {
     if (bytes.length === 0 || bytes.length > MAX_ORIGINAL_BYTES) return false;

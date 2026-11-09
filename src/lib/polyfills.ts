@@ -1,14 +1,14 @@
 /**
- * Small runtime polyfills for WebKit/older mobile browsers, loaded BEFORE heavy
+ * Small runtime polyfills for WebKit/older mobile browsers, loaded before heavy
  * libs that assume them. Imported on the main thread (via `extract.ts`) AND inside
  * the pdf.js worker (via `pdfWorker.ts`), because each is a separate global scope.
  *
- * 1. `ReadableStream` async iteration — Safari, INCLUDING current iOS/macOS, does
+ * 1. `ReadableStream` async iteration - Safari, including current iOS/macOS, does
  *    not implement `ReadableStream.prototype[Symbol.asyncIterator]`. pdf.js v6 does
  *    `for await (const value of readableStream)` while parsing, so PDF upload throws
  *    "undefined is not a function (near '...value of readableStream...')" on Safari.
  *    (Confirmed via safaridriver against real Safari 26.) This is the actual iOS bug.
- * 2. `Promise.withResolvers` — missing on Safari/iOS < 17.4. Kept for old devices.
+ * 2. `Promise.withResolvers` - missing on Safari/iOS < 17.4. Kept for old devices.
  *
  * Every guard makes the patch a no-op where the feature already exists.
  */

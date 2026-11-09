@@ -2,7 +2,7 @@ import { test, expect, type Page } from "@playwright/test";
 
 import { login, openChat, sharedCreds } from "./helpers/account";
 
-// Included-AI-budget UI (GET /account/usage → ScreenChat hint + Settings UsageCard).
+// Included-AI-budget UI (GET /account/usage -> ScreenChat hint + Settings UsageCard).
 // The throwaway stack has no provisioning, so we mock /account/usage directly.
 
 async function mockUsage(page: Page, body: Record<string, unknown>) {
@@ -18,7 +18,7 @@ async function mockUsage(page: Page, body: Record<string, unknown>) {
 test("provisioned near-limit: chat hint + Settings card show; not-provisioned hides both", async ({
   page,
 }) => {
-  // 4.2 / 5 = 0.84 → over the 0.8 hint threshold → "~84% used".
+  // 4.2 / 5 = 0.84 -> over the 0.8 hint threshold -> "~84% used".
   await mockUsage(page, {
     provisioned: true,
     usage_usd: 4.2,
@@ -38,7 +38,7 @@ test("provisioned near-limit: chat hint + Settings card show; not-provisioned hi
   await page.getByRole("button", { name: "Dismiss" }).click();
   await expect(hint).toHaveCount(0);
 
-  // Settings ▸ Providers shows the "Included AI budget" card with the exact figures.
+  // Settings Providers shows the "Included AI budget" card with the exact figures.
   await page.goto("/settings");
   await page.getByRole("tab", { name: "Providers" }).click();
   await expect(page.getByText("Included AI budget")).toBeVisible({ timeout: 30_000 });

@@ -31,8 +31,8 @@ from entities import ENTITY_CATALOG, PLACEHOLDERS  # noqa: F401  (re-export)
 
 _GENERIC_PLACEHOLDER = "[PII]"
 
-# Short, underscore-free labels for the "indexed" style: [PERSON_1], [AMOUNT_2] …
-# (kept regex-simple — [A-Z]+_\d+ — so the client can re-index and re-hydrate.)
+# Short, underscore-free labels for the "indexed" style: [PERSON_1], [AMOUNT_2] ...
+# (kept regex-simple - [A-Z]+_\d+ - so the client can re-index and re-hydrate.)
 INDEXED_LABELS: dict[str, str] = {
     "PERSON": "PERSON",
     "EMAIL": "EMAIL",
@@ -68,7 +68,7 @@ INDEXED_LABELS: dict[str, str] = {
 # "um"/"am" (collide with the English indefinite article / common English
 # words), "hat" (collides with the English noun "hat"), "also" (collides with
 # the English adverb "also"), "war" (collides with the English noun "war"),
-# and — from ner_gazetteer.INTERROGATIVES itself — "was" (collides with the
+# and - from ner_gazetteer.INTERROGATIVES itself - "was" (collides with the
 # English past tense of "be": "It was a great day" scored a false German hit
 # until this was caught by the corpus eval's before/after diff on an
 # unrelated TAX_ID slice, see test_detect_language_excluded_english_collision_
@@ -84,17 +84,17 @@ _GERMAN_HINTS = re.compile(
     r"kommt|ist|kann|soll|muss|möchte|geht|macht|gibt|wäre|könnte|würde|hätte|"
     r"dass|wenn|weil|obwohl|auch|noch|schon|doch|aber|nur|immer|hier|dort|"
     r"jetzt|dann|kein|keine|keinen|nie|mich|dich|mir|dir|uns|euch|"
-    # TRANSLITERATED register (2026-09-04): scraped web text and old exports
-    # write ue/oe/ae/ss for umlauts and ß — "Ruhige Finca im Suedwesten ..."
-    # carries plenty of German evidence, but the umlaut shortcut cannot see it
-    # and none of the umlauted words above can match their ASCII forms, so the
-    # whole page fell through to "de == 0 and en == 0 -> en" and the ENGLISH
-    # model invented PERSONs out of capitalised German noun phrases (the
-    # read_url E2E caught it). Two batches, every word individually vetted as
-    # not-an-English-token like the rest of this list: the ASCII forms of words
+    # Transliterated register: scraped web text and old exports write
+    # ue/oe/ae/ss for umlauts and ß - "Ruhige Finca im Suedwesten ..." carries
+    # plenty of German evidence, but the umlaut shortcut cannot see it and none
+    # of the umlauted words above can match their ASCII forms, so the whole
+    # page falls through to "de == 0 and en == 0 -> en" and the English model
+    # invents PERSONs out of capitalised German noun phrases. Two batches,
+    # every word individually vetted as not-an-English-token like the rest of
+    # this list: the ASCII forms of words
     # already trusted above, plus casual calendar/quantity vocabulary that
-    # umlaut-free listings and chat actually contain ("tag" is EXCLUDED — the
-    # English word — only its plural forms are safe; "april"/"mai"/"august"/
+    # umlaut-free listings and chat actually contain ("tag" is EXCLUDED - the
+    # English word - only its plural forms are safe; "april"/"mai"/"august"/
     # "september"/"november" collide with English month spellings and stay
     # out).
     r"fuer|ueber|gruessen?|moechte|waere|koennte|wuerde|haette|muessen|"
@@ -117,14 +117,14 @@ _GERMAN_HINTS = re.compile(
 _UMLAUTS = re.compile(r"[äöüßÄÖÜ]")
 # Broadened SYMMETRICALLY with _GERMAN_HINTS above (same casual-register fix,
 # opposite direction): the original list was likewise formal/business-skewed, so
-# a short casual ENGLISH sentence often scored 0 English hits — and once the
+# a short casual ENGLISH sentence often scored 0 English hits - and once the
 # German list gained words that double as English tokens ("den" the room, "Dann"
 # as a name, "mir"/"Mir" the station), a 1-hit-each tie flipped such sentences to
 # "de" (the tie-break favors German). The wrong-language model then MISSES real
-# English names ("Kim and Dann met at noon" → de model → no entities → the names
+# English names ("Kim and Dann met at noon" -> de model -> no entities -> the names
 # LEAK), which for a privacy gateway is worse than a false positive. Every word
-# below is common casual English and NOT a German word ("will" is deliberately
-# absent — "ich will" — as are "war"/"was"/"hat"/"also", which are excluded on
+# below is common casual English and not a German word ("will" is deliberately
+# absent - "ich will" - as are "war"/"was"/"hat"/"also", which are excluded on
 # the German side for the mirror-image reason).
 _ENGLISH_HINTS = re.compile(
     r"\b(the|and|or|not|with|for|from|please|dear|best|regards|kind|"
@@ -147,13 +147,13 @@ def detect_language(text: str, hint: str | None = None) -> str:
     """Cheap heuristic used only when ``options.language == "auto"``.
 
     ``hint`` (the client's UI/browser language, see ScrubOptions.language_hint)
-    breaks ONLY the zero-evidence tie: bare noun queries ("Milchreis Rezept",
-    "Airfryer Blumenkohl") contain no hint word in either language, and the old
-    hardcoded "en" default routed such German queries through the ENGLISH spaCy
-    model — the single biggest real-world PERSON-FP class (36% of FP-affected
-    prompts in the 2026-07-08 review of the user's real chat history, 35/36 of
-    which vanish under the correct model). Whenever the text itself carries any
-    signal (umlauts or hint-word hits), the hint is ignored entirely.
+    breaks only the zero-evidence tie: bare noun queries ("Milchreis Rezept",
+    "Airfryer Blumenkohl") contain no hint word in either language, and a
+    hardcoded "en" default routes such German queries through the English spaCy
+    model - the single biggest real-world PERSON-FP class (36% of FP-affected
+    prompts in a review of real chat history, 35/36 of which vanish under the
+    correct model). Whenever the text itself carries any signal (umlauts or
+    hint-word hits), the hint is ignored entirely.
     """
     if _UMLAUTS.search(text):
         return "de"
@@ -166,16 +166,16 @@ def detect_language(text: str, hint: str | None = None) -> str:
 
 
 def _dedup_key(entity_type: str, value: str) -> str:
-    """Normalized key so the SAME entity printed in different surface forms
-    collapses to ONE placeholder.
+    """Normalized key so the same entity printed in different surface forms
+    collapses to one placeholder.
 
     Only the merge KEY is normalized; the raw ``value`` is preserved for
     redaction, so every surface form is still found and removed from the text.
     Distinct entities always differ in their significant characters, so this can
-    only ever merge true duplicates — it never conflates two different values.
+    only ever merge true duplicates - it never conflates two different values.
 
-    Motivating case: an IBAN printed spaced (``DE89 3704 …``) by one detector and
-    unspaced (``DE89370400…``) by another would otherwise get ``[IBAN_1]`` and
+    Motivating case: an IBAN printed spaced (``DE89 3704 ...``) by one detector and
+    unspaced (``DE89370400...``) by another would otherwise get ``[IBAN_1]`` and
     ``[IBAN_2]`` for the *same* account, misleading the model into treating them
     as two accounts.
     """
@@ -193,7 +193,7 @@ def _dedup_key(entity_type: str, value: str) -> str:
 
 def _merge(primary: list[dict], secondary: list[dict]) -> list[dict]:
     """Merge two ``{type, value, score}`` lists, de-duplicating by normalized
-    (type, value) — see :func:`_dedup_key`.
+    (type, value) - see :func:`_dedup_key`.
 
     On a duplicate the higher-scoring entry wins. Used to combine the
     deterministic safety-net detections with the LLM's output.
@@ -219,7 +219,7 @@ def find_spans(text: str, value: str) -> list[tuple[int, int]]:
     """All case-insensitive occurrences of ``value`` in ``text``.
 
     Word boundaries are required only where ``value`` begins/ends with a word
-    character, so emails, IBANs and ``+49…`` phone numbers still match while
+    character, so emails, IBANs and ``+49...`` phone numbers still match while
     ``Marco`` does not match inside ``marco_abenteuer``.
     """
     value = _normalize_value(value)
@@ -267,7 +267,7 @@ def pseudonymize(
             continue
 
         # 0.8 was llm_default_confidence; the field outlived the tier because
-        # it was never about the LLM — it is the score a detection gets when
+        # it was never about the LLM - it is the score a detection gets when
         # its source did not provide one.
         score = float(item.get("score", 0.8))
         key = (etype, value.lower())
@@ -309,7 +309,7 @@ def pseudonymize(
 
 
 # A DATE value that is actually a relative duration / time-span ("3 Wochen",
-# "für 2 Tage", "over 6 months") — not PII. Concrete calendar dates have
+# "für 2 Tage", "over 6 months") - not PII. Concrete calendar dates have
 # separators or month names and do not match (no bare number+unit shape).
 _DURATION_RE = re.compile(
     r"^(?:für|fuer|über|ueber|seit|in|ab|ca\.?|rund|etwa|for|over|about|within)?\s*"
@@ -327,31 +327,31 @@ def _is_relative_duration(value: str) -> bool:
 
 
 # --- LLM CREDENTIAL / PIN / INTERNAL_URL sanity gates ----------------------
-# Unlike PERSON/EMAIL above, these three entity types have NO NER or regex
-# safety-net source at all (fallback.py only covers EMAIL/PHONE/IBAN/BETRAG) —
+# Unlike PERSON/EMAIL above, these three entity types have no NER or regex
+# safety-net source at all (fallback.py only covers EMAIL/PHONE/IBAN/BETRAG) - 
 # they are LLM-only, so there is no NER-side guard to reuse; the gate has to
 # live here, applied to whatever the LLM proposes, mirroring the EMAIL "@"
 # check and the PERSON ner._keep_person reuse above.
 #
-# Real-world FP report (2026-08-08): QUON's own technical documentation
-# (env-var names, architecture notes), pasted back into the scrubber, produced
+# QUON's own technical documentation (env-var names, architecture notes),
+# pasted back into the scrubber, produced
 # CREDENTIAL "OPENROUTER_API_KEY", "QUON_SERVER_SECRET", "COOKIE_SECURE" (bare
 # identifier NAMES with no value attached), CREDENTIAL/PIN on phrases that
 # merely NAME a secret concept ("OpenRouter API key", "Master Key in memory",
 # "recovery phrase"), and INTERNAL_URL on localhost URLs, bare path fragments
 # ("/api", "/sync") and even a model id ("gemma-3-12b-it") that isn't URL-
 # shaped at all. A secret/URL detector must require actual value/host context,
-# not just the LABEL of one — do NOT weaken this to also drop a real
+# not just the label of one - do not weaken this to also drop a real
 # `KEY=value`/`KEY: value` pair or a real internal hostname.
 
-# A bare SCREAMING_SNAKE_CASE identifier ("OPENROUTER_API_KEY") — the NAME of
+# A bare SCREAMING_SNAKE_CASE identifier ("OPENROUTER_API_KEY") - the NAME of
 # a secret, not a secret. A real `KEY=value`/`KEY: value` pair contains a "="
 # or ":" and does not fullmatch this (kept), and a real all-caps credential
-# VALUE (AWS-style "AKIA...", no underscore) does not fullmatch either.
+# Value (AWS-style "AKIA...", no underscore) does not fullmatch either.
 _BARE_IDENTIFIER_RE = re.compile(r"^[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+$")
 
 # Phrases that name the CONCEPT of a credential/secret rather than being one.
-# Matched only against the WHOLE value (case-insensitive) — an actual value
+# Matched only against the whole value (case-insensitive) - an actual value
 # that happens to start with one of these words ("recovery phrase: apple
 # river tiger ...") is a longer string and does not match, so a real secret
 # glued to its label is unaffected; only the bare label itself is dropped.
@@ -380,7 +380,7 @@ def _is_credential_label(value: str) -> bool:
 
 
 def _is_bare_concept_word(value: str) -> bool:
-    """A single word with no digit — the NAME of a secret, not one.
+    """A single word with no digit - the NAME of a secret, not one.
 
     Shape rule, not vocabulary: GLiNER labelled "Schlüssel" (German for "key") a
     PIN at 0.78 in a notarial contract that was discussing handing over the house
@@ -388,9 +388,9 @@ def _is_bare_concept_word(value: str) -> bool:
     German can compound into one, which a term list cannot.
 
     A real PIN carries digits; a real recovery phrase is several words. Neither
-    is a lone digitless noun. Unmarked single-word secrets are out of scope by
-    the 2026-08-20 policy anyway (see expectations.Policy), so this cannot drop
-    something the product promises to catch.
+    is a lone digitless noun. Unmarked single-word secrets are out of scope
+    anyway (see expectations.Policy), so this cannot drop something the product
+    promises to catch.
     """
     v = value.strip()
     return " " not in v and not any(ch.isdigit() for ch in v)
@@ -400,9 +400,9 @@ def _is_pin_label(value: str) -> bool:
     return value.strip().lower() in _PIN_LABEL_TERMS
 
 
-# Loopback/dev-infra hosts — generic to every machine, not identifying or
+# Loopback/dev-infra hosts - generic to every machine, not identifying or
 # internal-specific, so excluded even when otherwise URL-shaped. Deliberately
-# NOT extended to RFC1918 ranges (192.168.x, 10.x): those DO identify a
+# Not extended to RFC1918 ranges (192.168.x, 10.x): those DO identify a
 # specific internal network and stay in scope.
 _LOOPBACK_HOSTS = frozenset({"localhost", "0.0.0.0", "::1"})
 _URL_WITH_SCHEME_RE = re.compile(
@@ -411,23 +411,23 @@ _URL_WITH_SCHEME_RE = re.compile(
 _HOST_PORT_RE = re.compile(r"^([^/:\s]+):(\d+)(?:/.*)?$")
 
 
-# Types whose whole point is to BE an identifier. Measured on 38 real documents
-# (2026-08-20): every false positive in these types was the LABEL of an identifier
-# rather than one — "Personalausweisnummer:" with the field left blank, "Steuer ID",
-# a bare "NLN", the German words "Fahrzeugversicherer" and "Kfz-steuer" — plus two
+# Types whose whole point is to BE an identifier. Measured on 38 real documents,
+# every false positive in these types was the label of an identifier
+# rather than one - "Personalausweisnummer:" with the field left blank, "Steuer ID",
+# a bare "NLN", the German words "Fahrzeugversicherer" and "Kfz-steuer" - plus two
 # neighbouring classes that are never identifiers either: VAT RATES ("19% MwSt.",
 # "101 19,00 %") and STATUTE CITATIONS ("§ 22 EStG", "§13 StBVV").
 #
-# This is the same principle already written into the credential gate — a detector
-# must require a VALUE, not the label of one — applied to the identifier family.
+# This is the same principle already written into the credential gate - a detector
+# must require a value, not the label of one - applied to the identifier family.
 # It is deliberately a shape rule, not a word list: an identifier without a single
 # digit is essentially never real, whereas a vocabulary of German label words would
 # be fitted to whichever documents happened to be read.
 #
 # CREDENTIAL is excluded on purpose: real passwords need not contain a digit, and
 # dropping one would leak a secret. Wrong direction for a privacy gateway.
-# PIN is deliberately NOT here: a recovery/seed phrase is a real PIN-type secret
-# made only of words ("apple river tiger …"), and requiring a digit would drop it —
+# PIN is deliberately not here: a recovery/seed phrase is a real PIN-type secret
+# made only of words ("apple river tiger ..."), and requiring a digit would drop it - 
 # leaking the secret. Caught by test_llm_pin_with_real_phrase_value_still_redacts.
 _IDENTIFIER_TYPES = frozenset({"OTHER", "TAX_ID", "INSURANCE_ID", "ROUTING"})
 
@@ -448,8 +448,8 @@ def _is_identifier_shaped(value: str) -> bool:
 # "secret code" as PIN, "Geburtsdatum" as DATE, "new email address" as EMAIL,
 # and a blank form field "____________" as an IBAN.
 #
-# Deliberately NOT checksums. IBAN mod-97 and Luhn would catch more, but they
-# fail CLOSED on OCR-damaged real values — and an IBAN the scanner mangled is
+# Deliberately not checksums. IBAN mod-97 and Luhn would catch more, but they
+# fail closed on OCR-damaged real values - and an IBAN the scanner mangled is
 # still an IBAN that must not leak. Structure, not arithmetic.
 _IBAN_SHAPE_RE = re.compile(r"^[A-Za-z]{2}[0-9]{2}[A-Za-z0-9 ]{6,}$")
 
@@ -482,26 +482,26 @@ _TYPE_PRECONDITION = {
     "TAX_ID": _is_identifier_shaped,
     "INSURANCE_ID": _is_identifier_shaped,
     # A routing number is 8 digits (German BLZ) or 9 (US ABA). "port 465",
-    # "8080" and ":8000" were all shipping as ROUTING — measured on the
-    # project's own README and a real SMTP-config document — and a 3-4 digit
+    # "8080" and ":8000" were all shipping as ROUTING - measured on the
+    # project's own README and a real SMTP-config document - and a 3-4 digit
     # routing number is not a stricter-threshold case, it is IMPOSSIBLE.
     "ROUTING": lambda v: sum(ch.isdigit() for ch in v) >= 8,
     "OTHER": _is_identifier_shaped,
     # A credential is a secret or the WORD for one. "Zugangscode", "Passwort",
     # "Schlüssel" are the latter, and no term list keeps up with what German can
-    # compound — so the shape decides, exactly as _is_bare_concept_word does for
+    # compound - so the shape decides, exactly as _is_bare_concept_word does for
     # the GLiNER path. Applied here it covers every detector, not just that one.
     "CREDENTIAL": lambda v: not _is_concept_label(v),
 }
 
 
 def _is_concept_label(value: str) -> bool:
-    """A digitless SHORT phrase — the label of a secret, not a secret.
+    """A digitless short phrase - the label of a secret, not a secret.
 
     `_is_bare_concept_word` covers the single-word case ("Schlüssel",
     "Zugangscode"). The benchmark surfaced the two-word one: "secret code"
     redacted as a PIN. Extending from one word to three closes that without
-    touching the case a digit rule would have broken —
+    touching the case a digit rule would have broken - 
 
         "apple river tiger mirror ocean velvet"
 
@@ -533,19 +533,19 @@ def _drop_label_only_identifiers(dets: list[dict]) -> list[dict]:
     ]
 
 
-# PDF text extraction routinely breaks an umlaut into base letter + a SEPARATE
+# PDF text extraction routinely breaks an umlaut into base letter + a separate
 # diaeresis character, so "Dünenwald" arrives as "Du¨nenwald". Every detector then
 # sees a word that matches no letter class and no learned token: measured on a real
 # booking form, GLiNER scored the address 0.64 when clean and only 0.51 when
 # broken, fragmenting the span in the middle of the street name.
 #
 # Two encodings occur and only one is repaired by NFC:
-#   U+0308 COMBINING DIAERESIS — NFC joins it to the base letter.
-#   U+00A8 SPACING DIAERESIS   — a standalone character; NFC leaves it alone,
+#   U+0308 COMBINING DIAERESIS - NFC joins it to the base letter.
+#   U+00A8 SPACING DIAERESIS   - a standalone character; NFC leaves it alone,
 #                                so it is converted to the combining form first.
 # Repairing the INPUT (rather than teaching each rule about the artifact) fixes
 # spaCy, GLiNER, Presidio and the regex net at once, and the scrubbed output is
-# returned in the repaired form — which is what the user meant to write anyway.
+# returned in the repaired form - which is what the user meant to write anyway.
 _SPACING_ACCENT_RE = re.compile("([a-zA-Z])\u00a8")
 
 
@@ -555,12 +555,12 @@ def _repair_extraction_artifacts(text: str) -> str:
 
 
 def _drop_concept_only_secrets(dets: list[dict]) -> list[dict]:
-    """Apply the CREDENTIAL/PIN/INTERNAL_URL sanity gates to ANY detector's output.
+    """Apply the CREDENTIAL/PIN/INTERNAL_URL sanity gates to any detector's output.
 
     The gates were written for the LLM tier, but nothing about them is
     LLM-specific: "a secret detector must require actual value context, not just
-    the LABEL of one" is a property of the claim, not of who made it. GLiNER
-    reintroduced the very FP class documented above through a different door —
+    the label of one" is a property of the claim, not of who made it. GLiNER
+    reintroduced the very FP class documented above through a different door - 
     asked about "api key" it labels the env-var NAME "OPENROUTER_API_KEY", which
     protects nothing and destroys the sentence. Same gate, same reason.
     """
@@ -593,7 +593,7 @@ def _looks_like_internal_url(value: str) -> bool:
     """True only for an actual internal URL: a scheme+host, or a bare
     host:port. A path fragment with no host ("/api", "/sync", "/api/v1/keys")
     or a scheme-less, slash-less token ("gemma-3-12b-it", a model id) is
-    dropped — neither identifies an internal system on its own. Loopback
+    dropped - neither identifies an internal system on its own. Loopback
     hosts are excluded even when otherwise URL-shaped (see _LOOPBACK_HOSTS)."""
     v = value.strip()
     match = _URL_WITH_SCHEME_RE.match(v) or _HOST_PORT_RE.match(v)
@@ -631,17 +631,17 @@ def _detect_always_redact(text: str, terms: list[str]) -> list[dict]:
 
 def _apply_never_redact(detected: list[dict], terms: list[str]) -> list[dict]:
     """Drop detections whose value is on the user's allow-list (case-insensitive,
-    whole-value match). Suppresses false positives from any detector — e.g. an
+    whole-value match). Suppresses false positives from any detector - e.g. an
     ingredient "Xantan" the LLM or NER mistook for a name.
 
-    ⚠️ CUSTOM is exempt. A CUSTOM detection IS the user's own `always_redact`
+    CUSTOM is exempt. A CUSTOM detection is the user's own `always_redact`
     entry, so dropping it here would let the allow-list silently cancel an
-    explicit "always redact this" — a fail-OPEN, and the user cannot see it
+    explicit "always redact this" - a fail-OPEN, and the user cannot see it
     happen. The `disabled_types` block below already treats CUSTOM as a hard
     override for exactly this reason; this function simply did not, so a value
     present on both lists lost. Between two contradictory instructions from the
     same user, redacting is the safe reading.
-    """
+"""
     allow = {t.strip().lower() for t in terms if t.strip()}
     if not allow:
         return detected
@@ -677,7 +677,7 @@ async def scrub(
 
     PRIMARY (fast, always-on): spaCy/Presidio NER + the deterministic regex
     safety-net form the detection base. OPTIONAL: the LLM enriches the base with
-    context-dependent PII — best-effort, so a timeout/parse error keeps the base
+    context-dependent PII - best-effort, so a timeout/parse error keeps the base
     instead of dropping into a near-empty fallback.
 
     ``api_key`` is the caller-resolved per-user OpenRouter sub-key; it is used by
@@ -688,12 +688,12 @@ async def scrub(
     if len(text) > settings.max_text_length:
         text = text[: settings.max_text_length]
 
-    # Repair PDF-extraction damage BEFORE any detector sees the text — see
+    # Repair PDF-extraction damage before any detector sees the text - see
     # _repair_extraction_artifacts. Done here, once, so every tier benefits and
     # the replacement step works on the same string the detectors matched against.
     text = _repair_extraction_artifacts(text)
 
-    # Resolve language up front — the NER engine needs it. The client's locale
+    # Resolve language up front - the NER engine needs it. The client's locale
     # hint only ever breaks the zero-evidence tie (see detect_language).
     if options.language in ("de", "en"):
         language = options.language
@@ -716,24 +716,24 @@ async def scrub(
     if settings.gliner_enabled:
         import gliner_detect
 
-        # ONE forward pass, reused for both detection and the veto below. The veto
-        # used to re-run the model per PERSON candidate — measured on production,
-        # that cost 4.4x at 1000 chars and 2.8x at 4000, for identical output.
+        # One forward pass, reused for both detection and the veto below.
+        # Re-running the model per PERSON candidate costs 4.4x at 1000 chars and
+        # 2.8x at 4000 on the production box, for identical output.
         gliner_dets, gliner_spans = await asyncio.to_thread(
             gliner_detect.detect_gliner_with_spans, text
         )
         gliner_dets = _drop_concept_only_secrets(gliner_dets)
-        # A PERSON claim from GLiNER goes through the SAME guards NER's own
-        # PERSON claims do — the FULL _keep_person, not just the denylist.
+        # A PERSON claim from GLiNER goes through the same guards NER's own
+        # PERSON claims do - the full _keep_person, not just the denylist.
         #
         # The denylist alone was not enough, and the gap shipped: GLiNER labels
-        # ROLE NOUNS and PRONOUNS as people, confidently — measured on a real
+        # ROLE NOUNS and PRONOUNS as people, confidently - measured on a real
         # notarial contract, "Der Notar" 0.93, "Käufer" 0.87, "du" 0.97, against
         # "Jonas" 0.97. No threshold separates those, and no word list scales:
         # German makes a new role noun out of any profession.
         #
         # Grammar separates them exactly. spaCy tags Notar/Käufer/Gesellschafter/
-        # Nutzer as NOUN, "du"/"ihr" as PRON, "Der"/"Jeder" as DET — and
+        # Nutzer as NOUN, "du"/"ihr" as PRON, "Der"/"Jeder" as DET - and
         # Jonas/Michael/Brandt/Talberg as PROPN. _keep_person's guard 4
         # already requires one PROPN in the span; it simply never saw these,
         # because detect_ner only builds a POS doc when SPACY found a PERSON, and
@@ -752,11 +752,11 @@ async def scrub(
             )
 
         if any(d.get("type") == "PERSON" or _addr_needs_doc(d) for d in gliner_dets):
-            # `language`, NOT options.language: the client sends "auto" (or
+            # `language`, not options.language: the client sends "auto" (or
             # nothing) far more often than it sends a locale, and `or "de"`
             # then ran the GERMAN tagger over ENGLISH text. The guard misreads
             # every tag it gets back and fails open, so the whole filter
-            # silently did nothing on English input — which is exactly the
+            # silently did nothing on English input - which is exactly the
             # configuration the reported document arrived in. `language` is the
             # resolved one, decided 60 lines up for precisely this reason.
             pos = ner.pos_doc(text, language)
@@ -768,13 +768,13 @@ async def scrub(
             for d in gliner_dets:
                 # ADDRESS: keep on EVIDENCE of a real place, drop the concept
                 # word. Evidence, in order of strength: a digit (house number or
-                # postcode — the net's whole address grammar), a street-type
-                # morpheme ("Poststraße", "Erdmannstr." — the beta caught the
+                # postcode - the net's whole address grammar), a street-type
+                # morpheme ("Poststraße", "Erdmannstr." - the beta caught the
                 # first digit-only gate leaking exactly this: "Peter wohnt in
                 # der Poststraße", GLiNER 0.96, dropped), or a PROPN token
-                # ("Am Dünenwald", "Berlin" — named places the morpheme list
+                # ("Am Dünenwald", "Berlin" - named places the morpheme list
                 # cannot enumerate). What has none of these is the WORD for an
-                # address — "Postleitzahl-Adresse", "Lieferadresse" — and the
+                # address - "Postleitzahl-Adresse", "Lieferadresse" - and the
                 # PERSON-style OOV rescue is deliberately absent here: address
                 # concept words are hyphen compounds, which is precisely what a
                 # vocabulary lacks, so OOV would rescue the false positive.
@@ -791,15 +791,15 @@ async def scrub(
                             except Exception:  # noqa: BLE001
                                 span = None
                         if span is not None and not any(tk.pos_ == "PROPN" for tk in span):
-                            continue  # concept word — drop
+                            continue  # concept word - drop
                     kept_g.append(d)
                     continue
                 if d.get("type") != "PERSON":
                     kept_g.append(d)
                     continue
                 value = d.get("value", "")
-                # EVERY occurrence, not just the first. GLiNER reports a value,
-                # not an offset, so this side has to relocate it — and
+                # Every occurrence, not just the first. GLiNER reports a value,
+                # not an offset, so this side has to relocate it - and
                 # `text.find` judges whichever occurrence happens to come first,
                 # which is not the one the model scored. Measured on a real
                 # document: "person" scored inside `IOPoint: personOnSite`, but
@@ -807,12 +807,12 @@ async def scrub(
                 # a longer text). Whether the guard was right then depended on
                 # document order.
                 #
-                # Keep if ANY occurrence looks like a name. That is the
+                # Keep if any occurrence looks like a name. That is the
                 # fail-open direction and it is the one that matches how the
-                # detection is used: the value is redacted EVERYWHERE it
+                # detection is used: the value is redacted everywhere it
                 # appears, so one genuine occurrence is enough to require it.
                 occurrences = _occurrences(text, value)
-                # Unresolvable span -> fail OPEN, same as _keep_person does.
+                # Unresolvable span -> fail open, same as _keep_person does.
                 if not occurrences:
                     kept_g.append(d)
                     continue
@@ -829,7 +829,7 @@ async def scrub(
                 # on exactly the words this guard exists to stop: measured on
                 # ECHR judgments, "applicant" occurs 372 times, and a word that
                 # frequent is guaranteed to appear once without its article
-                # ("applicant's", a heading, a list item) — one lenient sample
+                # ("applicant's", a heading, a list item) - one lenient sample
                 # and it survives. Fail-open belongs to UNCERTAINTY, not to
                 # evidence: 370 determiner-led occurrences out of 372 is
                 # evidence. Ties keep, so a genuine 50/50 still fails open.
@@ -838,21 +838,20 @@ async def scrub(
             gliner_dets = kept_g
         ner_detected = ner_detected + gliner_dets
     deterministic = fallback.detect_safety_net(text) if settings.safety_net else []
-    # User's "always redact on device" terms — deterministic, top priority.
+    # User's "always redact on device" terms - deterministic, top priority.
     custom = _detect_always_redact(text, options.always_redact)
     base = _merge(_merge(ner_detected, deterministic), custom)
     ner_used = settings.ner_enabled and ner.is_ready()
 
-    # GLiNER contrast veto — deliberately OUTSIDE the LLM branch. It used to live
-    # inside it, which meant the veto silently did not exist in the one
-    # configuration we most want to ship (net + GLiNER, no LLM at all): brands
-    # sailed through as PERSON because nothing was asked. Measured on 38 real
-    # documents, that is where "Nokia", "Apple", "Samsung" and "Arvato Bertelsmann"
-    # came from.
+    # GLiNER contrast veto - deliberately outside the LLM branch. Inside it the
+    # veto would silently not exist in the one configuration we most want to
+    # ship (net + GLiNER, no LLM at all): brands sail through as PERSON because
+    # nothing was asked. Measured on 38 real documents, that is where "Nokia",
+    # "Apple", "Samsung" and "Arvato Bertelsmann" came from.
     #
     # Two bars, because the cost of being wrong is asymmetric:
     #   tentative      -> any competing label wins (NER already doubted it)
-    #   NOT tentative  -> the contrast label must win DECISIVELY (>= 0.95), since a
+    #   Not tentative  -> the contrast label must win DECISIVELY (>= 0.95), since a
     #                     wrong veto here leaks a real name.
     if settings.gliner_enabled and settings.gliner_veto:
         import gliner_detect
@@ -883,21 +882,20 @@ async def scrub(
             kept.append(d)
         base = kept
 
-    # The LLM extraction tier is GONE (2026-08-23, .claude/plans/
-    # remove-llm-pii-tier.md). Detection is complete at this point: NER + the
-    # deterministic net + GLiNER, with the guards above. What follows are the
-    # cross-detector gates.
+    # There is no LLM extraction tier. Detection is complete at this point: NER,
+    # the deterministic net and GLiNER, with the guards above. What follows are
+    # the cross-detector gates.
     detected = base
 
-    # Identifier-typed claims that carry no identifier — see
+    # Identifier-typed claims that carry no identifier - see
     # _drop_label_only_identifiers. Applied here, after every detector, so it
     # covers the net, NER, GLiNER and the LLM with one rule rather than four.
     detected = _drop_label_only_identifiers(detected)
     detected = _drop_structurally_impossible(detected)
 
-    # V1 cross-check — the winning verifier from the 2026-08-23 trial. LAST of
-    # the PERSON gates, after every detector and veto, so it judges exactly
-    # what would otherwise ship. One GLiNER query per surviving PERSON claim,
+    # V1 cross-check, the last of the PERSON gates. It runs after every detector
+    # and veto, so it judges exactly what would otherwise ship. One GLiNER query
+    # per surviving PERSON claim,
     # over the claim's own context; only a real verdict below the floor drops
     # it (person_score returns None for "no verdict" -> keep). Sweep table and
     # the accepted recall cost are documented at the config knobs.
@@ -905,8 +903,8 @@ async def scrub(
         import gliner_detect as _gd
 
         # One POS doc for hygiene at this gate. The GLiNER path strips fused
-        # prefixes too, but spaCy's own claims arrive here unstripped — the
-        # term sheet's "Beispiel-Meilensteine Jonas" came from BOTH detectors,
+        # prefixes too, but spaCy's own claims arrive here unstripped - the
+        # term sheet's "Beispiel-Meilensteine Jonas" came from both detectors,
         # and fixing only one path left the other's copy painting the prefix.
         pos_cc = (
             ner.pos_doc(text, language)
@@ -928,11 +926,11 @@ async def scrub(
             at = text.find(value)
             if at >= 0:
                 stripped = ner.strip_leading_common_nouns(value, at, pos_cc)
-                # Accept ONLY when the stripped name is independently detected:
+                # Accept only when the stripped name is independently detected:
                 # then this is convergence of two claims onto one value, and a
                 # wrong strip is impossible. Without that check, stripping the
                 # OOV compound off "Paul-Heinz Müller" would LEAK the given
-                # name — hygiene must not be able to cost recall.
+                # name - hygiene must not be able to cost recall.
                 if stripped != value and stripped.lower() in _person_values:
                     d = dict(d, value=stripped)
                     value = stripped
@@ -953,7 +951,7 @@ async def scrub(
         detected = kept_cc
 
 
-    # Drop DATE entities that are relative durations ("3 Wochen") — not PII.
+    # Drop DATE entities that are relative durations ("3 Wochen") - not PII.
     if settings.drop_relative_durations:
         detected = [
             d
@@ -961,10 +959,10 @@ async def scrub(
             if not (d.get("type") == "DATE" and _is_relative_duration(d.get("value", "")))
         ]
 
-    # User's "never redact" allow-list — applied AFTER every detector (incl. the
+    # User's "never redact" allow-list - applied after every detector (incl. the
     # LLM) so it suppresses false positives from any source. Whole-value,
     # case-insensitive match. CUSTOM (an always_redact entry) is exempt, so an
-    # overlapping allow-list entry can no longer silently un-redact it.
+    # overlapping allow-list entry cannot silently un-redact it.
     detected = _apply_never_redact(detected, options.never_redact)
 
     # Per-request type policy: drop the entity types the user turned off. CUSTOM
@@ -980,10 +978,8 @@ async def scrub(
     metadata = ScrubMetadata(
         model_used=model_used,
         processing_time_ms=int(round((time.perf_counter() - started) * 1000)),
-        # Historically "the LLM tier did not run"; the tier no longer exists,
-        # and the full detector IS this pipeline. True now only when the NER
-        # engine itself is down (regex net alone) — the one remaining state
-        # the "eingeschränkte Erkennung" warning should describe.
+        # True only when the NER engine itself is down (regex net alone) - the
+        # one state the "eingeschränkte Erkennung" warning should describe.
         fallback_mode=not ner_used,
         language_detected=language,
         ner_used=ner_used,

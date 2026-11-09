@@ -20,11 +20,11 @@ export class ApiError extends Error {
 }
 
 /** Default request deadline. Without one, a stalled socket leaves the promise
- *  pending FOREVER — which surfaced as a real bug: the document viewer's
- *  originals fetch (syncApi.blob → here) hung on a dead connection and a user
- *  watched a frozen spinner for minutes (feedback #59). A timeout turns "hangs
- *  silently" into "fails loudly with a Retry". Callers moving big payloads
- *  (originals-chunk push on a slow uplink) pass a larger value. */
+ *  pending forever: the document viewer's originals fetch (syncApi.blob ->
+ *  here) can hang on a dead connection and show a frozen spinner for minutes.
+ *  A timeout turns "hangs silently" into "fails loudly with a Retry". Callers
+ *  moving big payloads (originals-chunk push on a slow uplink) pass a larger
+ *  value. */
 const DEFAULT_TIMEOUT_MS = 30_000;
 
 export async function apiFetch<T>(
@@ -52,7 +52,7 @@ export async function apiFetch<T>(
     });
   } catch (err) {
     // An abort reads terribly as "AbortError: signal is aborted without reason"
-    // — name the actual event so error surfaces can say something true.
+    // - name the actual event so error surfaces can say something true.
     if (controller.signal.aborted)
       throw new ApiError(0, `${path} timed out after ${timeoutMs / 1000}s`);
     throw err;

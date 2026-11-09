@@ -7,9 +7,9 @@ import { setOpenRouterKey, type SettingsStatus } from "@/lib/quonApi";
 
 interface Props {
   configured: boolean;
-  /** The user has an own key stored — it overrides the included one, so the
-   *  card must say so and offer to remove it (#91: a wrong key could never be
-   *  taken back from the UI). */
+  /** The user has an own key stored - it overrides the included one, so the
+   *  card must say so and offer to remove it (otherwise a wrong key can never
+   *  be taken back from the UI). */
   ownKey?: boolean;
   /** OpenRouter routing region; "eu" = strict in-region routing (region.py). */
   region?: string;

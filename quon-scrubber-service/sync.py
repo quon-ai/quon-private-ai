@@ -1,22 +1,22 @@
 """Zero-knowledge sync relay: opaque encrypted blobs, last-write-wins.
 
-The server stores only ciphertext — the client encrypts each chat session with a
+The server stores only ciphertext - the client encrypts each chat session with a
 key derived from its Master Key, so the backend can never read a conversation.
 Sync is deliberately *dumb storage*:
 
-* ``POST /sync/push``    — upload changed blobs; LWW by the client's ``updated_at``.
-* ``GET  /sync/changes`` — download everything changed since a per-user monotonic
+* ``POST /sync/push``    - upload changed blobs; LWW by the client's ``updated_at``.
+* ``GET  /sync/changes`` - download everything changed since a per-user monotonic
                            ``server_seq`` (delta pull).
-* ``GET  /sync/blob``    — fetch ONE blob by id (lazy pull for the ``originals``
+* ``GET  /sync/blob``    - fetch one blob by id (lazy pull for the ``originals``
                            chunks, which deliberately stay out of the delta loop).
 
 All three also serve **shared projects** (shares.py): pass ``project_id`` and the
-same operations run against ``shared_blobs`` — ciphertext under the shared
+same operations run against ``shared_blobs`` - ciphertext under the shared
 Project Key, membership checked against ``project_grants``, and a sequence that
 is monotonic **per project** (not per user) so every member consumes one shared
 delta stream. v1 sharing is read-only: only the project owner may push; readers
 get a per-blob ``"forbidden"`` status. Non-members get 404 everywhere (the
-non-oracle convention — see shares.py).
+non-oracle convention - see shares.py).
 
 Conflict *merging* is out of scope: the last write (by ``updated_at``) wins per
 blob. Per-chat-session granularity keeps the blast radius of a lost concurrent
@@ -39,10 +39,10 @@ from config import settings
 router = APIRouter(prefix="/sync", tags=["sync"])
 
 MAX_CHANGES = 500
-MAX_BLOB_BYTES = 4 * 1024 * 1024  # 4 MiB per blob — generous for a chat session
+MAX_BLOB_BYTES = 4 * 1024 * 1024  # 4 MiB per blob - generous for a chat session
 # The one collection with a per-user total-bytes quota: encrypted original file
 # bytes (chunked client-side, ids `orig:<docId>:<chunkIndex>`). Everything else
-# (chat/memory/documents/projects) stays quota-free — those blobs are small.
+# (chat/memory/documents/projects) stays quota-free - those blobs are small.
 ORIGINALS_COLLECTION = "originals"
 
 
@@ -53,7 +53,7 @@ class BlobIn(BaseModel):
     content_ver: int = 1
     updated_at: int  # client-asserted epoch ms (drives LWW)
     deleted: bool = False
-    # Set → this is a shared-project blob (stored in shared_blobs under the
+    # Set -> this is a shared-project blob (stored in shared_blobs under the
     # project's own sequence; caller must hold the 'owner' grant to write).
     project_id: str | None = Field(default=None, max_length=128)
 
@@ -117,14 +117,14 @@ def _latest_project_seq(conn, project_id: str) -> int:
 def _originals_used_bytes(conn, user_id: str, exclude_id: str, exclude_project_id: str = "") -> int:
     """Live ciphertext bytes charged against this user's originals quota: their
     personal ``originals`` blobs PLUS the shared ``originals`` of every project
-    they OWN (shared bytes bill the owner — and since only owners can push to a
+    they own (shared bytes bill the owner - and since only owners can push to a
     shared project in v1, a reader can never consume someone else's quota).
 
-    Excludes the blob about to be replaced — its old bytes are freed by the
+    Excludes the blob about to be replaced - its old bytes are freed by the
     upsert, so they must not count against the incoming one: the personal row
     ``exclude_id`` when ``exclude_project_id`` is empty, else that project's
     row. Tombstones are excluded twice over: ``deleted=0`` here, and a tombstone
-    upsert stores empty ciphertext anyway — deleting a document frees quota."""
+    upsert stores empty ciphertext anyway - deleting a document frees quota."""
     personal_sql = (
         "SELECT COALESCE(SUM(LENGTH(ciphertext)), 0) AS used FROM blobs"
         " WHERE user_id=? AND collection=? AND deleted=0"
@@ -169,7 +169,7 @@ async def get_changes(
 ) -> ChangesResponse:
     """Return all blobs in ``collection`` with ``server_seq > since`` (delta pull).
 
-    With ``project_id``: the shared project's stream instead — any member may
+    With ``project_id``: the shared project's stream instead - any member may
     pull, ``since``/``latest_seq`` are that project's own sequence."""
     with db.get_conn() as c:
         if project_id:
@@ -199,7 +199,7 @@ async def get_blob(
     project_id: str | None = None,
     user: User = Depends(current_active_user),
 ) -> BlobOut:
-    """Fetch a single blob by id — the *lazy* counterpart to the delta pull.
+    """Fetch a single blob by id - the *lazy* counterpart to the delta pull.
 
     Used for the ``originals`` chunks: wiring those into ``/sync/changes`` would
     auto-download every original onto every device, so the client instead pulls
@@ -226,9 +226,9 @@ async def get_blob(
 @router.get("/originals/usage", response_model=OriginalsUsageResponse)
 async def originals_usage(user: User = Depends(current_active_user)) -> OriginalsUsageResponse:
     """Live originals-quota usage for the signed-in user: personal ``originals``
-    ciphertext bytes plus the shared originals of projects they OWN (the same
+    ciphertext bytes plus the shared originals of projects they own (the same
     accounting `_originals_used_bytes` applies at push time). Powers the
-    Documents screen's storage line. Exposes only byte counts — no content."""
+    Documents screen's storage line. Exposes only byte counts - no content."""
     with db.get_conn() as c:
         used = _originals_used_bytes(c, user.id, exclude_id="")
     return OriginalsUsageResponse(
@@ -242,15 +242,15 @@ async def push(body: PushRequest, user: User = Depends(current_active_user)) -> 
     is rejected as ``stale`` (so the client can re-pull and reconcile).
 
     Blobs with ``project_id`` go to the shared project's stream. v1 sharing is
-    read-only, so only the owner grant may write; anyone else — reader,
-    non-member, unknown project alike (non-oracle) — gets the per-blob status
+    read-only, so only the owner grant may write; anyone else - reader,
+    non-member, unknown project alike (non-oracle) - gets the per-blob status
     ``"forbidden"``, mirroring "stale"/"quota" so one refused blob never fails a
     mixed batch."""
     if len(body.changes) > MAX_CHANGES:
         raise HTTPException(status_code=413, detail=f"too many changes (max {MAX_CHANGES})")
 
     results: list[PushResult] = []
-    roles: dict[str, str | None] = {}  # per-request grant cache: project_id → role
+    roles: dict[str, str | None] = {}  # per-request grant cache: project_id -> role
     with db.transaction() as c:
         for ch in body.changes:
             ct = b""
@@ -306,10 +306,10 @@ async def push(body: PushRequest, user: User = Depends(current_active_user)) -> 
                 continue
 
             # Per-user storage quota for original-file bytes. Rejected per-blob
-            # (status "quota", not an HTTP error) so the rest of the batch — and
-            # the document's own text sync in other collections — is unaffected,
+            # (status "quota", not an HTTP error) so the rest of the batch - and
+            # the document's own text sync in other collections - is unaffected,
             # and the client can tell "over quota" apart from transient failures.
-            # Shared originals bill the OWNER — who is exactly the pusher here
+            # Shared originals bill the OWNER - who is exactly the pusher here
             # (readers were already turned away above), so `user.id` is always
             # the right account to charge.
             if ch.collection == ORIGINALS_COLLECTION and not ch.deleted:

@@ -4,10 +4,10 @@ import { login, registerAndVerify, type Creds } from "./helpers/account";
 
 /**
  * Cross-device originals: a document uploaded on device A must render its
- * ORIGINAL layout on device B — the exact flow behind the reported "das
- * Originallayout gibt es nur auf dem Gerät…" bug. Logout wipes every local
- * store (documents + originals caches), so sign-out → sign-in on the same
- * browser IS a faithful "other device": the DocItem comes back via /sync, and
+ * original layout on device B - the exact flow behind the reported "das
+ * Originallayout gibt es nur auf dem Gerät..." bug. Logout wipes every local
+ * store (documents + originals caches), so sign-out -> sign-in on the same
+ * browser is a faithful "other device": the DocItem comes back via /sync, and
  * the original bytes must be lazily fetched from the `originals` collection
  * (encrypted chunks), decrypted and rendered.
  */
@@ -50,7 +50,7 @@ test("an HTML document's original layout survives to a fresh device via original
   const docRow = page.getByRole("button", { name: new RegExp(`${fname}.*Indexed`) });
   await expect(docRow).toBeVisible({ timeout: 120_000 });
   await origPush;
-  // The manifest rides the normal documents collection — wait for that push too
+  // The manifest rides the normal documents collection - wait for that push too
   // so the "other device" is guaranteed to see it.
   await page.waitForResponse(
     (r) => r.url().includes("/sync/push") && (r.request().postData() ?? "").includes('"documents"'),
@@ -74,8 +74,8 @@ test("an HTML document's original layout survives to a fresh device via original
   await expect(rowB).toBeVisible({ timeout: 60_000 });
   await rowB.click();
 
-  // The original is not cached here — it must be fetched (chunks), decrypted
-  // and rendered as real layout, NOT the extracted-text fallback.
+  // The original is not cached here - it must be fetched (chunks), decrypted
+  // and rendered as real layout, not the extracted-text fallback.
   const viewerB = page.getByRole("dialog");
   await expect(viewerB.getByRole("heading", { name: heading })).toBeVisible({ timeout: 60_000 });
   await expect(viewerB.getByText(/only available on the device|hasn't been synced/)).toHaveCount(0);

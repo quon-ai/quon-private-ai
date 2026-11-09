@@ -7,9 +7,9 @@ import { clickSend, login, openChat, sharedCreds } from "./helpers/account";
  * round trips (retrieved context, project instruction, attachment, the typed
  * message). Each costs a network hop plus the backend's cloud-LLM pass, so
  * running them one after another was most of the wait before the model even
- * started answering — the reported "QUON is noticeably slower than ChatGPT".
+ * started answering - the reported "QUON is noticeably slower than ChatGPT".
  *
- * They are now issued as ONE parallel wave and only CONSUMED in a fixed order
+ * They are now issued as one parallel wave and only CONSUMED in a fixed order
  * (so placeholder numbering stays deterministic). This pins the overlap: with an
  * artificial delay on every /scrub, two requests must be in flight at the same
  * time. Before the change the maximum overlap was 1.
@@ -43,7 +43,7 @@ test("context and message are scrubbed in parallel, not one after the other", as
 
   await login(page, sharedCreds());
 
-  // A pinned document is unconditional context — it guarantees a context scrub
+  // A pinned document is unconditional context - it guarantees a context scrub
   // alongside the message scrub without depending on retrieval scores.
   const fname = `parallel-${Date.now()}.txt`;
   await page.goto("/documents");

@@ -18,23 +18,23 @@ const ERROR_KEYS: Record<DurableRedactError, MessageKey> = {
 };
 
 /**
- * "Immer schwärzen" (durable redaction) trigger + inline result line — shared
+ * "Immer schwärzen" (durable redaction) trigger + inline result line - shared
  * by the chat Review panel's attachment section and the document viewer's Text
  * view, so both surfaces speak with the same voice.
  *
- * Every outcome is named, never silent (the lesson from feedback #58's silent
- * per-send button): success states the exact blast radius — how many places,
- * right now, per `resolveDurableRedaction`'s occurrence count — and failure
- * states why, in the same wording the per-send button already uses.
+ * Every outcome is named, never silent (a button that acts invisibly reads as
+ * broken): success states the exact blast radius - how many places, right
+ * now, per `resolveDurableRedaction`'s occurrence count - and failure states
+ * why, in the same wording the per-send button already uses.
  *
  * WebKit detail carried over from RedactSelectionButton: onMouseDown
  * preventDefault, because a mousedown on a button collapses the text
- * selection BEFORE click fires in WebKit — the exact selection this button
+ * selection before click fires in WebKit - the exact selection this button
  * exists to read.
  */
 /** What the button promises: "document" saves the term on the DocItem
  *  (every future send), "send" applies it to the one message being composed
- *  (a staged ad-hoc attachment, #72). Label and confirmation follow the scope,
+ *  (a staged ad-hoc attachment). Label and confirmation follow the scope,
  *  so the button never claims more permanence than the parent delivers. */
 export type RedactScope = "document" | "send";
 

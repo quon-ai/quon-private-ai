@@ -12,7 +12,7 @@ test("uploaded document is viewable, and attachable from the chat store", async 
   const fname = `tropics-${testInfo.project.name}.txt`;
   await login(page, sharedCreds());
 
-  // --- upload a small text document and wait until THIS one is indexed (ready) ---
+  // --- upload a small text document and wait until this one is indexed (ready) ---
   await page.goto("/documents");
   await page.setInputFiles('input[type="file"]', {
     name: fname,
@@ -25,7 +25,7 @@ test("uploaded document is viewable, and attachable from the chat store", async 
   const docRow = page.getByRole("button", { name: new RegExp(`${fname}.*Indexed`) });
   await expect(docRow).toBeVisible({ timeout: 120_000 });
 
-  // --- Feature 1: click the document → the viewer shows its extracted text ---
+  // --- Feature 1: click the document -> the viewer shows its extracted text ---
   await docRow.click();
   const viewer = page.getByRole("dialog");
   await expect(viewer).toBeVisible();
@@ -52,7 +52,7 @@ test("uploaded document is viewable, and attachable from the chat store", async 
 
 // Several documents can be attached in one go ("compare these two offers"). The
 // picker used to stage exactly one and close on the first tap, so a second file
-// was simply not reachable. Multiple picks are combined into ONE attachment that
+// was simply not reachable. Multiple picks are combined into one attachment that
 // then walks the identical scrub-before-send path.
 test("the document picker attaches several documents at once", async ({ page }, testInfo) => {
   test.slow(); // two documents to index
@@ -81,7 +81,7 @@ test("the document picker attaches several documents at once", async ({ page }, 
   const picker = page.getByRole("dialog");
   await picker.getByText(a).click();
   await picker.getByText(b).click();
-  // The button counts what is selected — the user sees both are coming along.
+  // The button counts what is selected - the user sees both are coming along.
   const confirm = picker.getByRole("button", { name: "Attach 2 documents" });
   await expect(confirm).toBeVisible();
   await confirm.click();
@@ -93,7 +93,7 @@ test("the document picker attaches several documents at once", async ({ page }, 
 });
 
 // A document's filename is just a label: renaming must stick (and sync) without
-// touching its chunks/embeddings — scanned files land as "scan_0001.pdf" and are
+// touching its chunks/embeddings - scanned files land as "scan_0001.pdf" and are
 // unfindable until the user can name them.
 test("a document can be renamed in place", async ({ page }, testInfo) => {
   test.slow();
@@ -128,7 +128,7 @@ test("a document can be renamed in place", async ({ page }, testInfo) => {
   await expect(page.getByRole("button", { name: new RegExp(`${after}.*Indexed`) })).toBeVisible();
   await expect(page.getByText(before, { exact: true })).toHaveCount(0);
 
-  // It survives a reload — the rename was persisted, not just local component state.
+  // It survives a reload - the rename was persisted, not just local component state.
   await page.reload();
   await expect(page.getByText(after, { exact: true })).toBeVisible({ timeout: 60_000 });
 });

@@ -1,14 +1,14 @@
 """The 58-case QUON evaluation corpus.
 
 Each case declares:
-  - ``must_anonymize``      values that MUST be removed (plain string or ``{value, type}``)
-  - ``must_not_anonymize``  values that MUST still be present (false-positive guard)
+  - ``must_anonymize``      values that must be removed (plain string or ``{value, type}``)
+  - ``must_not_anonymize``  values that must still be present (false-positive guard)
   - ``pair_id`` (optional)  links DE/EN mirror scenarios for side-by-side reporting
   - ``policy`` (optional)   ``strict_private`` | ``public_ok`` | ``amount_debate``
 
 Curation note: ``must_not_anonymize`` only lists tokens that appear in the text
 *independently* of any redacted span. Company names that occur solely inside an
-email domain (e.g. "BMW" in p.hoffmann@bmw.de) are intentionally omitted — they
+email domain (e.g. "BMW" in p.hoffmann@bmw.de) are intentionally omitted - they
 legitimately vanish when the email is redacted, so asserting their presence
 would be a guaranteed false failure rather than a real false positive.
 """

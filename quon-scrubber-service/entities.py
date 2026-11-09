@@ -1,10 +1,10 @@
 """Single source of truth for QUON's PII entity types.
 
-Contributing a NEW entity type touches exactly three places:
-  1. ONE entry in ``ENTITY_TYPES`` below (placeholder + catalog description),
-  2. a detector — an NER mapping (`ner._PRESIDIO_TO_QUON`), a GLiNER label
+Contributing a new entity type touches exactly three places:
+  1. One entry in ``ENTITY_TYPES`` below (placeholder + catalog description),
+  2. a detector - an NER mapping (`ner._PRESIDIO_TO_QUON`), a GLiNER label
      (`gliner_detect.py`) and/or a safety-net recognizer/regex (`fallback.py`),
-  3. a frontend style in ``src/lib/quonEntityStyles.ts`` (label key + colors) —
+  3. a frontend style in ``src/lib/quonEntityStyles.ts`` (label key + colors) - 
      ``tests/test_entities.py`` fails if a catalog type has no style there.
 
 ``PLACEHOLDERS`` and the ``GET /entities`` catalog both DERIVE from this

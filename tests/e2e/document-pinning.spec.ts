@@ -4,7 +4,7 @@ import { clickSend, login, sharedCreds } from "./helpers/account";
 
 /**
  * Document pinning (Runde 1): a PINNED document is injected as context into every
- * in-scope send WITHOUT attaching it (unlike the paperclip). Scoped to a fresh
+ * in-scope send without attaching it (unlike the paperclip). Scoped to a fresh
  * project so the pin can't leak into other specs' global sends. Asserts the
  * pinned doc's distinctive text reaches the wire as a context turn.
  */
@@ -27,7 +27,7 @@ test("a pinned document is auto-injected as context on the next send", async ({
 
   await login(page, sharedCreds());
 
-  // Fresh project → its pinned doc is invisible to every other spec's sends.
+  // Fresh project -> its pinned doc is invisible to every other spec's sends.
   const projectName = `Pinning ${testInfo.project.name} ${Date.now()}`;
   await page.goto("/projects");
   await page.getByRole("button", { name: "New project" }).click();
@@ -52,7 +52,7 @@ test("a pinned document is auto-injected as context on the next send", async ({
   await page.getByRole("button", { name: "Always use as context" }).first().click();
   await expect(page.getByRole("button", { name: "Don't always use as context" })).toBeVisible();
 
-  // A chat in this project, send WITHOUT attaching anything.
+  // A chat in this project, send without attaching anything.
   await page.goto(`/chat?p=${projectId}`);
   await page
     .getByPlaceholder("Ask anything, keep your data personal")

@@ -1,6 +1,6 @@
 /** Device-local biometric-enrollment marker: per-user isolation, corruption
  *  safety, and the storage-unavailable degrade path (feature hides, never
- *  throws). localStorage is stubbed with a Map — vitest's node env has none
+ *  throws). localStorage is stubbed with a Map - vitest's node env has none
  *  (same pattern as pendingJoin.test.ts). */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -36,7 +36,7 @@ describe("bioEnrollment marker", () => {
   });
   afterEach(() => vi.unstubAllGlobals());
 
-  it("set → get round-trips and is scoped per user", () => {
+  it("set -> get round-trips and is scoped per user", () => {
     setBioMarker("user-a", { credentialId: "cred-a", createdAt: 1 });
     setBioMarker("user-b", { credentialId: "cred-b", createdAt: 2 });
 
@@ -95,8 +95,8 @@ describe("bioEnrollment marker", () => {
 });
 
 /**
- * The lost-passkey streak (Pixel 10, 2026-08-06: an OS update deleted the
- * passkey; marker + server wrap survived; every unlock dead-ended). WebAuthn
+ * The lost-passkey streak: an OS update can delete the passkey while the
+ * marker and the server wrap survive, so every unlock dead-ends. WebAuthn
  * cannot tell "credential gone" from "user cancelled", so the detector is a
  * consecutive-failure streak that a success resets.
  */
@@ -116,7 +116,7 @@ describe("lost-passkey failure streak", () => {
     expect(bioFailureCount("u2")).toBe(0); // independent per user
   });
 
-  it("a success resets the streak — one-off cancels never accumulate", () => {
+  it("a success resets the streak: one-off cancels never accumulate", () => {
     recordBioFailure("u1");
     clearBioFailures("u1");
     expect(bioFailureCount("u1")).toBe(0);
@@ -124,7 +124,7 @@ describe("lost-passkey failure streak", () => {
   });
 
   it("looks broken only when enrolled AND at the threshold", () => {
-    // Failures without an enrollment marker are not "broken" — nothing to fix.
+    // Failures without an enrollment marker are not "broken" - nothing to fix.
     for (let i = 0; i < BIO_TROUBLE_THRESHOLD; i++) recordBioFailure("u1");
     expect(bioLooksBroken("u1")).toBe(false);
 

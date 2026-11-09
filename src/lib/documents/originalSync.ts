@@ -1,21 +1,21 @@
 /**
- * Cross-device sync of ORIGINAL document bytes (sync collection `originals`).
+ * Cross-device sync of original document bytes (sync collection `originals`).
  *
  * Upload (background, best-effort): after a manual upload is indexed, the
  * original bytes are encrypted whole under the Master-Key-derived originals key
- * and the ciphertext is pushed as ≤3 MiB chunks (`orig:<docId>:<i>`) through the
- * existing `/sync/push`. Only when EVERY chunk is accepted does the DocItem get
- * its `original` manifest ({size, chunkCount}) — which syncs through the normal
+ * and the ciphertext is pushed as <=3 MiB chunks (`orig:<docId>:<i>`) through the
+ * existing `/sync/push`. Only when every chunk is accepted does the DocItem get
+ * its `original` manifest ({size, chunkCount}) - which syncs through the normal
  * `documents` collection and is what tells other devices an original exists.
  *
- * Resume: the manifest doubles as the durable upload state — absent manifest on
+ * Resume: the manifest doubles as the durable upload state - absent manifest on
  * a ready manual upload whose bytes are in the local cache means "incomplete",
  * and the start-of-session scan re-uploads it (this also opportunistically
  * backfills originals saved by builds that predate syncing). Chunks can't be
  * resumed mid-file across sessions (each encryption pass has a fresh nonce), so
- * a retry restarts from chunk 0; files are ≤20 MB so that's cheap.
+ * a retry restarts from chunk 0; files are <=20 MB so that's cheap.
  *
- * Download is deliberately LAZY — `originals` is not in the delta-pull loop, so
+ * Download is deliberately LAZY - `originals` is not in the delta-pull loop, so
  * originals never auto-download onto every device. The viewer calls
  * `fetchOriginal` when it opens a doc whose manifest promises bytes that aren't
  * cached locally; chunks are pulled sequentially via `/sync/blob`, reassembled,
@@ -25,12 +25,12 @@
  * Quota: the server enforces a per-user byte cap on this collection and rejects
  * with the distinct push status "quota". We then tombstone the partial chunks
  * (they'd otherwise eat quota invisibly), flag the doc for the Documents-screen
- * banner, and leave the manifest absent — text sync/search are unaffected, and
+ * banner, and leave the manifest absent - text sync/search are unaffected, and
  * the next app start retries once (the user may have freed space).
  *
  * Zero-knowledge invariant: the server only ever sees ciphertext; reassembly
  * and decryption happen client-side, and a failed/partial fetch falls back to
- * the extracted-text view — never plaintext to the server.
+ * the extracted-text view - never plaintext to the server.
  */
 
 import { syncApi, type BlobIn } from "@/lib/api/syncApi";
@@ -70,11 +70,11 @@ const SCAN_DELAY_MS = 4000;
 // --- per-doc sync issues (drives the Documents-screen banner) ---------------
 
 /** "quota": the server's per-user originals cap rejected the upload.
- *  "toobig": the file exceeds the per-file cap — never cached or synced.
- *  "device": cached here, but larger than THIS device can safely push (the
- *  upload holds the file ~3× in memory — bytes, sealed, base64 chunks — which
- *  is what killed the page at every boot on iPhones, #68/#76). Syncs from a
- *  desktop; on this device the original stays local. */
+ *  "toobig": the file exceeds the per-file cap - never cached or synced.
+ *  "device": cached here, but larger than this device can safely push (the
+ *  upload holds the file ~3x in memory - bytes, sealed, base64 chunks - which
+ *  is what kills the page at boot on iPhones). Syncs from a desktop; on this
+ *  device the original stays local. */
 export type OriginalSyncIssue = "quota" | "toobig" | "device";
 
 const EMPTY_ISSUES: Readonly<Record<string, OriginalSyncIssue>> = Object.freeze({});
@@ -82,7 +82,7 @@ let issues: Readonly<Record<string, OriginalSyncIssue>> = EMPTY_ISSUES;
 const issueListeners = new Set<() => void>();
 
 /** Flag a doc whose original can never sync because the file exceeds the
- *  per-file cap (called from ingest — the only place that still has the size). */
+ *  per-file cap (called from ingest - the only place that still has the size). */
 export function reportOriginalTooBig(docId: string): void {
   setIssue(docId, "toobig");
 }
@@ -96,8 +96,8 @@ function setIssue(docId: string, issue: OriginalSyncIssue | null): void {
   for (const l of issueListeners) l();
 }
 
-/** Snapshot of docs whose original couldn't be synced (docId → issue).
- *  Stable reference between changes — useSyncExternalStore-compatible. */
+/** Snapshot of docs whose original couldn't be synced (docId -> issue).
+ *  Stable reference between changes - useSyncExternalStore-compatible. */
 export function getOriginalSyncIssues(): Readonly<Record<string, OriginalSyncIssue>> {
   return issues;
 }
@@ -117,7 +117,7 @@ let stopped = true;
 const inFlight = new Set<string>();
 
 /** Tombstone every synced chunk of a document (delete or partial-upload cleanup).
- *  Best-effort — tombstones are idempotent and re-pushing costs nothing. */
+ *  Best-effort - tombstones are idempotent and re-pushing costs nothing. */
 export async function tombstoneOriginalChunks(docId: string, chunkCount: number): Promise<void> {
   if (chunkCount <= 0) return;
   const now = Date.now();
@@ -131,18 +131,18 @@ export async function tombstoneOriginalChunks(docId: string, chunkCount: number)
   try {
     await syncApi.push(changes);
   } catch {
-    /* offline — the chunks linger until the doc id is re-deleted; acceptable */
+    /* offline - the chunks linger until the doc id is re-deleted; acceptable */
   }
 }
 
 /** Pure decision: is this doc a candidate for uploading its original bytes?
- *  Connector imports (a `source`) are INCLUDED — they keep original bytes now
+ *  Connector imports (a `source`) are INCLUDED - they keep original bytes now
  *  (ingest `keepOriginal`), so a Dropbox/folder PDF's layout must reach other
  *  devices. The cached-bytes check is the real gate; this is the cheap
  *  pre-filter. Exported for the regression test (the earlier bug: this returned
  *  false for any sourced doc, so connector originals never uploaded/synced). */
 export function isUploadCandidate(doc: DocItem | undefined): boolean {
-  // NB: deliberately does NOT look at doc.source — the old bug did, which
+  // NB: deliberately does not look at doc.source - the old bug did, which
   // excluded every connector import from ever uploading its original.
   return !!doc && doc.status === "ready" && !doc.original;
 }
@@ -169,7 +169,7 @@ async function uploadOriginal(docId: string): Promise<void> {
     const chunks = chunkBytes(sealed);
     const updatedAt = Date.now();
     for (let i = 0; i < chunks.length; i++) {
-      // Doc deleted (or logout) mid-upload → stop and clear what we pushed.
+      // Doc deleted (or logout) mid-upload -> stop and clear what we pushed.
       if (stopped || !getDocument(docId)) {
         await tombstoneOriginalChunks(docId, i);
         return;
@@ -190,12 +190,12 @@ async function uploadOriginal(docId: string): Promise<void> {
         setIssue(docId, "quota");
         return;
       }
-      if (status !== "accepted" && status !== "stale") return; // unknown → retry next start
+      if (status !== "accepted" && status !== "stale") return; // unknown -> retry next start
     }
     setDocumentOriginal(docId, { size: bytes.length, chunkCount: chunks.length });
     setIssue(docId, null);
   } catch {
-    /* transient (offline, 5xx) — manifest stays absent → retried next start */
+    /* transient (offline, 5xx) - manifest stays absent -> retried next start */
   } finally {
     inFlight.delete(docId);
   }
@@ -209,7 +209,7 @@ export function queueOriginalUpload(docId: string): void {
 
 /** Upload every ready manual doc that has local original bytes but no manifest:
  *  resumes interrupted uploads AND backfills pre-sync local-only originals.
- *  Awaits the documents store's hydration first — a fixed timer alone raced the
+ *  Awaits the documents store's hydration first - a fixed timer alone raced the
  *  async IndexedDB load and could scan an empty list, silently skipping the
  *  whole session's backfill. */
 let scanning = false;
@@ -231,7 +231,7 @@ async function scanPendingUploads(): Promise<void> {
       if (d.status !== "ready" || d.original) continue;
       const kind = originalKind(d.mime, d.filename);
       if (!kind || kind === "md") continue; // text formats / md keep no bytes
-      await uploadOriginal(d.id); // sequential — don't saturate the connection
+      await uploadOriginal(d.id); // sequential - don't saturate the connection
     }
   } finally {
     scanning = false;
@@ -248,7 +248,7 @@ export function rescanOriginals(): void {
 // --- download (lazy, viewer-driven) ------------------------------------------
 
 /** Fetch, reassemble, decrypt and locally cache a document's original bytes.
- *  Returns null on any failure (missing chunk, wrong key, size mismatch) — the
+ *  Returns null on any failure (missing chunk, wrong key, size mismatch) - the
  *  viewer then falls back to the extracted-text view. */
 export async function fetchOriginal(
   docId: string,
@@ -267,7 +267,7 @@ export async function fetchOriginal(
     }
     const bytes = decryptBytes(assembleChunks(chunks), deriveOriginalsKey(mk));
     if (bytes.length !== manifest.size) return null;
-    void saveOriginalBytes(docId, bytes); // offline next time — best-effort
+    void saveOriginalBytes(docId, bytes); // offline next time - best-effort
     return bytes;
   } catch {
     return null;
@@ -284,7 +284,7 @@ const onOnline = () => rescanOriginals();
 export function startOriginalsSync(): void {
   if (!stopped) return;
   stopped = false;
-  // Locally deleted doc → tombstone its synced chunks (client knows chunkCount
+  // Locally deleted doc -> tombstone its synced chunks (client knows chunkCount
   // from the manifest). Remote tombstones are the deleting device's job.
   unsubDelete = onDocumentDeleted((doc) => {
     setIssue(doc.id, null);
@@ -292,7 +292,7 @@ export function startOriginalsSync(): void {
   });
   scanTimer = setTimeout(() => void scanPendingUploads(), SCAN_DELAY_MS);
   // A session can outlive many connectivity changes (mobile PWA left open for
-  // days) — retry pending uploads whenever the device comes back online instead
+  // days) - retry pending uploads whenever the device comes back online instead
   // of only at the next app start.
   window.addEventListener("online", onOnline);
 }

@@ -17,24 +17,22 @@ import { useT } from "@/lib/i18n/i18n";
 import type { MessageKey } from "@/lib/i18n/catalog";
 
 /**
- * /trust — the "wohin deine Daten gehen" page (feedback #50/51/52/56, then the
- * redesign feedback: the old version "read like AI text", buried the PII filter
- * as one of three equal cards, and never named the model).
+ * /trust - the "wohin deine Daten gehen" page.
  *
- * Now the page leads with the thing that matters: an animated data-flow diagram
+ * The page leads with the thing that matters: an animated data-flow diagram
  * (the "Ameisenstraße") with the QUON filter as its glowing hero, real PII
  * flowing in (amber) and placeholders flowing out (green). Two pledges make the
- * zero-knowledge point unmissable — the server never SEES your stored data; the
- * one read is the momentary filter pass — and the model is named and explained.
+ * zero-knowledge point unmissable - the server never SEES your stored data; the
+ * one read is the momentary filter pass - and the model is named and explained.
  *
- * HONESTY RULE (unchanged): the one step that is not end-to-end encrypted (the
- * scrub transit through server RAM) is stated, not hidden — the amber "Gelesen
+ * Honesty rule: the one step that is not end-to-end encrypted (the
+ * scrub transit through server RAM) is stated, not hidden - the amber "Gelesen
  * wird nur zum Schwärzen" pledge is that admission, made in plain words. The
- * live status row below the diagram uses the SAME health probe the pill uses, so
+ * live status row below the diagram uses the same health probe the pill uses, so
  * this page can never reassure you of something the indicator contradicts.
  */
 
-/** Render a catalog string with lightweight inline emphasis: `*…*` becomes a
+/** Render a catalog string with lightweight inline emphasis: `*...*` becomes a
  *  bold span (colour via `emph`), and `{model}` is filled from PII_MODEL. Keeps
  *  the copy translatable AND styled without a rich-text runtime. */
 function rich(s: string, emph = "font-semibold text-quon-text"): ReactNode[] {
@@ -155,7 +153,7 @@ export function ScreenTrust() {
           </div>
         </div>
 
-        {/* ============ ZERO-KNOWLEDGE vs. THE ONE READ ============ */}
+        {/* ============ ZERO-KNOWLEDGE vs. The one read ============ */}
         <div className="qt-pledge">
           <div className="qt-pl qt-safe">
             <h4>
@@ -230,7 +228,7 @@ export function ScreenTrust() {
           </div>
         </div>
 
-        {/* Live status — the same probe the pill and the chat use. */}
+        {/* Live status - the same probe the pill and the chat use. */}
         <section className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-quon-border bg-quon-surface px-4 py-3 text-xs">
           <span className="flex items-center gap-2 text-quon-muted">
             <Cpu className="h-3.5 w-3.5 shrink-0" />

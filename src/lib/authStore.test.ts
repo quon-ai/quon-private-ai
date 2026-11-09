@@ -1,7 +1,7 @@
 /**
- * The boot fail-closed rule: a momentarily-unreachable backend must NOT log the
+ * The boot fail-closed rule: a momentarily-unreachable backend must not log the
  * user out. Only a real 401/403 means "no session"; a network error, a 5xx, or a
- * boot timeout must land in `unreachable` (Master Key kept, retry offered) — never
+ * boot timeout must land in `unreachable` (Master Key kept, retry offered) - never
  * `anonymous`.
  */
 import { describe, expect, it } from "vitest";

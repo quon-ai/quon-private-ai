@@ -6,10 +6,10 @@ import { useT } from "@/lib/i18n/i18n";
 
 /**
  * Small "i" icon that reveals a longer explanation on demand instead of it
- * sitting on the page as an always-visible paragraph — tap opens the bubble
+ * sitting on the page as an always-visible paragraph - tap opens the bubble
  * on mobile, and the native `title` gives desktop users an immediate hover
- * tooltip too. Built for the Agents screen redesign (2026-07) but generic —
- * any long explanatory copy elsewhere can reuse it.
+ * tooltip too. Built for the Agents screen but generic - any long explanatory
+ * copy elsewhere can reuse it.
  */
 export function InfoHint({ text, label }: { text: string; label?: string }) {
   const { t } = useT();

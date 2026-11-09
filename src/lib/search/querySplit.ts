@@ -6,10 +6,10 @@
  * fact gets averaged away by conversational filler. Measured against a "I live
  * in Ontario" memory, the full message
  *   "Weißt du wo ich lebe und hast du das bei der Antwort berücksichtigt?"
- * embeds at cosine 0.24 (≈ noise), but its clause "Weißt du wo ich lebe" embeds
- * at 0.355 — clearly relevant. Scoring each candidate by its BEST-matching probe
+ * embeds at cosine 0.24 (~ noise), but its clause "Weißt du wo ich lebe" embeds
+ * at 0.355 - clearly relevant. Scoring each candidate by its BEST-matching probe
  * (max-pooling in `topKMulti`) recovers the hit. Filler clauses
- * ("…berücksichtigt?", cos −0.08) and unrelated messages stay low, so this lifts
+ * ("...berücksichtigt?", cos 0.08) and unrelated messages stay low, so this lifts
  * recall without admitting noise.
  */
 

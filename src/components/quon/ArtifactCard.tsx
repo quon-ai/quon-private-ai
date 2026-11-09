@@ -1,7 +1,7 @@
 /**
  * A saveable artifact detected in an assistant reply (a complete Markdown doc
  * or HTML page the model produced). Renders a compact preview + a one-click
- * "save into Documents" (zero-knowledge — same on-device encrypt/index pipeline
+ * "save into Documents" (zero-knowledge - same on-device encrypt/index pipeline
  * as any document). HTML is rendered STATICALLY through the shared allowlist
  * sanitizer (no scripts), matching the document viewer.
  */
@@ -33,11 +33,10 @@ export function ArtifactCard({
   artifact: Artifact;
   messageId: number;
   index: number;
-  /** Project this chat belongs to — the save target DEFAULTS here.
-   *  Reported 2026-08-04: a document written inside a project offered to save
-   *  itself to "Global", so it left the project it was created in unless the
-   *  user noticed and changed the picker. The chat's scope is the only sane
-   *  default; the picker still allows anything. */
+  /** Project this chat belongs to - the save target defaults here. A "Global"
+   *  default would move a document written inside a project out of that
+   *  project unless the user noticed and changed the picker. The chat's scope
+   *  is the only sane default; the picker still allows anything. */
   defaultProjectId?: string;
   /** Discard this card (the user doesn't want it in Documents). Remembered on
    *  the message, so it stays gone after a reload. */
@@ -130,7 +129,7 @@ export function ArtifactCard({
               {t("chat.artifact.save")}
             </button>
             <ProjectPickerBadge value={target} onChange={setTarget} />
-            {/* Not everything the model produces belongs in Documents — let the
+            {/* Not everything the model produces belongs in Documents - let the
                 card go away instead of sitting there forever (reported). */}
             {onDismiss && (
               <button

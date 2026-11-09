@@ -44,7 +44,7 @@ describe("memorySweepRunner", () => {
     h.resolve({ analyzed: 4, failed: 0, suggestions: 3 });
     await vi.waitFor(() => expect(isSweeping("p1")).toBe(false));
     // The final summary persists so a re-entered screen still shows it. Wording is
-    // catalog-driven (default German) — assert the count is present, not the language.
+    // catalog-driven (default German) - assert the count is present, not the language.
     expect(getSweepState("p1").status).toContain("3");
     unsub();
   });

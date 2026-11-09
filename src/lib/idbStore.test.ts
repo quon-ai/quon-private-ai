@@ -3,9 +3,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SYNC_CURSOR_PREFIX } from "./syncCursor";
 
 /**
- * Feedback #88: „Meine Projekte werden nicht mehr angezeigt obwohl ich welche
- * habe" — the browser evicted the IndexedDB cache, the sync cursors in
- * localStorage survived, and the device never asked the server again.
+ * „Meine Projekte werden nicht mehr angezeigt obwohl ich welche habe": the
+ * browser evicted the IndexedDB cache, the sync cursors in localStorage
+ * survived, and the device never asked the server again.
  * Opening the database must notice it had to CREATE it and reset the cursors;
  * a blocked or outdated upgrade must open the stored version instead of
  * hanging every store.
@@ -79,8 +79,8 @@ beforeEach(() => {
 });
 afterEach(() => vi.unstubAllGlobals());
 
-describe("idbStore — opening the local database", () => {
-  it("a database that had to be created resets the surviving sync cursors (evicted cache, #88)", async () => {
+describe("idbStore: opening the local database", () => {
+  it("a database that had to be created resets the surviving sync cursors (evicted cache)", async () => {
     localStorage.setItem(`${SYNC_CURSOR_PREFIX}projects_v2`, "52130");
     localStorage.setItem(`${SYNC_CURSOR_PREFIX}memory_v2`, "52130");
     installFakeIndexedDB(0);
@@ -91,14 +91,14 @@ describe("idbStore — opening the local database", () => {
     expect(diag).toHaveBeenCalledWith(expect.stringContaining("re-pulling everything"));
   });
 
-  it("a genuine first run (no cursors) says nothing — empty diag = healthy", async () => {
+  it("a genuine first run (no cursors) says nothing: empty diag = healthy", async () => {
     installFakeIndexedDB(0);
     const { whenLocalDbOpened } = await import("./idbStore");
     await whenLocalDbOpened();
     expect(diag).not.toHaveBeenCalled();
   });
 
-  it("an ordinary version upgrade keeps the cursors — the data is still there", async () => {
+  it("an ordinary version upgrade keeps the cursors: the data is still there", async () => {
     localStorage.setItem(`${SYNC_CURSOR_PREFIX}projects_v2`, "52130");
     installFakeIndexedDB(5);
     const { whenLocalDbOpened } = await import("./idbStore");

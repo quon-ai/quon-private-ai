@@ -7,7 +7,7 @@ import { login, registerAndVerify, type Creds } from "./helpers/account";
  * LearnFromDocumentsButton + the review queue in ScreenMemory). Same
  * zero-knowledge pipeline as the chat sweep: the document text is scrubbed
  * on-device, only placeholders reach the relay, the reply is re-hydrated
- * locally and lands in the review queue — never straight in Memory.
+ * locally and lands in the review queue - never straight in Memory.
  *
  * Driven in a project so scope isolation is exercised: upload one document,
  * mock the extraction reply, run the sweep, Keep the fact into project memory.
@@ -22,8 +22,8 @@ test("Learn from documents mines a project document into a kept memory", async (
   const factText = `Versichert bei der Nordsee Kasse ${Date.now()}`;
   let extractionCalls = 0;
 
-  // Non-stream extraction call (chatComplete → POST /chat). Only the API POST is
-  // intercepted — the frontend's GET /chat navigation shares the path.
+  // Non-stream extraction call (chatComplete -> POST /chat). Only the API POST is
+  // intercepted - the frontend's GET /chat navigation shares the path.
   await page.route(/\/chat(\?.*)?$/, async (route) => {
     if (route.request().method() !== "POST") {
       await route.fallback();
@@ -79,7 +79,7 @@ test("Learn from documents mines a project document into a kept memory", async (
   await page.getByRole("button", { name: /Learn from documents/ }).click();
   await page.getByRole("tab", { name: "Content" }).click();
 
-  // The keyed fact reaches the review queue…
+  // The keyed fact reaches the review queue...
   await expect(page.getByText(/Suggested for your memory/)).toBeVisible({ timeout: 120_000 });
   const card = page
     .locator("div")
@@ -87,7 +87,7 @@ test("Learn from documents mines a project document into a kept memory", async (
     .filter({ has: page.getByRole("button", { name: "Keep" }) })
     .last();
   await expect(card).toBeVisible({ timeout: 30_000 });
-  // …carrying its source document, and the unkeyed summary was dropped.
+  // ...carrying its source document, and the unkeyed summary was dropped.
   await expect(card.getByText(fname)).toBeVisible();
   await expect(page.getByText(/bestaetigt den Versicherungsschutz/)).toHaveCount(0);
 

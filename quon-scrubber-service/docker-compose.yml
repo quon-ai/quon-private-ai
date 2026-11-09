@@ -2,52 +2,52 @@
 #
 #   docker compose up -d
 #
-# NO Ollama service. It existed for LOCAL PII extraction, and detection is now
+# No Ollama service. It existed for local PII extraction, and detection is now
 # entirely in-process (spaCy + regex net + GLiNER). Left
-# running it cost 8.44 GB of image plus a 4.68 GB model volume on a 38 GB disk —
+# running it cost 8.44 GB of image plus a 4.68 GB model volume on a 38 GB disk - 
 # for a tier nothing calls. Its own log read `inference compute id=cpu,
 # total_vram="0 B"`.
 #
-# The tier is GONE, not merely switched off: llm_client.py was deleted on
-# 2026-08-23 and no LLM_ENRICHMENT / OLLAMA_* variable is read by any code path.
-# Setting them here does nothing. This removed a capability, deliberately.
+# The tier is gone, not merely switched off: there is no llm_client.py, and no
+# LLM_ENRICHMENT / OLLAMA_* variable is read by any code path. Setting them
+# here does nothing. This removed a capability, deliberately.
 
 services:
   scrubber:
     build: .
-    image: quon-scrubber:0.10.0
+    image: quon-scrubber:1.0.0
     ports:
       - "127.0.0.1:8000:8000"
     environment:
       LOG_LEVEL: INFO
       # --- GLiNER (third detector, in-process on CPU) ---
       # This compose enumerates every variable, so setting GLINER_ENABLED in
-      # .env alone would never reach the container — this line IS the wiring.
+      # .env alone would never reach the container - this line is the wiring.
       GLINER_ENABLED: ${GLINER_ENABLED:-false}
       # Leave empty. int8 was measured on this box and destroys the model
       # (see config.py gliner_quantize for the numbers).
       GLINER_QUANTIZE: ${GLINER_QUANTIZE:-}
       # Model cache on the PERSISTED volume. The container is recreated on every
       # `up --build`, so an in-image cache means re-downloading 1.5 GB on every
-      # single deploy — and the first request after each one waiting for it.
+      # single deploy - and the first request after each one waiting for it.
       HF_HOME: /app/data/hf
       # --- Multi-user DB (persisted on the named volume below) ---
       DATABASE_PATH: /app/data/quon.db
-      # Operator runtime settings (model catalog, keys) must live on the SAME
-      # volume — the in-image default is recreated from the build context on
+      # Operator runtime settings (model catalog, keys) must live on the same
+      # volume - the in-image default is recreated from the build context on
       # every `up --build`, silently reverting all Settings-UI edits.
       RUNTIME_SETTINGS_PATH: /app/data/runtime_settings.json
       # Public OAuth client id of the operator's Dropbox app (one-click connect).
       DROPBOX_APP_KEY: ${DROPBOX_APP_KEY:-}
       MS_CLIENT_ID: ${MS_CLIENT_ID:-}
-      # Beta feedback → GitHub issues (optional; both unset = mirroring off).
-      # NOTE: this compose enumerates every variable — there is no env_file, so
-      # a key in .env alone NEVER reaches the container. Adding one here is not
+      # Beta feedback -> GitHub issues (optional; both unset = mirroring off).
+      # NOTE: this compose enumerates every variable - there is no env_file, so
+      # a key in .env alone never reaches the container. Adding one here is not
       # optional plumbing, it is the whole wiring.
       GITHUB_TOKEN: ${GITHUB_TOKEN:-}
       GITHUB_REPO: ${GITHUB_REPO:-}
-      # --- Auth / cookies (HTTPS in prod → Secure cookies on) ---
-      # Your public URL (email links, cookies). REQUIRED — no default, so a
+      # --- Auth / cookies (HTTPS in prod -> Secure cookies on) ---
+      # Your public URL (email links, cookies). Required - no default, so a
       # forgotten override fails loudly instead of pointing at someone else's
       # domain. Set it in .env next to this file.
       APP_BASE_URL: ${APP_BASE_URL:?set APP_BASE_URL in .env, e.g. https://quon.example.com}
@@ -56,18 +56,18 @@ services:
       CORS_ALLOW_ORIGINS: ${CORS_ALLOW_ORIGINS:?set CORS_ALLOW_ORIGINS in .env, e.g. https://quon.example.com}
       # --- Secrets: passed from host env / .env, never hard-coded here ---
       OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
-      # In-region routing: "eu" sends every chat to eu.openrouter.ai (strict —
+      # In-region routing: "eu" sends every chat to eu.openrouter.ai (strict - 
       # the catalog is filtered, web search off). Default: global.
       OPENROUTER_REGION: ${OPENROUTER_REGION:-global}
-      # Seals per-user OpenRouter sub-keys at rest. MUST be set + stable in prod.
+      # Seals per-user OpenRouter sub-keys at rest. Must be set + stable in prod.
       QUON_SERVER_SECRET: ${QUON_SERVER_SECRET:-}
-      # Enable per-user $5 sub-keys. Empty → self-host BYOK (no provisioning).
+      # Enable per-user $5 sub-keys. Empty -> self-host BYOK (no provisioning).
       OPENROUTER_PROVISIONING_KEY: ${OPENROUTER_PROVISIONING_KEY:-}
       OPENROUTER_USER_LIMIT_USD: ${OPENROUTER_USER_LIMIT_USD:-5}
       # Guards the /admin/* key-lifecycle endpoints.
       ADMIN_TOKEN: ${ADMIN_TOKEN:-}
       # Closed-beta signup gate: when set, /auth/register requires this code.
-      # Empty → open registration. Set the value in .env (never hard-code here).
+      # Empty -> open registration. Set the value in .env (never hard-code here).
       SIGNUP_INVITE_CODE: ${SIGNUP_INVITE_CODE:-}
       # auto = verify by mail when SMTP_HOST is set, else active on creation; required; off
       EMAIL_VERIFICATION: ${EMAIL_VERIFICATION:-auto}
@@ -79,13 +79,13 @@ services:
       DEMO_SCRUB_GLOBAL_PER_MINUTE: ${DEMO_SCRUB_GLOBAL_PER_MINUTE:-300}
       DEMO_CONTACT_URL: ${DEMO_CONTACT_URL:-}
       DEMO_CONTACT_EMAIL: ${DEMO_CONTACT_EMAIL:-}
-      # --- SMTP (email verification). Empty SMTP_HOST → links logged (dev). ---
+      # --- SMTP (email verification). Empty SMTP_HOST -> links logged (dev). ---
       SMTP_HOST: ${SMTP_HOST:-}
       SMTP_PORT: ${SMTP_PORT:-587}
       SMTP_USER: ${SMTP_USER:-}
       SMTP_PASSWORD: ${SMTP_PASSWORD:-}
       SMTP_FROM: ${SMTP_FROM:-QUON <no-reply@localhost>}
-      # Beta-feedback inbox (POST /feedback). Empty → falls back to SMTP_FROM.
+      # Beta-feedback inbox (POST /feedback). Empty -> falls back to SMTP_FROM.
       FEEDBACK_EMAIL: ${FEEDBACK_EMAIL:-}
     volumes:
       - quon-data:/app/data

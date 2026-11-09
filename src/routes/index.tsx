@@ -19,7 +19,7 @@ export const Route = createFileRoute("/")({
 
 function Index() {
   // AppShell gates on auth: shows sign-in/unlock when needed, and once the
-  // session is ready it redirects "/" → /dashboard.
+  // session is ready it redirects "/" -> /dashboard.
   return (
     <AppShell>
       <div />

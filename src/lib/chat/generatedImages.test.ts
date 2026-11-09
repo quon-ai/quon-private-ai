@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { chunkIdFor, MAX_IMAGE_BYTES, parseImageDataUrl } from "./generatedImages";
 
-/** A 1×1 transparent PNG — the smallest valid image payload. */
+/** A 1x1 transparent PNG - the smallest valid image payload. */
 const PNG_B64 =
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==";
 
@@ -20,7 +20,7 @@ describe("parseImageDataUrl", () => {
     expect(parsed?.mime).toBe("image/jpeg");
   });
 
-  it("rejects anything that is not an inline image — a remote URL, a non-image, an empty body", () => {
+  it("rejects anything that is not an inline image: a remote URL, a non-image, an empty body", () => {
     expect(parseImageDataUrl("https://example.test/x.png")).toBeNull();
     expect(parseImageDataUrl("data:text/plain;base64,aGk=")).toBeNull();
     expect(parseImageDataUrl("data:image/png;base64,")).toBeNull();

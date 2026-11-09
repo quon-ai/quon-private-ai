@@ -5,9 +5,9 @@ import { provideHttp } from "@/lib/platform";
 import { QuonError, setOpenRouterKey } from "./quonApi";
 
 /**
- * Feedback #91: the backend refused a pasted key with a worded reason, but
- * the settings card showed "/settings/openrouter-key responded 400" — this
- * client threw path + status and dropped the body's `detail`.
+ * When the backend refuses a pasted key with a worded reason, the settings
+ * card must show that reason, not "/settings/openrouter-key responded 400":
+ * the client keeps the body's `detail`, not just path + status.
  */
 afterEach(() => {
   provideHttp({ unrestricted: false, fetch: (...a) => globalThis.fetch(...a) });

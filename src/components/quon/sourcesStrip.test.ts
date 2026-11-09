@@ -63,7 +63,7 @@ describe("mergePreviews", () => {
 
 describe("linkImageUrl", () => {
   it("routes the image through QUON's own proxy, never the origin", () => {
-    // The whole privacy point: what lands in <img src> must be OUR endpoint, and
+    // The whole privacy point: what lands in <img src> must be our endpoint, and
     // the origin URL must be encoded as a parameter (query strings, & and all).
     const url = linkImageUrl("https://shop.example.com/p.jpg?w=200&h=200");
     expect(url).toContain("/link-image?url=");

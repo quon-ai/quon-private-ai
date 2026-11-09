@@ -42,11 +42,11 @@ import {
 } from "@/lib/webauthnBio";
 
 /**
- * Dashboard = "your private starting point", not a feature tour: ONE primary
+ * Dashboard = "your private starting point", not a feature tour: one primary
  * CTA, a compact protection row (full slider + the live "N items kept
  * private" trust signal behind "Change"), real counts for the private data
  * areas, and recent chats. The former marketing block ("Why QUON") and the
- * sidebar-duplicating feature cards are gone on purpose — onboarding carries
+ * sidebar-duplicating feature cards are gone on purpose - onboarding carries
  * the value story, the sidebar/tab bar carries navigation.
  */
 export function ScreenDashboard() {
@@ -57,7 +57,7 @@ export function ScreenDashboard() {
   const projects = useProjects();
 
   // On-open briefing: generate today's "what's new" once per day (device-local,
-  // free, on-device — dailyBriefing.ts). Runs after the stores have hydrated;
+  // free, on-device - dailyBriefing.ts). Runs after the stores have hydrated;
   // memories/docs in the deps re-run it once real data has loaded on first open.
   useEffect(() => {
     if (FEATURES.briefing) runDailyBriefing();
@@ -69,7 +69,7 @@ export function ScreenDashboard() {
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-y-auto px-5 py-5 md:px-8 md:py-8">
       <div className="mx-auto w-full max-w-2xl">
-        {/* Primary CTA — the first thing you do here is ASK, not navigate. */}
+        {/* Primary CTA - the first thing you do here is ASK, not navigate. */}
         <StartComposer />
         {lastChat ? (
           <Link
@@ -102,12 +102,12 @@ export function ScreenDashboard() {
   );
 }
 
-/** One-time proactive offer to turn on biometric unlock — the natural place to
+/** One-time proactive offer to turn on biometric unlock - the natural place to
  *  "ask every user", since it can't happen at the pending-registration step (no
  *  session/Master Key yet). Shows once per user per device (bioOfferDismissed)
  *  when a platform authenticator exists and the device isn't already enrolled;
  *  "Not now" and a successful enroll both dismiss it for good. Enrolling here is
- *  the exact Settings flow (enrollBiometric — two prompts on iOS, honest PRF
+ *  the exact Settings flow (enrollBiometric - two prompts on iOS, honest PRF
  *  failure), so no logic is duplicated. */
 function BiometricOfferCard() {
   const { t } = useT();
@@ -145,7 +145,7 @@ function BiometricOfferCard() {
       setDone(true);
     } catch (e) {
       if (e instanceof BioCancelledError) {
-        /* dismissed the platform prompt — leave the card so they can retry */
+        /* dismissed the platform prompt - leave the card so they can retry */
       } else if (e instanceof BioPrfUnavailableError) {
         // Best-effort: an OS passkey may have been created; don't leave a half state.
         void disableBiometric().catch(() => {});
@@ -210,12 +210,12 @@ function BiometricOfferCard() {
 }
 
 /** Shown after the lost-passkey streak (see bioEnrollment.ts): the device is
- *  enrolled, but the last attempts all failed — on the reporting Pixel an
+ *  enrolled, but the last attempts all failed - on the reporting Pixel an
  *  Android update had deleted the OS passkey while our marker and the server
  *  wrap survived, so unlock dead-ended with the OS's "no passkey" sheet. The
  *  user has just unlocked with their password (the MK is present), which is
- *  exactly the moment a fresh enrollment is possible. Enrollment runs FIRST
- *  and the old server row is deleted only after success — so if the passkey
+ *  exactly the moment a fresh enrollment is possible. Enrollment runs first
+ *  and the old server row is deleted only after success - so if the passkey
  *  actually still works (the streak was two genuine cancels) and the user
  *  bails out of the prompt, nothing has been destroyed. */
 function BioRepairCard() {
@@ -254,7 +254,7 @@ function BioRepairCard() {
       setDone(true);
     } catch (e) {
       if (e instanceof BioCancelledError) {
-        /* dismissed the platform prompt — leave the card so they can retry */
+        /* dismissed the platform prompt - leave the card so they can retry */
       } else if (e instanceof BioPrfUnavailableError) {
         setError(t("nav.bioPrfUnavailable"));
       } else {
@@ -325,7 +325,7 @@ function ProtectionRow() {
   const [open, setOpen] = useState(false);
 
   const protectedNow = isProtected(protectionLevel);
-  // Zero is always explained (nothing sent yet ≠ nothing caught), and "off"
+  // Zero is always explained (nothing sent yet != nothing caught), and "off"
   // never reads like success.
   const status = !protectedNow
     ? {
@@ -391,7 +391,7 @@ function ProtectionRow() {
   );
 }
 
-/** Real counts for the three private-data areas — same links the sidebar has,
+/** Real counts for the three private-data areas - same links the sidebar has,
  *  but carrying information instead of duplicating navigation. */
 function PrivateDataCluster({
   memories,
@@ -464,7 +464,7 @@ function PrivateDataCluster({
   );
 }
 
-/** The last few chats — real activity instead of marketing tiles. Hidden
+/** The last few chats - real activity instead of marketing tiles. Hidden
  *  entirely while there are no chats (the CTA above carries the empty state). */
 function RecentChats() {
   const { t } = useT();
@@ -506,14 +506,14 @@ function RecentChats() {
 }
 
 /** The dashboard's primary action: type the question here, land in the chat with
- *  it already sent. Replaces the old "Start Chat" button — the button made the
+ *  it already sent. Replaces the old "Start Chat" button - the button made the
  *  user pay a navigation before they could say anything.
  *
  *  The text is handed over in memory (pendingChatMessage.ts), never as a `?q=`
  *  search param: an auto-sending URL would let a crafted link put words in the
  *  user's chat, spend their AI budget and leave the answer in their history.
  *
- *  Scrubbing is untouched — the message travels the ordinary send() path in
+ *  Scrubbing is untouched - the message travels the ordinary send() path in
  *  ScreenChat, including fail-closed. Disabled while empty, exactly like the
  *  chat composer's own Send: there is nothing to hand over, and an opening
  *  "blank chat" is one click away in the nav. */

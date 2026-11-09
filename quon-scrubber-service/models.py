@@ -7,37 +7,37 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 Language = Literal["auto", "de", "en"]
-# typed:   [PERSON], [EMAIL], [TELEFON] …
+# typed:   [PERSON], [EMAIL], [TELEFON] ...
 # generic: [PII] for everything
-# indexed: [PERSON_1], [EMAIL_1], [AMOUNT_2] … — unique per value, for re-hydration
+# indexed: [PERSON_1], [EMAIL_1], [AMOUNT_2] ... - unique per value, for re-hydration
 PlaceholderStyle = Literal["typed", "generic", "indexed"]
 
 
 class ScrubOptions(BaseModel):
     language: Language = "auto"
-    # Client-supplied tie-break for `language: "auto"`, used ONLY when the text
-    # itself carries zero language evidence (no hint-word hits either way —
+    # Client-supplied tie-break for `language: "auto"`, used only when the text
+    # itself carries zero language evidence (no hint-word hits either way - 
     # bare noun queries like "Milchreis Rezept"). The browser knows the user's
-    # UI language; the old hardcoded "en" default sent such German queries
-    # through the ENGLISH spaCy model, whose PERSON guesses on unfamiliar
-    # German compounds were the single biggest real-world FP class (36% of
-    # FP-affected prompts in the 2026-07-08 real-prompt review). Any value
-    # other than "de"/"en" is ignored. Never overrides actual text signal.
+    # UI language; a hardcoded "en" default sends such German queries through
+    # the English spaCy model, whose PERSON guesses on unfamiliar German
+    # compounds are the single biggest real-world FP class (36% of FP-affected
+    # prompts in a review of real chat history). Any value other than
+    # "de"/"en" is ignored. Never overrides actual text signal.
     language_hint: Literal["de", "en"] | None = None
     show_entities: bool = True
     placeholder_style: PlaceholderStyle = "typed"
-    # Caller-supplied words/values that must ALWAYS be redacted (deterministic,
+    # Caller-supplied words/values that must always be redacted (deterministic,
     # case-insensitive). These are the user's own "always redact on device" list
-    # (name, address, numbers …). They are applied per-request and never stored
+    # (name, address, numbers ...). They are applied per-request and never stored
     # server-side. Type CUSTOM, score 1.0 (highest).
     always_redact: list[str] = Field(default_factory=list)
-    # Caller-supplied allow-list: values that must NEVER be redacted (case-
-    # insensitive, whole-value match). Suppresses false positives from ANY detector
-    # — NER and LLM — e.g. a product/ingredient ("Xantan") mistaken for a name.
+    # Caller-supplied allow-list: values that must never be redacted (case-
+    # insensitive, whole-value match). Suppresses false positives from any detector
+    # - NER and LLM - e.g. a product/ingredient ("Xantan") mistaken for a name.
     # Applied per-request, never stored server-side.
     never_redact: list[str] = Field(default_factory=list)
-    # Entity TYPES the user turned OFF. Empty/None = scrub everything (default,
-    # unchanged behavior). Listed types are NOT redacted — the user's per-request
+    # Entity TYPES the user turned off. Empty/None = scrub everything (default,
+    # unchanged behavior). Listed types are not redacted - the user's per-request
     # policy (Settings, per-project overridable). CUSTOM (the always_redact list)
     # is always kept regardless, even if listed. Applied per-request, never
     # stored server-side. (A drop-list, not an allow-list, so the client never
@@ -61,7 +61,7 @@ class ScrubMetadata(BaseModel):
     model_used: str
     processing_time_ms: int
     # True when the optional LLM enrichment did not run (timeout/parse error or
-    # disabled). The NER + regex base may still have detected PII — see ner_used.
+    # disabled). The NER + regex base may still have detected PII - see ner_used.
     fallback_mode: bool
     language_detected: str
     # True when the spaCy/Presidio NER engine ran (names detectable).
@@ -71,7 +71,7 @@ class ScrubMetadata(BaseModel):
     # budget | provider_error | parse. None when enrichment ran.
     skip_reason: str | None = None
     # True when the input had no upper-case letter (no case signal). NER PERSON is
-    # unreliable here and is deferred to the LLM — so lowercase + skipped LLM means
+    # unreliable here and is deferred to the LLM - so lowercase + skipped LLM means
     # names were likely missed. The UI uses this to warn more strongly.
     low_case_signal: bool = False
 
@@ -99,9 +99,8 @@ class HealthResponse(BaseModel):
     # True when the spaCy/Presidio NER engine is loaded and ready.
     ner_ready: bool = False
     # The whole in-process detection stack (NER + regex net + GLiNER when
-    # enabled) is loaded and usable. There is no other backend: the LLM
-    # extraction tier was removed 2026-08-23, so this endpoint describes the
-    # only detector that exists.
+    # enabled) is loaded and usable. There is no other backend, so this flag
+    # describes the only detector that exists.
     pii_ready: bool = False
     gliner_enabled: bool = False
     gliner_loaded: bool = False
@@ -111,7 +110,7 @@ class HealthResponse(BaseModel):
     # the same fact by refusing without one.
     signup_invite_required: bool = False
     # OpenRouter routing region (region.py): "global" or "eu". On /health so
-    # the client learns it from the poll it already runs — the chat hides the
+    # the client learns it from the poll it already runs - the chat hides the
     # Web toggle on it, the trust page names it.
     region: str = "global"
     web_search_available: bool = True
@@ -148,22 +147,22 @@ class ChatTurn(BaseModel):
 class ChatRequest(BaseModel):
     model: str = "openrouter/auto"
     # Which provider connection to route through ("openrouter" or a custom
-    # connection id). None/omitted → the built-in OpenRouter connection.
+    # connection id). None/omitted -> the built-in OpenRouter connection.
     connection_id: str | None = None
     messages: list[ChatTurn] = Field(..., min_length=1)
     # True when the messages were scrubbed before sending (filter active).
-    # False when the filter is off — use a neutral system prompt so the model
+    # False when the filter is off - use a neutral system prompt so the model
     # does not apply its own privacy heuristics to real text.
     protected: bool = True
     # OpenAI-shape tool definitions (MCP tools discovered client-side). The
     # provider may answer with tool_calls, which stream back as a distinct SSE
     # event; the client executes them (with consent) and continues the chat
-    # with tool turns. None/empty → no tools sent (behavior unchanged).
+    # with tool turns. None/empty -> no tools sent (behavior unchanged).
     tools: list[dict] | None = None
     # Ask for an IMAGE back as well as text (OpenRouter `modalities`). Only
     # honoured by image-output models (gemini-*-image, gpt-*-image); the client
     # sets it from the catalog's `image_output` flag. The prompt is scrubbed
-    # exactly like any text turn — the returned image is data, not a transcript
+    # exactly like any text turn - the returned image is data, not a transcript
     # of anything personal, so nothing needs re-hydrating.
     image_output: bool = False
     # Attach OpenRouter's agentic SERVER tools (web search, URL fetch,
@@ -173,7 +172,7 @@ class ChatRequest(BaseModel):
     # OpenRouter connection.
     web_search: bool = False
     # Reasoning/thinking budget for reasoning-capable models ("low"/"medium"/"high").
-    # None/omitted → don't send a reasoning param (provider default). Ignored by models
+    # None/omitted -> don't send a reasoning param (provider default). Ignored by models
     # that don't support reasoning. Passed through to OpenRouter's unified `reasoning`.
     reasoning_effort: str | None = None
 
@@ -184,7 +183,7 @@ class ChatResponse(BaseModel):
 
 
 class OcrCloudRequest(BaseModel):
-    # Base64 JPEG/PNG/WebP (client re-encodes via canvas: ≤2000 px, EXIF/GPS
+    # Base64 JPEG/PNG/WebP (client re-encodes via canvas: <=2000 px, EXIF/GPS
     # stripped). The length cap bounds decode work; the decoded bytes are
     # checked against ocr_cloud.MAX_IMAGE_BYTES again.
     image_b64: str = Field(min_length=1, max_length=12_000_000)
@@ -200,7 +199,7 @@ class FetchUrlRequest(BaseModel):
     # the SSRF check + fetch bounded; https-only + host validation happen in
     # net_guard (fetch_url.fetch_and_extract).
     url: str = Field(min_length=1, max_length=2048)
-    # raw=True returns the body verbatim (no Readability) — used for .ics calendar
+    # raw=True returns the body verbatim (no Readability) - used for .ics calendar
     # subscriptions, which are parsed client-side.
     raw: bool = False
 
@@ -213,7 +212,7 @@ class LinkPreviewsRequest(BaseModel):
 
 class AgentCreateRequest(BaseModel):
     # A server-side web-watch agent. `spec.query` is the search term (interest
-    # metadata — NOT private encrypted content). `kind` is "web-watch" for now.
+    # metadata - not private encrypted content). `kind` is "web-watch" for now.
     name: str = Field(min_length=1, max_length=120)
     kind: str = Field(default="web-watch", max_length=40)
     spec: dict = Field(default_factory=dict)
@@ -238,31 +237,31 @@ class AgentEnabledRequest(BaseModel):
 class AgentResultItem(BaseModel):
     id: str
     agent_id: str | None = None
-    # base64 crypto_box_seal(result, user's identity pubkey) — server can't read it.
+    # base64 crypto_box_seal(result, user's identity pubkey) - server can't read it.
     sealed: str
     created_at: int
 
 
 class FeedbackRequest(BaseModel):
-    # Beta feedback from a logged-in user, emailed to the operator. NOT
+    # Beta feedback from a logged-in user, emailed to the operator. Not
     # zero-knowledge (the message + optional screenshot reach the server in the
-    # clear — stated honestly in the UI). Category is a free short tag; the
+    # clear - stated honestly in the UI). Category is a free short tag; the
     # screenshot is an optional base64 image (data-URL prefix tolerated).
     category: str = Field(default="", max_length=40)
     message: str = Field(min_length=1, max_length=5000)
-    # Optional screenshot as base64 (raw or "data:image/png;base64,…"); capped.
+    # Optional screenshot as base64 (raw or "data:image/png;base64,..."); capped.
     screenshot_b64: str | None = Field(default=None, max_length=8_000_000)
     screenshot_mime: str | None = Field(default=None, max_length=40)
     # Whether the user wants a reply (adds their account email as Reply-To).
     contact_back: bool = False
-    # Optional client diagnostics (the diagLog breadcrumb report — technical
+    # Optional client diagnostics (the diagLog breadcrumb report - technical
     # strings only, consent-gated with a full preview in the UI). Capped well
     # above the client's own ~6KB ring limit.
     diag: str | None = Field(default=None, max_length=12_000)
 
 
 class FetchUrlResponse(BaseModel):
-    # The FINAL url after redirects, the extracted title (may be empty), and the
+    # The final url after redirects, the extracted title (may be empty), and the
     # Readability main text. Ingested + encrypted client-side like any document.
     url: str
     title: str
@@ -271,7 +270,7 @@ class FetchUrlResponse(BaseModel):
 
 class LinkPreviewItem(BaseModel):
     # `image` is an absolute URL on the ORIGIN. The client must load it through
-    # GET /link-image (the proxy), never put it in an <img src> directly — that
+    # GET /link-image (the proxy), never put it in an <img src> directly - that
     # would hand the merchant the user's IP and interest.
     url: str
     title: str
@@ -292,12 +291,12 @@ class ChatModelInfo(BaseModel):
     connection_id: str = "openrouter"
     model: str = ""
     # The model can return an image (OpenRouter output_modalities / the slug
-    # convention `…-image`). Drives the picker badge and `image_output` on send.
+    # convention `...-image`). Drives the picker badge and `image_output` on send.
     image_output: bool = False
 
 
 class ConnectionInfo(BaseModel):
-    """A chat provider connection (no secrets — key is never returned)."""
+    """A chat provider connection (no secrets - key is never returned)."""
 
     id: str
     label: str
@@ -321,8 +320,8 @@ class CatalogModel(BaseModel):
 # --- Settings -------------------------------------------------------------
 class SettingsResponse(BaseModel):
     openrouter_configured: bool
-    # The CALLER has stored an own OpenRouter key that overrides the included
-    # sub-key (#91: without this the settings card could not offer "remove").
+    # The caller has stored an own OpenRouter key that overrides the included
+    # sub-key; without this flag the settings card could not offer "remove".
     own_openrouter_key: bool = False
     # OpenRouter routing region (region.py): "global" or "eu". With "eu" the
     # catalog is already filtered to in-region models and web search is off.
@@ -365,7 +364,7 @@ class McpServerInfo(BaseModel):
 
 class McpServerUpsertRequest(BaseModel):
     """Create/update an MCP server. auth_header is write-only ("Name: value",
-    e.g. "Authorization: Bearer …"); empty/omitted keeps the existing secret."""
+    e.g. "Authorization: Bearer ..."); empty/omitted keeps the existing secret."""
 
     label: str
     url: str

@@ -2,11 +2,11 @@ import { test, expect } from "@playwright/test";
 
 import { clickSend, login, openChat, sharedCreds } from "./helpers/account";
 
-// House rule #1 (CLAUDE.md): if the scrubber is unreachable the chat MUST block
-// sending and preserve the input — never forward unscrubbed text. This locks that
+// Fail closed: if the scrubber is unreachable the chat must block
+// sending and preserve the input - never forward unscrubbed text. This locks that
 // invariant end-to-end: with /scrub failing, no /chat/stream request may go out,
 // an error is surfaced, and the typed message stays in the composer.
-test("scrubber unreachable → send is blocked, input preserved, nothing forwarded", async ({
+test("scrubber unreachable -> send is blocked, input preserved, nothing forwarded", async ({
   page,
 }) => {
   // Fail the scrub at the network boundary (as if the scrubber were down).
@@ -30,36 +30,35 @@ test("scrubber unreachable → send is blocked, input preserved, nothing forward
   await page.getByPlaceholder("Ask anything, keep your data personal").fill(secret);
   await clickSend(page);
 
-  // Fail-closed error is surfaced to the user (hosted-user wording — no "start
-  // the scrubber" jargon; see ScreenChat.tsx's scrub catch, report #5 of the
-  // 2026-07-15 UX walkthrough).
+  // Fail-closed error is surfaced to the user (hosted-user wording, no "start
+  // the scrubber" jargon; see ScreenChat.tsx's scrub catch).
   await expect(page.getByText(/privacy filter can.t be reached/i)).toBeVisible({
     timeout: 30_000,
   });
 
-  // The message stays on the device (composer keeps the exact text — do NOT type,
+  // The message stays on the device (composer keeps the exact text - do not type,
   // typing clears the error state).
   await expect(page.getByPlaceholder("Ask anything, keep your data personal")).toHaveValue(secret);
 
-  // THE GUARANTEE: nothing was forwarded to the relay.
+  // The guarantee: nothing was forwarded to the relay.
   expect(relayHits).toBe(0);
 });
 
 /**
  * The same guarantee for an ATTACHMENT. A send can involve up to four
  * independent /scrub calls (context, project instruction, attachment, message)
- * which now go out as one PARALLEL wave — so "the attachment couldn't be
- * scrubbed" is no longer a plain try/catch around a single await, but a
+ * which go out as one parallel wave - so "the attachment couldn't be
+ * scrubbed" is not a plain try/catch around a single await, but a
  * per-source decision on a settled result. Getting that wrong would send the
  * message and silently drop the document the user attached, or worse. This
  * pins the two things that must hold: nothing reaches the relay, and the
  * attachment is still staged so the user can retry.
  *
  * The message's own scrub is mocked to SUCCEED, so only the attachment's
- * failure can cause the abort — otherwise the test would pass for the wrong
+ * failure can cause the abort - otherwise the test would pass for the wrong
  * reason (i.e. the case above).
  */
-test("attachment scrub fails → nothing sent, the attachment stays staged", async ({ page }) => {
+test("attachment scrub fails -> nothing sent, the attachment stays staged", async ({ page }) => {
   test.slow();
 
   const attachmentText = "Vertragspartnerin ist Anna Müller, IBAN DE02120300000000202051.";
@@ -99,12 +98,12 @@ test("attachment scrub fails → nothing sent, the attachment stays staged", asy
   await page.getByPlaceholder("Ask anything, keep your data personal").fill("Fasse das zusammen");
   await clickSend(page);
 
-  // Honest, actionable error — not a silent drop.
+  // Honest, actionable error - not a silent drop.
   await expect(page.getByText(/couldn.t remove personal data from the attachment/i)).toBeVisible({
     timeout: 30_000,
   });
 
-  // THE GUARANTEE: the relay never saw this send at all.
+  // The guarantee: the relay never saw this send at all.
   expect(relayHits).toBe(0);
   // And the work isn't lost: attachment still staged, message still typed.
   await expect(page.getByRole("button", { name: "Remove attachment" })).toBeVisible();
@@ -114,14 +113,14 @@ test("attachment scrub fails → nothing sent, the attachment stays staged", asy
 });
 
 /**
- * The OTHER half of the same rule, and the reason it can't just be "abort on any
+ * The other half of the same rule, and the reason it can't just be "abort on any
  * failure": retrieved CONTEXT is optional. If its scrub fails the context is
- * simply not sent — the user's question must still go through. Getting this
+ * simply not sent - the user's question must still go through. Getting this
  * backwards (aborting) would make an unrelated document break every chat; the
  * dangerous mistake in the other direction (sending the context unscrubbed) is
  * what the relay assertion below rules out.
  */
-test("context scrub fails → the message still sends, without the context", async ({ page }) => {
+test("context scrub fails -> the message still sends, without the context", async ({ page }) => {
   test.slow(); // on-device indexing of the pinned document
 
   const contextMarker = "Kontextdokument Zebrastreifen";
@@ -170,9 +169,9 @@ test("context scrub fails → the message still sends, without the context", asy
   await page.getByPlaceholder("Ask anything, keep your data personal").fill("Was steht da?");
   await clickSend(page);
 
-  // The send goes through despite the failed context scrub…
+  // The send goes through despite the failed context scrub...
   await expect(page.getByText("Antwort ohne Kontext.")).toBeVisible({ timeout: 60_000 });
-  // …and the un-scrubbed context was NOT smuggled along.
+  // ...and the un-scrubbed context was not smuggled along.
   expect(relayBody).not.toContain(contextMarker);
 
   // Restore the shared account's state (this spec pinned a synced document).

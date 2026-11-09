@@ -1,14 +1,13 @@
-"""Verify a user's OWN OpenRouter key before it is stored.
+"""Verify a user's own OpenRouter key before it is stored.
 
-Why (beta feedback #84, #91 — two users, three bursts of chat failures):
-the budget banner says "add your own key", the settings card says OpenRouter,
-and both users pasted a key from another vendor. A user's override WINS over
-the provisioned sub-key, so from that moment every chat failed — and
+Why: the budget banner says "add your own key", the settings card says
+OpenRouter, and users paste a key from another vendor. A user's override wins
+over the provisioned sub-key, so from that moment every chat fails - and
 OpenRouter's answer for a non-``sk-or-`` token is the misleading
-"401 Missing Authentication header" (measured 2026-10-20: an Anthropic key,
-a quoted key, a doubled "Bearer" and an empty token all get exactly that;
-only a well-formed unknown key gets "User not found"). Checking the key at
-save time turns a silent, lasting breakage into one clear message.
+"401 Missing Authentication header" (an Anthropic key, a quoted key, a doubled
+"Bearer" and an empty token all get exactly that; only a well-formed unknown
+key gets "User not found"). Checking the key at save time turns a silent,
+lasting breakage into one clear message.
 """
 
 from __future__ import annotations

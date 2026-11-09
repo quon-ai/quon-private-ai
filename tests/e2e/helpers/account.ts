@@ -23,17 +23,17 @@ interface CredsFile {
 }
 
 /**
- * This run-lane's own pre-verified account. The lane is (BROWSER PROJECT ×
+ * This run-lane's own pre-verified account. The lane is (BROWSER PROJECT x
  * worker slot), not just the worker slot.
  *
  * Keying on the worker alone was a real bug: serially (workers=1) the chromium
  * and webkit projects both took slot 0, so **webkit inherited every byte of
- * account state chromium had accumulated** — including SYNCED prefs. The
+ * account state chromium had accumulated** - including synced prefs. The
  * protection level lives in the prefs blob, so `review-mode.spec` (chromium)
  * could leave Review ON for webkit's first direct-send specs, which then sat at
  * the review panel until they timed out: the chronic
  * artifacts/attach-all/attach-large-scrub/attachment failures. Per-test cleanup
- * can't close that hole reliably, because `prefs` is ONE blob — any later pref
+ * can't close that hole reliably, because `prefs` is one blob - any later pref
  * write from a page holding a stale copy re-publishes the old protection level
  * under a fresh timestamp (whole-blob LWW).
  *
@@ -46,19 +46,19 @@ export function sharedCreds(): Creds {
   const worker = Number(process.env.TEST_PARALLEL_INDEX ?? 0);
   const lane = laneKey(project, worker);
   const found = file.workers.find((w) => w.email.startsWith(`shared-${lane}@`));
-  // A creds file from an older run (pre-lane naming) → fall back to the old
+  // A creds file from an older run (pre-lane naming) -> fall back to the old
   // worker-slot behaviour rather than crashing the whole suite.
   return found ?? file.workers[worker % file.workers.length];
 }
 
-/** Account lane id for a (project, worker) pair — the shared naming rule used by
+/** Account lane id for a (project, worker) pair - the shared naming rule used by
  *  global-setup when registering and by sharedCreds when looking up. */
 export function laneKey(project: string, worker: number): string {
   return `${project}-w${worker}`;
 }
 
-/** Dedicated account for review-mode.spec. Review is a SYNCED pref, so leaving
- *  it on poisons every later direct-send spec sharing the account — and per-test
+/** Dedicated account for review-mode.spec. Review is a synced pref, so leaving
+ *  it on poisons every later direct-send spec sharing the account - and per-test
  *  cleanup can't reliably undo it (`prefs` is a single blob: any later pref write
  *  from a page holding a stale copy republishes the old level). Isolating the one
  *  spec that flips it keeps the hazard out of the lane accounts entirely. Falls
@@ -69,13 +69,13 @@ export function reviewCreds(): Creds {
   return file.reviewers?.find((r) => r.email.startsWith(`review-${lane}@`)) ?? sharedCreds();
 }
 
-/** The instance-admin account (registered FIRST on the fresh test DB — the
+/** The instance-admin account (registered first on the fresh test DB - the
  *  role bootstrap). Only admin.spec should log into it. */
 export function adminCreds(): Creds {
   return (JSON.parse(readFileSync(CREDS_FILE, "utf8")) as CredsFile).admin;
 }
 
-/** Mark a pending account active directly in the test DB — stands in for clicking
+/** Mark a pending account active directly in the test DB - stands in for clicking
  *  the emailed verification link (SMTP is disabled, so no mail is ever sent).
  *  The busy timeout matters: the backend holds the WAL lock. We assert exactly
  *  one row changed so a lock/timing miss fails loudly instead of no-opping. */
@@ -85,7 +85,7 @@ export function activateInDb(email: string): void {
       email,
     ]);
     if (out === "1") return;
-    execFileSync("sleep", ["0.3"]); // row not visible yet — brief poll
+    execFileSync("sleep", ["0.3"]); // row not visible yet - brief poll
   }
   throw new Error(`activateInDb(${email}): row never became visible to activate`);
 }
@@ -113,12 +113,12 @@ export async function registerAndVerify(page: Page, creds: Creds): Promise<void>
 }
 
 /** Read the plaintext verification token for `email` out of the backend's tee'd
- *  stdout (`[DEV EMAIL] to=<email> ... http://…/verify?token=<TOKEN>`, see
- *  quon-scrubber-service/email_service.py — SMTP is disabled in the e2e stack,
- *  so this is the ONLY place the plaintext token is ever observable; the DB
+ *  stdout (`[DEV EMAIL] to=<email> ... http://.../verify?token=<TOKEN>`, see
+ *  quon-scrubber-service/email_service.py - SMTP is disabled in the e2e stack,
+ *  so this is the only place the plaintext token is ever observable; the DB
  *  stores only its sha256 hash). Polls like `activateInDb`: the backend writes
  *  the log line asynchronously relative to the HTTP response that triggered it.
- *  Takes the LAST match so a re-registration (resend) picks up the newest token. */
+ *  Takes the last match so a re-registration (resend) picks up the newest token. */
 function readVerifyTokenFromLog(email: string): string {
   const re = new RegExp(
     `\\[DEV EMAIL\\] to=${email.replace(/[.*+?^${}()|[\\]\\\\]/g, "\\$&")}[\\s\\S]*?verify\\?token=(\\S+)`,
@@ -140,9 +140,9 @@ function readVerifyTokenFromLog(email: string): string {
   );
 }
 
-/** Register + drive the REAL /auth/verify HTTP flow (unlike `registerAndVerify`,
+/** Register + drive the real /auth/verify HTTP flow (unlike `registerAndVerify`,
  *  which activates via a direct DB write and never touches the endpoint). Needed
- *  for anything that depends on a real `/auth/verify` response — currently only
+ *  for anything that depends on a real `/auth/verify` response - currently only
  *  the onboarding-eligibility signal (`MeResponse.onboarding_pending`), which is
  *  reported exactly once there and nowhere else (see onboardingStore.ts). Leaves
  *  the page on `/verify` mid-navigation to the unlock/dashboard redirect. */
@@ -178,18 +178,18 @@ export async function login(page: Page, creds: Creds): Promise<void> {
 }
 
 /**
- * Open the chat screen for a spec that SENDS a message, and fail fast if the
+ * Open the chat screen for a spec that sends a message, and fail fast if the
  * account is in Review mode.
  *
  * Review is a synced pref: with it left on, a send stops at the "Review before
- * sending" panel and waits for an approval the spec never gives. That used to
- * surface as an unexplained 60s timeout on whatever the spec expected next —
- * the failure looked like slowness and cost weeks of misdiagnosis. Here it
- * fails in seconds, naming the actual cause.
+ * sending" panel and waits for an approval the spec never gives. Without this
+ * check that surfaces as an unexplained 60s timeout on whatever the spec
+ * expected next, a failure that looks like slowness. Here it fails in seconds,
+ * naming the actual cause.
  *
- * Honest limit: this reads the pill AFTER the initial sync pull has normally
+ * Honest limit: this reads the pill after the initial sync pull has normally
  * landed, but a very late pull could still flip Review on afterwards. That case
- * degrades to the old timeout — never worse, usually much better.
+ * degrades to the old timeout - never worse, usually much better.
  */
 export async function openChat(page: Page): Promise<void> {
   await page.goto("/chat");
@@ -205,18 +205,17 @@ export async function openChat(page: Page): Promise<void> {
 /**
  * Click Send, but only once the composer has actually accepted the text.
  *
- * The Send button is `disabled={!input.trim()}` — driven by REACT STATE, not by
+ * The Send button is `disabled={!input.trim()}` - driven by REACT STATE, not by
  * the DOM value. Playwright's fill() sets the value and dispatches an input
  * event; if that lands before hydration has attached the handler, the event is
  * lost, the state stays empty, and the button stays disabled FOREVER, because
  * nothing will fire again. The click then burns its whole timeout on an
  * element that can never become enabled.
  *
- * That is the failure that produced three different red gates on 2026-08-05 —
- * attachment, artifacts and scrub-parallel, all "locator.click timeout,
- * element is not enabled", all passing in isolation, all on a loaded machine.
+ * The symptom is "locator.click timeout, element is not enabled" in specs
+ * that pass in isolation and fail on a loaded machine.
  * Waiting for `enabled` turns a lost race into a slower one that still
- * succeeds, and keeps a REAL "send never becomes possible" bug failing loudly.
+ * succeeds, and keeps a real "send never becomes possible" bug failing loudly.
  */
 export async function clickSend(page: Page): Promise<void> {
   const send = page.getByRole("button", { name: "Send", exact: true });
@@ -233,21 +232,17 @@ export async function dismissReleaseNotes(page: Page): Promise<void> {
     .catch(() => {});
 }
 
-/** Count synced blobs of a collection in the test DB — used to wait until local
- *  data (e.g. a freshly-added memory) has reached the server, so a reload pulls it
- *  back (the harness's IndexedDB cache doesn't persist across reloads). */
-/** Count LIVE (non-tombstoned) synced blobs — the rows the server would hand a
+/** Count live (non-tombstoned) synced blobs - the rows the server would hand a
  *  fresh login. `deleted=0` matches how sync.py itself counts.
  *
  *  Exists for cleanup contracts: a spec that deletes its fixtures via the UI
- *  has only changed LOCAL state — the sync tombstone still has to reach the
+ *  has only changed local state - the sync tombstone still has to reach the
  *  server, and it races the context close at spec end. On a fast laptop the
- *  push wins; on a loaded CI runner it lost, the next login on the lane
- *  account pulled the "deleted" memory back, and resend-unfiltered saw a
- *  context redaction for a clean sentence (root-caused 2026-08-04 from the
- *  runner's trace: leftover "Wohnort… Elbchaussee 1" from
- *  memory-maintenance). Deleted-in-the-UI is not deleted; deleted-ON-THE-
- *  SERVER is. */
+ *  push wins; on a loaded CI runner it loses, the next login on the lane
+ *  account pulls the "deleted" memory back, and an unrelated spec sees a
+ *  context redaction for a clean sentence (a leftover address memory from
+ *  memory-maintenance, retrieved as RAG context). Deleted in the UI is not
+ *  deleted; deleted on the server is. */
 export function liveBlobCount(collection: string): number {
   return (
     Number.parseInt(
@@ -257,8 +252,8 @@ export function liveBlobCount(collection: string): number {
   );
 }
 
-/** Same count, restricted to ONE account. The suite runs several lane accounts
- *  against one DB, so a global count mixes in other lanes' rows — a baseline
+/** Same count, restricted to one account. The suite runs several lane accounts
+ *  against one DB, so a global count mixes in other lanes' rows - a baseline
  *  taken that way is not a fact about this spec. */
 export function liveBlobCountForEmail(collection: string, email: string): number {
   return (
@@ -274,30 +269,29 @@ export function liveBlobCountForEmail(collection: string, email: string): number
 }
 
 /** Block until the server's live count for `collection` is back at `baseline`
- *  (captured BEFORE the spec created its fixtures — relative, so residue from
+ *  (captured before the spec created its fixtures - relative, so residue from
  *  other lanes/specs never breaks the wait). Fails loudly naming the residue
  *  class instead of letting a later spec fail confusingly. */
 /**
  * Remove an account's residue for `collection` from the TEST DATABASE.
  *
  * Why at the DB and not through the app: `collectionSync` debounces a push,
- * and its net for "the tab is going away" is a `pagehide` listener — which
+ * and its net for "the tab is going away" is a `pagehide` listener - which
  * fires when the CONTEXT CLOSES, i.e. after the test body. Measured: sampling
  * the DB from outside the browser shows rows flipping to deleted=1 only as the
  * previous spec's context goes away, and a synthetic `pagehide` from
  * page.evaluate does not reliably bring that forward. So a spec cannot observe
  * its own cleanup, no matter how long it waits.
  *
- * That timing is CORRECT product behaviour (a real user's tab really does flush
+ * That timing is correct product behaviour (a real user's tab really does flush
  * on the way out), so the fix belongs in teardown, not in the app. Specs keep
- * asserting the delete through the UI — that is the actual test; this only
+ * asserting the delete through the UI - that is the actual test; this only
  * guarantees the shared lane account is clean for whatever runs next.
  *
- * Root cause it closes (2026-08-04, from the CI runner's Playwright trace): a
- * leftover "Wohnort… Elbchaussee 1" memory was retrieved as RAG context for an
- * unrelated question, and its ADDRESS redaction was counted into the chip —
- * so resend-unfiltered saw "1 item redacted" where it expected "No personal
- * data found". The detector was never wrong.
+ * The failure it closes: a leftover address memory is retrieved as RAG context
+ * for an unrelated question, and its ADDRESS redaction is counted into the
+ * chip, so resend-unfiltered sees "1 item redacted" where it expects "No
+ * personal data found". The detector is never wrong in that picture.
  */
 export function purgeAccountBlobs(collection: string, email: string): void {
   execSql(
@@ -320,12 +314,12 @@ export function blobCount(collection: string): number {
  *
  * Via PYTHON, not the `sqlite3` CLI. The CLI is an undeclared system dependency:
  * macOS ships it and GitHub's runner images include it, so it worked everywhere
- * we happened to look — and the mini-PC runner failed instantly with
+ * we happened to look - and the mini-PC runner failed instantly with
  * `spawnSync sqlite3 ENOENT`. Python is already a hard requirement here (the
  * Playwright webServer boots the scrubber from its venv), so this removes a
  * dependency instead of adding one.
  *
- * Parameters are BOUND, not interpolated — the old CLI form pasted an email
+ * Parameters are BOUND, not interpolated - the old CLI form pasted an email
  * straight into SQL, which a test address containing a quote would have broken.
  */
 export function execSql(sql: string, params: string[] = []): string {

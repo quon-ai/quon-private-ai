@@ -1,16 +1,15 @@
-"""Latency budget — the ratchet detection has had for months and latency never did.
+"""Latency budget: the same ratchet detection has, applied to the send path.
 
-Detection numbers are enforced (`test_corpus.py` FLOORS + build-failing asserts).
-Latency numbers lived in HANDOFF prose, and that class regressed TWICE: once
-shipping ~9 s on every message for eleven days, once again later via a blocking
-fetch added to the send path. The stated reason for prose was "no test can catch
-this — a mocked stream is always instant". True, and it does not follow that
-nothing can be enforced: what *can* be checked, offline and in CI, is that a
-measurement exists for the current send path and that its numbers are inside the
-budget.
+Detection numbers are enforced (`test_corpus.py` floors and build-failing
+asserts). Latency numbers once lived in prose, and prose does not fail a build:
+a blocking fetch added to the send path shipped unnoticed. The usual objection,
+that a mocked stream is always instant so no test can catch this, is true and
+does not follow through. What can be checked, offline and in CI, is that a
+measurement exists for the current send path and that its numbers are inside
+the budget.
 
-So this reads the ledger rather than the network. It is the same shape as FLOORS:
-a measured value, its provenance, a directionality rule, and an assert.
+So this reads the ledger rather than the network. It is the same shape as
+FLOORS: a measured value, its provenance, a directionality rule, and an assert.
 """
 
 from __future__ import annotations
@@ -23,8 +22,8 @@ import pytest
 
 LEDGER = Path(__file__).parent / "reports" / "LATENCY.md"
 
-#: model → (max first token s, max total s, min chunks)
-#: Raise ONLY after re-measuring with scripts/measure-latency.sh, and never lower
+#: model -> (max first token s, max total s, min chunks)
+#: Raise only after re-measuring with scripts/measure-latency.sh, and never lower
 #: silently. min_chunks is the important one: a change can leave the total
 #: untouched and still destroy streaming, which is most of what "feels slow" is.
 BUDGET = {
@@ -80,7 +79,8 @@ def test_recorded_latencies_are_inside_the_budget() -> None:
     reason="needs a git checkout to diff the send path",
 )
 def test_send_path_changes_come_with_a_measurement() -> None:
-    """A send-path change with no ledger row for HEAD is the 2026-07 incident.
+    """Every send-path change needs a ledger row for HEAD: a mocked stream
+    cannot measure latency, so the ledger is the only place it is recorded.
 
     Advisory rather than fatal on a branch with no upstream: the point is to be
     impossible to *forget*, not to block unrelated work.

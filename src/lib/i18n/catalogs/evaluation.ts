@@ -1,9 +1,9 @@
 /**
- * evaluation.* — the public end-user page (/docs/detection) explaining HOW the
+ * evaluation.* - the public end-user page (/docs/detection) explaining how the
  * privacy filter is tested. Companion to the /demo page and written for the
  * same audience: strangers without an account. English by default with the
  * same local language switch as the demo; du-form in German, the app's own
- * words (schwärzen, freigeben). Plain language — the engineering detail lives
+ * words (schwärzen, freigeben). Plain language - the engineering detail lives
  * in docs/detection-whitepaper.md and docs/detection-experiments.md, not here.
  */
 export const evaluation = {
@@ -32,6 +32,8 @@ export const evaluation = {
       "The full measurement method, the dated experiment record and the enforced thresholds are part of the source code. The numbers live in tests that fail the build — not in marketing copy.",
     "evaluation.ctaDemo": "Try the demo",
     "evaluation.ctaSource": "Method and record in the source code",
+    "evaluation.ctaWhitepaper": "Read the whitepaper",
+    "evaluation.backToOverview": "How we test the filter",
   },
   de: {
     "evaluation.metaTitle": "So testen wir den Filter — QUON",
@@ -58,5 +60,7 @@ export const evaluation = {
       "Die vollständige Messmethode, das datierte Versuchsprotokoll und die erzwungenen Grenzwerte sind Teil des Quellcodes. Die Zahlen stehen in Tests, die den Build scheitern lassen — nicht in Werbetexten.",
     "evaluation.ctaDemo": "Probier die Demo",
     "evaluation.ctaSource": "Methode und Protokoll im Quellcode",
+    "evaluation.ctaWhitepaper": "Zum Whitepaper (englisch)",
+    "evaluation.backToOverview": "So testen wir den Filter",
   },
 } as const;

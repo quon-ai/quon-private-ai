@@ -50,7 +50,7 @@ def test_off_wins_over_smtp(quon_client, monkeypatch):
 def test_without_verification_a_duplicate_is_refused_honestly(quon_client, monkeypatch):
     """With verification there is an anti-enumeration fake-pending answer and a
     mail to the real owner. Without a mail path that answer would only strand
-    the user, so the duplicate is a plain 409 — documented as the trade-off."""
+    the user, so the duplicate is a plain 409 - documented as the trade-off."""
     monkeypatch.setattr(settings, "email_verification", "off")
     body = register_body("dup@quon.local")
     assert quon_client.post("/auth/register", json=body).status_code == 201

@@ -3,10 +3,10 @@ import { withSyncPush } from "./helpers/sync";
 
 import { clickSend, login, reviewCreds } from "./helpers/account";
 
-/** Ensure Review mode is ON — deterministically. The protection level is a
- *  SYNCED pref, so an earlier test in this file leaves "review" on the server
- *  and the fresh page's initial sync pull races a blind click on the toggle —
- *  pull-first meant the click switched Review OFF again and the send went out
+/** Ensure Review mode is ON - deterministically. The protection level is a
+ *  synced pref, so an earlier test in this file leaves "review" on the server
+ *  and the fresh page's initial sync pull races a blind click on the toggle -
+ *  pull-first meant the click switched Review off again and the send went out
  *  un-reviewed (the chronic flake in this file). So: check the pressed state,
  *  click only when off, and always wait for pressed=true; the click bumps
  *  prefsUpdatedAt, so a late-arriving older blob can't revert it (LWW gate in
@@ -15,11 +15,11 @@ async function ensureReviewMode(page: Page): Promise<void> {
   const pill = page.getByRole("button", { name: "Review", exact: true });
   await expect(pill).toBeVisible();
   // A single click can still get lost in the fresh page's hydration window
-  // (handler not yet live, or the initial pull applying concurrently) — seen
+  // (handler not yet live, or the initial pull applying concurrently) - seen
   // once on webkit under retries:0: click fired, pressed stayed "false" for
   // 20s. State-based retry: re-click until pressed actually sticks; the LWW
   // gate (prefsUpdatedAt bump per click) keeps late older blobs from
-  // reverting a click that DID land.
+  // reverting a click that did land.
   await expect(async () => {
     if ((await pill.getAttribute("aria-pressed")) !== "true") {
       await pill.click();
@@ -30,26 +30,26 @@ async function ensureReviewMode(page: Page): Promise<void> {
 }
 
 // Leave the account back in Filter mode. Belt-and-braces only since this file
-// got its OWN account (reviewCreds): a leftover Review can no longer reach any
-// other spec. Keep it anyway — it makes re-runs of THIS file start from a known
+// got its own account (reviewCreds): a leftover Review can no longer reach any
+// other spec. Keep it anyway - it makes re-runs of this file start from a known
 // state. Note this cleanup alone was never sufficient: `prefs` is a single
 // synced blob, so a later pref write from a page holding a stale copy
 // republishes the old protection level under a fresh timestamp (whole-blob
 // LWW). That is exactly how Review used to leak into the next project and
-// stall its first direct-send specs at the review panel — the chronic
+// stall its first direct-send specs at the review panel - the chronic
 // artifacts/attach-all/attach-large-scrub/attachment "timeouts".
 // Best-effort (the page may be gone after a hard failure).
 test.afterEach(async ({ page }) => {
   try {
-    // ⚠️ Toggle REVIEW off — do not "ensure Filter pressed": in review mode the
-    // Filter pill shows pressed TOO (review implies protection), so checking
+    // Toggle REVIEW off - do not "ensure Filter pressed": in review mode the
+    // Filter pill shows pressed too (review implies protection), so checking
     // Filter is a no-op exactly when the reset is needed.
     const review = page.getByRole("button", { name: "Review", exact: true });
     if (!(await review.isVisible({ timeout: 2000 }).catch(() => false))) return;
     if ((await review.getAttribute("aria-pressed")) === "true") {
-      // The prefs push is DEBOUNCED (collectionSync, 1500ms) — closing the page
+      // The prefs push is DEBOUNCED (collectionSync, 1500ms) - closing the page
       // right after the click loses the write and the SERVER blob keeps Review
-      // ON for the next project's pass. THIS leak is the one cited in
+      // ON for the next project's pass. This leak is the one cited in
       // playwright.config.ts as the reason workers=2 is not the default, so the
       // listener has to be registered before the click, not after it.
       await withSyncPush(
@@ -62,12 +62,12 @@ test.afterEach(async ({ page }) => {
       );
     }
   } catch {
-    /* best-effort — never fail the suite from cleanup */
+    /* best-effort - never fail the suite from cleanup */
   }
 });
 
 // Review mode: the user approves exactly what's sent. The detected PII is shown for
-// review BEFORE anything leaves the device, and only the placeholder crosses the wire.
+// review before anything leaves the device, and only the placeholder crosses the wire.
 test("Review mode shows detected PII for approval, then sends only placeholders", async ({
   page,
 }) => {
@@ -93,16 +93,16 @@ test("Review mode shows detected PII for approval, then sends only placeholders"
     .fill("Schreib an chef@example.com bitte");
   await clickSend(page);
 
-  // The review panel appears with the detected email — nothing sent yet.
+  // The review panel appears with the detected email - nothing sent yet.
   await expect(page.getByText(/Review before sending/)).toBeVisible({ timeout: 30_000 });
-  // exact:true — the sidebar Recents entry for a prior run is titled with the
-  // full message ("Schreib an chef@… bitte"), so a substring match is ambiguous
+  // exact:true - the sidebar Recents entry for a prior run is titled with the
+  // full message ("Schreib an chef@... bitte"), so a substring match is ambiguous
   // once chats accumulate on the shared account; only the review-panel value is
   // the bare email.
   await expect(page.getByText("chef@example.com", { exact: true })).toBeVisible();
   expect(outgoing).toBe("");
 
-  // Approve → it sends; only the placeholder crosses the wire, answer re-hydrates.
+  // Approve -> it sends; only the placeholder crosses the wire, answer re-hydrates.
   await page.getByRole("button", { name: /Send to/ }).click();
   await expect(page.getByText("Erledigt: chef@example.com.")).toBeVisible({ timeout: 30_000 });
   expect(outgoing).toContain("[EMAIL_1]");
@@ -110,7 +110,7 @@ test("Review mode shows detected PII for approval, then sends only placeholders"
 });
 
 // Review must cover documents too, not just the typed message: an attached file's
-// detected PII is shown for approval and stays redacted by default — only the
+// detected PII is shown for approval and stays redacted by default - only the
 // placeholder leaves the device.
 test("Review mode redacts an attached document's PII by default (placeholder on the wire)", async ({
   page,
@@ -143,14 +143,14 @@ test("Review mode redacts an attached document's PII by default (placeholder on 
     .fill("Fasse das Dokument zusammen");
   await clickSend(page);
 
-  // The review panel lists the DOCUMENT's detected email with a per-hit toggle —
+  // The review panel lists the DOCUMENT's detected email with a per-hit toggle -
   // nothing has been sent yet.
   await expect(page.getByText(/Review before sending/)).toBeVisible({ timeout: 30_000 });
   await expect(page.getByText("kontakt@lieferant.de", { exact: true })).toBeVisible();
   await expect(page.getByRole("button", { name: "Redacted" })).toBeVisible();
   expect(outgoing).toBe("");
 
-  // Approve as-is → the document hit stays redacted: only the placeholder crosses the wire.
+  // Approve as-is -> the document hit stays redacted: only the placeholder crosses the wire.
   await page.getByRole("button", { name: /Send to/ }).click();
   await expect(page.getByText("Zusammengefasst.")).toBeVisible({ timeout: 30_000 });
   expect(outgoing).toContain("[EMAIL_1]");
@@ -194,7 +194,7 @@ test("Review mode can un-redact a document hit, sending its real value", async (
   await page.getByRole("button", { name: /Send to/ }).click();
 
   await expect(page.getByText("Ok.")).toBeVisible({ timeout: 30_000 });
-  // The user chose to reveal it → the real email crosses the wire and no orphan
+  // The user chose to reveal it -> the real email crosses the wire and no orphan
   // placeholder is left behind.
   expect(outgoing).toContain("kontakt@lieferant.de");
   expect(outgoing).not.toContain("[EMAIL_1]");
@@ -219,7 +219,7 @@ test("Review mode can manually redact a document term the detector missed", asyn
   await page.goto("/chat");
   await ensureReviewMode(page);
 
-  // A codename the NER/regex net won't flag as PII — so only a manual redaction removes it.
+  // A codename the NER/regex net won't flag as PII - so only a manual redaction removes it.
   await page.setInputFiles('input[type="file"]', {
     name: "notes.txt",
     mimeType: "text/plain",

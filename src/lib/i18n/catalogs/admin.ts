@@ -1,6 +1,6 @@
 /**
  * "admin" namespace UI strings (operator screen, /admin). Keys `admin.*` plus
- * the nav entry. Keep en/de in sync — missing German = compile error.
+ * the nav entry. Keep en/de in sync - missing German = compile error.
  */
 export const admin = {
   en: {

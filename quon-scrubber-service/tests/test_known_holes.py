@@ -1,7 +1,7 @@
-"""Holes found by the 2026-10-31 adversarial review of the optional-e-mail-
-verification / CORS-guard changes. Each test states the SAFE behaviour and is
+"""Holes found by an adversarial review of the optional e-mail verification
+and the CORS guard. Each test states the safe behaviour and is
 marked ``xfail(strict=True)``: it documents a confirmed hole without turning the
-gate red, and the moment a fix lands it XPASSes — which strict mode reports as a
+gate red, and the moment a fix lands it XPASSes - which strict mode reports as a
 failure, forcing whoever fixed it to drop the marker and keep the regression.
 
 All values are synthetic.
@@ -36,7 +36,7 @@ def test_prod_boot_rejects_wildcard_or_null_anywhere_in_cors_list(raw, monkeypat
             pass
 
 
-# --- 2. EMAIL_VERIFICATION: an unrecognised value must fail CLOSED ----------
+# --- 2. EMAIL_VERIFICATION: an unrecognised value must fail closed ----------
 @pytest.mark.parametrize("mode", ["requried", "require", "true", "on"])
 def test_unknown_email_verification_mode_requires_verification(mode):
     assert Settings(email_verification=mode, smtp_host="").email_verification_required is True
@@ -72,7 +72,7 @@ def test_unverified_mode_does_not_activate_someone_elses_pending_account(quon_cl
     assert c.post("/auth/login", json={"email": "owner@quon.local", "auth_token": b64(b"O" * 32)}).status_code == 200
 
 
-# --- 5. An ordinary user cannot repoint the operator's GLOBAL connection -----
+# --- 5. An ordinary user cannot repoint the operator's global connection -----
 def test_regular_user_cannot_retarget_global_connection(quon_client, monkeypatch):
     import connections
     import settings_store
@@ -80,7 +80,7 @@ def test_regular_user_cannot_retarget_global_connection(quon_client, monkeypatch
     settings_store.upsert_custom_connection(
         "acme", "Operator LLM", "https://llm.operator.example/v1", ["m1"], api_key="sk-synthetic-operator"
     )
-    # The new default: auto without SMTP ⇒ a stranger's account is active at once.
+    # The new default: auto without SMTP => a stranger's account is active at once.
     monkeypatch.setattr(settings, "email_verification", "auto")
     monkeypatch.setattr(settings, "smtp_host", "")
     c = quon_client

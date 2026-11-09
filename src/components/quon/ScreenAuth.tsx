@@ -52,8 +52,8 @@ type Mode = "login" | "register" | "forgot";
 /** Reached `ready` outside of `/join` itself (e.g. the invitee closed the
  *  /join tab and later just logged in from the root page): if a shared-project
  *  invite is still stashed and fresh, resume it instead of landing wherever
- *  this login/unlock would otherwise go. See pendingJoin.ts. A no-op — and
- *  the normal landing proceeds — for the overwhelming majority of logins that
+ *  this login/unlock would otherwise go. See pendingJoin.ts. A no-op - and
+ *  the normal landing proceeds - for the overwhelming majority of logins that
  *  have nothing stashed. */
 function resumePendingJoin(navigate: ReturnType<typeof useNavigate>): void {
   const target = pendingJoinTarget();
@@ -110,9 +110,9 @@ async function downloadRecoveryKit(
   y += boxH + 22;
 
   // The grid above is for READING. Every cell is its own text run, so a
-  // select-all copies "1. word 7. word 2. word …" — numbers interleaved, columns
-  // shuffled — and pasting it into a recovery form fails (reported). This one
-  // line is the same twelve words in order, in ONE run, so a drag-select copies
+  // select-all copies "1. word 7. word 2. word ..." - numbers interleaved, columns
+  // shuffled - and pasting it into a recovery form fails (reported). This one
+  // line is the same twelve words in order, in one run, so a drag-select copies
   // exactly what the unlock screen expects.
   doc.setFont("helvetica", "normal").setFontSize(9).setTextColor(120);
   doc.text(labels.copyLine, M, y);
@@ -125,7 +125,7 @@ async function downloadRecoveryKit(
   doc.setFont("helvetica", "normal").setFontSize(9).setTextColor(130);
   doc.text(labels.footer, M, y);
 
-  // Filename stays a fixed, unlocalized slug — it's a file identifier on disk,
+  // Filename stays a fixed, unlocalized slug - it's a file identifier on disk,
   // not UI copy.
   doc.save("QUON-Recovery-Kit.pdf");
 }
@@ -142,7 +142,7 @@ function errMessage(e: unknown, t: I18n["t"]): string {
   }
   if (e instanceof TypeError) return t("auth.errScrubberDown");
   // The unlock/login decrypt failing (libsodium "wrong secret key for the given
-  // ciphertext") just means the password was wrong — say so plainly.
+  // ciphertext") just means the password was wrong - say so plainly.
   if (e instanceof Error && /ciphertext|secret key|decrypt/i.test(e.message))
     return t("auth.errWrongPassword");
   return translateApiError(e, t);
@@ -286,7 +286,7 @@ function RecoveryKit({ mnemonic, onDone }: { mnemonic: string; onDone: () => voi
 
       {/* Not muted, unlike the surrounding help text: this is the one sentence
           on the screen that must actually be read. Plain foreground rather
-          than an alarm colour — red reads as "something went wrong", and
+          than an alarm colour - red reads as "something went wrong", and
           nothing has. */}
       <label className="flex items-start gap-2 text-xs leading-relaxed text-quon-text">
         <input
@@ -314,19 +314,19 @@ export function ScreenUnlock() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   // Biometric unlock (WebAuthn PRF): offered when this device enrolled a
-  // credential for THIS user and has a platform authenticator. The wrap
+  // credential for this user and has a platform authenticator. The wrap
   // material is PREFETCHED so credentials.get() runs inside the click's
-  // transient activation (Safari requirement) — awaiting a fetch in the click
+  // transient activation (Safari requirement) - awaiting a fetch in the click
   // handler could consume it. A GET 404 means "revoked elsewhere": clear the
   // marker and don't offer the button. Other fetch errors keep the button
-  // (transient network blip — retried on click).
+  // (transient network blip - retried on click).
   const bioMarker = user ? getBioMarker(user.id) : null;
   const [bioAvailable, setBioAvailable] = useState(false);
   const [bioKm, setBioKm] = useState<BioKeyMaterial | null>(null);
   const [bioRevoked, setBioRevoked] = useState(false);
   // Lost-passkey suspicion (see bioEnrollment.ts): at the threshold we stop
-  // auto-firing the prompt — on Android a get() for a deleted credential pops
-  // the OS's own "kein Passkey vorhanden" sheet on EVERY visit — and show a
+  // auto-firing the prompt - on Android a get() for a deleted credential pops
+  // the OS's own "kein Passkey vorhanden" sheet on every visit - and show a
   // hint pointing at the password + re-create path instead.
   const [bioTrouble, setBioTrouble] = useState(() =>
     user ? bioFailureCount(user.id) >= BIO_TROUBLE_THRESHOLD : false,
@@ -335,8 +335,8 @@ export function ScreenUnlock() {
   // user doesn't have to tap the button first. Only fires once per mount
   // (autoTried) so a cancel doesn't loop. On browsers that require a user
   // gesture for credentials.get() (Safari/iOS), the gestureless attempt is
-  // rejected as NotAllowedError — indistinguishable from a real cancel, so the
-  // AUTO path stays SILENT (no error text) and just leaves the button for a
+  // rejected as NotAllowedError - indistinguishable from a real cancel, so the
+  // AUTO path stays silent (no error text) and just leaves the button for a
   // manual, gesture-backed tap. Android Chrome allows the gestureless call, so
   // there the prompt appears on its own.
   const autoTriedRef = useRef(false);
@@ -351,7 +351,7 @@ export function ScreenUnlock() {
       .then((km) => {
         if (cancelled) return;
         setBioKm(km);
-        // Refresh the offline front door — with this cached, the biometric
+        // Refresh the offline front door - with this cached, the biometric
         // unlock works with no server in reach (the PRF ceremony is local).
         if (user) saveOfflineBio(user.id, bioMarker.credentialId, km);
       })
@@ -381,7 +381,7 @@ export function ScreenUnlock() {
     setBusy(true);
     setError("");
     try {
-      // Re-fetch only if the prefetch failed (transient) — the common path has
+      // Re-fetch only if the prefetch failed (transient) - the common path has
       // the material ready so the biometric prompt fires within the gesture.
       const km = bioKm ?? (await authApi.bioGet(bioMarker.credentialId));
       await unlockWithBiometric(bioMarker.credentialId, km);
@@ -392,7 +392,7 @@ export function ScreenUnlock() {
       if (err instanceof ApiError && err.status === 404) {
         if (user) {
           clearBioMarker(user.id);
-          clearBioFailures(user.id); // nothing left to repair — honest reset
+          clearBioFailures(user.id); // nothing left to repair - honest reset
         }
         setBioRevoked(true);
         if (!auto) setError(t("auth.bioTurnedOff"));
@@ -405,9 +405,9 @@ export function ScreenUnlock() {
         const streak = recordBioFailure(user.id);
         if (streak >= BIO_TROUBLE_THRESHOLD) setBioTrouble(true);
       }
-      if (err instanceof BioCancelledError) return; // user dismissed — quiet reset
+      if (err instanceof BioCancelledError) return; // user dismissed - quiet reset
       // A silent auto-attempt that the browser blocked for want of a gesture
-      // must NOT show a scary error — the manual button is right there.
+      // must not show a scary error - the manual button is right there.
       if (!auto) setError(t("auth.bioDidntWork"));
     }
   }
@@ -497,7 +497,7 @@ export function ScreenAuth() {
   const [inviteCode, setInviteCode] = useState("");
   // Only a closed instance (SIGNUP_INVITE_CODE set) has a code to ask for; an
   // open one must not show a required field nobody can fill. /health says
-  // which — read through the app's ONE shared poll (useQuonHealth), never a
+  // which - read through the app's one shared poll (useQuonHealth), never a
   // request of this screen's own: the health-poll E2E counts them.
   const health = useQuonHealth().health;
   const inviteRequired = Boolean(health?.signup_invite_required);
@@ -511,10 +511,10 @@ export function ScreenAuth() {
   const [registeredActive, setRegisteredActive] = useState(false);
   const [step, setStep] = useState<"form" | "kit" | "sent">("form");
 
-  // Rendering on /join with a still-valid invite fragment in the URL — used to
+  // Rendering on /join with a still-valid invite fragment in the URL - used to
   // tell a registering invitee what happens next (they leave for email verify,
   // then come back here automatically). Read directly off the URL rather than
-  // the pendingJoin stash so this reflects what's ACTUALLY in the address bar
+  // the pendingJoin stash so this reflects what's actually in the address bar
   // right now, not a side effect of it.
   const isJoinInvite =
     typeof window !== "undefined" &&
@@ -546,7 +546,7 @@ export function ScreenAuth() {
   }
 
   /** Kit acknowledged on an instance without e-mail verification: the password
-   *  is still in memory, so sign in right here — that is also what derives the
+   *  is still in memory, so sign in right here - that is also what derives the
    *  keys the app needs. On an error the form comes back with the message. */
   async function finishActiveRegistration() {
     setBusy(true);
@@ -623,7 +623,7 @@ export function ScreenAuth() {
         ) : (
           <>
             {/* Registration fake-succeeds for an already-taken email (enumeration
-                defense, see auth.py) — this copy must read identically whichever
+                defense, see auth.py) - this copy must read identically whichever
                 branch actually fired, so it covers both without hinting which one
                 happened. Otherwise an existing user is left waiting forever for an
                 email that will never arrive, holding a now-dead recovery phrase. */}

@@ -2,12 +2,12 @@
  * Auth + session state, shared across the app via useSyncExternalStore.
  *
  * State machine:
- *   loading     — checking the session on boot
- *   anonymous   — no session (show login / register)
- *   locked      — valid session but the Master Key isn't in memory (needs password)
- *   ready       — session + Master Key unlocked; the app can encrypt/decrypt
- *   unreachable — couldn't reach QUON on boot (network / server error / timeout).
- *                 NOT the same as anonymous: the session may well be valid, we just
+ *   loading     - checking the session on boot
+ *   anonymous   - no session (show login / register)
+ *   locked      - valid session but the Master Key isn't in memory (needs password)
+ *   ready       - session + Master Key unlocked; the app can encrypt/decrypt
+ *   unreachable - couldn't reach QUON on boot (network / server error / timeout).
+ *                 not the same as anonymous: the session may well be valid, we just
  *                 can't confirm it. The Master Key is kept so a retry resumes
  *                 straight to ready/locked instead of forcing a full re-login.
  *
@@ -57,8 +57,8 @@ function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
 
 /**
  * Classify a failure of the boot `me()` check. Only a genuine 401/403 means the
- * session is gone (→ re-login). Everything else — a fetch TypeError, a 5xx, or
- * our own timeout — means we simply couldn't reach QUON, and must NOT trigger a
+ * session is gone (-> re-login). Everything else - a fetch TypeError, a 5xx, or
+ * our own timeout - means we simply couldn't reach QUON, and must not trigger a
  * silent logout. Pure + exported so the fail-closed rule is unit-tested directly.
  */
 export function classifyBootError(e: unknown): "anonymous" | "unreachable" {
@@ -70,8 +70,8 @@ export function classifyBootError(e: unknown): "anonymous" | "unreachable" {
 interface AuthState {
   status: AuthStatus;
   user: MeResponse | null;
-  /** True when this state was reached WITHOUT the server: the shell renders
-   *  from the offline bundle and the encrypted local caches. Read-mostly mode —
+  /** True when this state was reached without the server: the shell renders
+   *  from the offline bundle and the encrypted local caches. Read-mostly mode -
    *  sending is already fail-closed elsewhere; a reconnect watcher upgrades to
    *  a real session as soon as the network returns. */
   offline: boolean;
@@ -79,7 +79,7 @@ interface AuthState {
 
 let state: AuthState = { status: "loading", user: null, offline: false };
 let masterKey: Uint8Array | null = null;
-// X25519 identity keypair for Shared Projects — unwrapped from the login/me
+// X25519 identity keypair for Shared Projects - unwrapped from the login/me
 // response (identity_priv_wrapped) under the MK; memory-only, like the MK's
 // derived keys. Restored on every boot from the server response, so it needs
 // no at-rest cache of its own.
@@ -92,7 +92,7 @@ function emit() {
 }
 
 function set(patch: Partial<AuthState>) {
-  // `offline` is sticky only within an explicit offline transition — any state
+  // `offline` is sticky only within an explicit offline transition - any state
   // change that doesn't say otherwise means we talked to the server.
   state = { ...state, offline: false, ...patch };
   emit();
@@ -104,7 +104,7 @@ function setMasterKey(mk: Uint8Array | null) {
   if (mk) {
     void qc.persistMasterKey(mk);
     // Unlock the at-rest encryption of the local caches (chat history,
-    // Memory/Documents, preferences) — stores deferred loading until now.
+    // Memory/Documents, preferences) - stores deferred loading until now.
     setLocalCacheKey(qc.deriveLocalCacheKey(mk));
   } else {
     qc.clearPersistedMasterKey();
@@ -119,7 +119,7 @@ function setMasterKey(mk: Uint8Array | null) {
 /** Unwrap and hold the account's identity private key when a server response
  *  carries identity material (registered once via ensureIdentity, then returned
  *  by login/me). A blob that doesn't open under this MK (corrupt or foreign) is
- *  treated as absent — the share flows re-register or fail loudly later; the
+ *  treated as absent - the share flows re-register or fail loudly later; the
  *  login/unlock itself must never break on it. */
 function installIdentity(user: MeResponse | null, mk: Uint8Array): qc.IdentityKeypair | null {
   if (!user?.identity_pub || !user.identity_priv_wrapped) return null;
@@ -140,7 +140,7 @@ export function getMasterKey(): Uint8Array | null {
 }
 
 /** The current account's user id (any non-anonymous state), or null. Used for
- *  per-user device-local markers like the agent-runner opt-in — a synchronous,
+ *  per-user device-local markers like the agent-runner opt-in - a synchronous,
  *  non-hook accessor (mirrors getMasterKey). */
 export function getActiveUserId(): string | null {
   return state.user?.id ?? null;
@@ -172,9 +172,9 @@ export function useAuth(): AuthState {
 }
 
 /** Called once on app boot (and by the "retry" action) to resolve the initial
- *  state. Distinguishes a genuine "no session" (401/403 → anonymous, re-login)
- *  from the server being unreachable (network error / 5xx / timeout →
- *  `unreachable`, keep the Master Key and offer a retry). It must NEVER silently
+ *  state. Distinguishes a genuine "no session" (401/403 -> anonymous, re-login)
+ *  from the server being unreachable (network error / 5xx / timeout ->
+ *  `unreachable`, keep the Master Key and offer a retry). It must never silently
  *  wipe the session just because the scrubber is momentarily down. */
 export async function initAuth(): Promise<void> {
   set({ status: "loading" });
@@ -183,7 +183,7 @@ export async function initAuth(): Promise<void> {
     me = await withTimeout(authApi.me(), BOOT_TIMEOUT_MS);
   } catch (e) {
     if (classifyBootError(e) === "anonymous") {
-      // The session is genuinely gone → re-login; the persisted key is now stale.
+      // The session is genuinely gone -> re-login; the persisted key is now stale.
       setMasterKey(null);
       set({ status: "anonymous", user: null });
     } else if (!(await enterOfflineFromBoot())) {
@@ -210,7 +210,7 @@ export async function initAuth(): Promise<void> {
 }
 
 /** The offline bundle's profile, shaped like the /auth/me response the rest of
- *  the app expects. Labels the UI only — no security decision hangs on it. */
+ *  the app expects. Labels the UI only - no security decision hangs on it. */
 function offlineUser(b: OfflineBundle): MeResponse {
   return {
     id: b.user.id,
@@ -223,7 +223,7 @@ function offlineUser(b: OfflineBundle): MeResponse {
 }
 
 /** Boot with no server: resume unlocked if the tab still holds the Master Key,
- *  otherwise land on the (offline-capable) unlock screen — the cached key
+ *  otherwise land on the (offline-capable) unlock screen - the cached key
  *  material lets unlock()/biometric work without a round trip. Returns false
  *  when nothing is cached, and the caller falls back to the retry screen. */
 async function enterOfflineFromBoot(): Promise<boolean> {
@@ -243,7 +243,7 @@ async function enterOfflineFromBoot(): Promise<boolean> {
 }
 
 /** While offline, quietly try to reach the server again (browser `online`
- *  event + a slow interval) and upgrade in place — WITHOUT bouncing the UI
+ *  event + a slow interval) and upgrade in place - without bouncing the UI
  *  through `loading`. A 401/403 on reconnect means the session expired while
  *  we were away: honest logout, exactly as if it had happened online. */
 let reconnectTimer: ReturnType<typeof setInterval> | null = null;
@@ -272,7 +272,7 @@ function watchForReconnect(): void {
         setMasterKey(null);
         set({ status: "anonymous", user: null });
       }
-      /* still unreachable — stay offline, try again later */
+      /* still unreachable - stay offline, try again later */
     }
   };
   const stopWatching = () => {
@@ -316,7 +316,7 @@ export async function unlock(password: string): Promise<void> {
   try {
     km = await authApi.keymaterial();
   } catch (e) {
-    // No server in reach (a 401 means the session died — that must surface,
+    // No server in reach (a 401 means the session died - that must surface,
     // not silently degrade): unlock against the cached key material instead.
     // The password proves ownership locally; the server was never part of the
     // MK derivation anyway (zero-knowledge).
@@ -335,15 +335,15 @@ export async function unlock(password: string): Promise<void> {
 }
 
 // --- biometric unlock (WebAuthn PRF) ---------------------------------------
-// wrap_bio = secretbox(MK, KDF(prfOutput, "quonbio0")) — a third wrap of the
+// wrap_bio = secretbox(MK, KDF(prfOutput, "quonbio0")) - a third wrap of the
 // same MK, so it survives password changes exactly like the recovery phrase
 // does (the Settings card says so; "Turn off" is the explicit revoke).
 
-/** Enroll THIS device for biometric unlock. Requires `ready` (the MK is
+/** Enroll this device for biometric unlock. Requires `ready` (the MK is
  *  wrapped). Create-then-get: several platforms (notably iOS) return PRF
  *  results only on get(), so after create + prf.enabled check we run one
- *  immediate assertion — the user confirms twice, the card copy warns.
- *  Throws BioPrfUnavailableError (fail honest — nothing enrolled) and
+ *  immediate assertion - the user confirms twice, the card copy warns.
+ *  Throws BioPrfUnavailableError (fail honest - nothing enrolled) and
  *  BioCancelledError (caller resets silently). */
 export async function enrollBiometric(): Promise<void> {
   const mk = getMasterKey();
@@ -363,7 +363,7 @@ export async function enrollBiometric(): Promise<void> {
 
 /** Unlock from `locked` with the device biometric. `km` is prefetched by
  *  ScreenUnlock so credentials.get() runs inside the click's transient
- *  activation (Safari requirement) — no network before the prompt. Mirrors
+ *  activation (Safari requirement) - no network before the prompt. Mirrors
  *  unlock() exactly once the MK is recovered. */
 export async function unlockWithBiometric(credentialId: string, km: BioKeyMaterial): Promise<void> {
   const prfOutput = await evalPrf(credentialId, qc.base64ToBytes(km.prf_salt));
@@ -371,13 +371,13 @@ export async function unlockWithBiometric(credentialId: string, km: BioKeyMateri
   const mk = await qc.unlockMasterKeyBio(km.wrap_bio, bioWrapKey);
   setMasterKey(mk);
   installIdentity(state.user, mk);
-  // The PRF ceremony is fully local — if the km came from the offline cache
+  // The PRF ceremony is fully local - if the km came from the offline cache
   // (ScreenUnlock's fallback), this stays an offline unlock.
   set({ status: "ready", offline: state.offline });
 }
 
 /** Turn biometric unlock off for this device: server row + local marker. The
- *  OS-level passkey can't be removed programmatically — the card copy points
+ *  OS-level passkey can't be removed programmatically - the card copy points
  *  the user at their device's password settings. */
 export async function disableBiometric(): Promise<void> {
   if (!state.user) return;
@@ -388,7 +388,7 @@ export async function disableBiometric(): Promise<void> {
 }
 
 /** Make sure this account has an X25519 identity keypair for Shared Projects
- *  and return its public key. Lazy — called by the share/accept flows, never at
+ *  and return its public key. Lazy - called by the share/accept flows, never at
  *  login, so accounts that don't share pay nothing. The first call generates a
  *  keypair, wraps the private key under the MK and registers it (set-once);
  *  a 409 means another tab/device won the race, so theirs is canonical and we
@@ -411,7 +411,7 @@ export async function ensureIdentity(): Promise<{ pub: Uint8Array }> {
     return { pub: fresh.pub };
   } catch (e) {
     if (!(e instanceof ApiError) || e.status !== 409) throw e;
-    // Lost the set-once race — fetch the winning identity and unwrap it.
+    // Lost the set-once race - fetch the winning identity and unwrap it.
     const me = await authApi.me();
     set({ user: me });
     const adopted = installIdentity(me, mk);
@@ -463,7 +463,7 @@ export async function registerAccount(
  *  the password unlocks the Master Key. */
 export async function verifyEmail(token: string): Promise<MeResponse> {
   const me = await authApi.verify(token);
-  captureEligibility(me.onboarding_pending); // one-shot signal — see onboardingStore.ts
+  captureEligibility(me.onboarding_pending); // one-shot signal - see onboardingStore.ts
   set({ status: "locked", user: me });
   return me;
 }
@@ -505,14 +505,14 @@ export async function recoverWithPhrase(
 
 /** Change the password from within a `ready` session. Proves the current password
  *  (server-side verifier check), then re-wraps the UNCHANGED Master Key under the
- *  new one — so synced data stays decryptable and the recovery phrase keeps
+ *  new one - so synced data stays decryptable and the recovery phrase keeps
  *  working. This session survives; the server invalidates all other sessions. */
 export async function changePassword(current: string, next: string): Promise<void> {
   const mk = getMasterKey();
   if (!mk) throw new Error("Unlock QUON first to change your password.");
   const km = await authApi.keymaterial();
   // authToken derived from the CURRENT password + current salt = what the server
-  // stored; a wrong current password produces a non-matching token → server 403.
+  // stored; a wrong current password produces a non-matching token -> server 403.
   const { authToken: currentAuthToken } = await qc.deriveAuth(current, km.kdf_salt, km.kdf_params);
   const rewrap = await qc.rewrapForPassword(mk, next);
   await authApi.changePassword({
@@ -526,8 +526,8 @@ export async function changePassword(current: string, next: string): Promise<voi
 
 /**
  * Rotate the recovery phrase (the "I lost my written-down phrase" path): the
- * OLD phrase was never stored anywhere — that is the ZK point — so the only
- * honest remedy is generating a NEW one while unlocked. Verifies the current
+ * OLD phrase was never stored anywhere - that is the ZK point - so the only
+ * honest remedy is generating a new one while unlocked. Verifies the current
  * password server-side (a hijacked session alone must not be able to brick or
  * take over recovery), swaps rec_salt/wrap_rec atomically, and returns the new
  * 12 words for one-time display. MK, password and sessions stay untouched.
@@ -541,7 +541,7 @@ export async function rotateRecoveryPhrase(currentPassword: string): Promise<str
     km.kdf_salt,
     km.kdf_params,
   );
-  // MUST derive with the account's stored params — see buildRecoveryRotation.
+  // Must derive with the account's stored params - see buildRecoveryRotation.
   const rotation = await qc.buildRecoveryRotation(mk, km.kdf_params);
   await authApi.rotateRecovery({
     current_auth_token: currentAuthToken,
@@ -571,22 +571,22 @@ export async function deleteAccount(password: string): Promise<void> {
   const { authToken } = await qc.deriveAuth(password, km.kdf_salt, km.kdf_params);
   await authApi.deleteAccount(authToken);
   // Server rows are gone via cascade; drop this device's marker too. Markers on
-  // OTHER devices self-heal through the GET /auth/bio 404 path.
+  // Other devices self-heal through the GET /auth/bio 404 path.
   if (state.user) clearBioMarker(state.user.id);
   setMasterKey(null);
   set({ status: "anonymous", user: null });
 }
 
-/** Handles a 401 surfaced by any authenticated call made AFTER boot (chat/scrub/
- *  relay — see quonApi.ts's `setUnauthorizedHandler`). This is the same
+/** Handles a 401 surfaced by any authenticated call made after boot (chat/scrub/
+ *  relay - see quonApi.ts's `setUnauthorizedHandler`). This is the same
  *  conclusion `classifyBootError` reaches for a boot-time 401: the session is
  *  genuinely gone (expired, revoked, account deleted elsewhere), never a network
- *  hiccup — a fetch-level failure or 5xx throws a plain QuonError with no
+ *  hiccup - a fetch-level failure or 5xx throws a plain QuonError with no
  *  `status`, so `isUnauthorizedError` (and therefore this) only fires on a real
  *  401. Transitions straight to `anonymous` so the UI shows the sign-in screen
- *  instead of every subsequent call failing with a misleading error (report #5,
- *  2026-07-15 UX walkthrough). A no-op once already anonymous/loading, so a
- *  burst of concurrent 401s (scrub + relay both in flight) doesn't re-fire.
+ *  instead of every subsequent call failing with a misleading error. A no-op
+ *  once already anonymous/loading, so a burst of concurrent 401s (scrub + relay
+ *  both in flight) doesn't re-fire.
  */
 function handleUnauthorized(): void {
   if (state.status === "anonymous" || state.status === "loading") return;

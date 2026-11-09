@@ -8,7 +8,7 @@ import base64
 
 from conftest import b64, make_active_user
 
-AUTH = b"A" * 32  # make_active_user's default auth token — lets us re-login
+AUTH = b"A" * 32  # make_active_user's default auth token - lets us re-login
 
 
 def _login(client, email):
@@ -127,7 +127,7 @@ def test_share_create_and_duplicate_409(quon_client):
             "owner": True,
             "member_count": 1,
             "created_at": shares[0]["created_at"],
-            # the caller's own grant ciphertext — fresh devices restore the PK from it
+            # the caller's own grant ciphertext - fresh devices restore the PK from it
             "sealed_pk": b64(b"S" * 80),
         }
     ]
@@ -142,7 +142,7 @@ def test_invite_accept_happy_path(quon_client):
     assert mine[0]["role"] == "reader" and mine[0]["owner"] is False
     assert mine[0]["member_count"] == 2
 
-    # Any member sees the member list (emails included — accepted v1 scope).
+    # Any member sees the member list (emails included - accepted v1 scope).
     members = c.get("/shares/p1/members").json()["members"]
     assert {(m["email"], m["role"]) for m in members} == {
         ("own@x.de", "owner"),
@@ -226,7 +226,7 @@ def test_accept_bad_tokens_are_uniform_400(quon_client):
         _accept(c, h_b, "nonexistent-id.some-secret"),
         _accept(c, h_b, f"{real_id}.wrong-secret"),  # valid id, wrong secret
     ]
-    # Uniform failure — no oracle about ids, secrets, or project existence.
+    # Uniform failure - no oracle about ids, secrets, or project existence.
     assert {r.status_code for r in responses} == {400}
     assert len({r.json()["detail"] for r in responses}) == 1
 
@@ -250,7 +250,7 @@ def test_changes_and_blob_require_grant(quon_client):
     r = c.get("/sync/blob", params={"collection": "memory", "id": "m1", "project_id": "p1"})
     assert r.status_code == 200
 
-    # Non-members get 404 on both — indistinguishable from a nonexistent project.
+    # Non-members get 404 on both - indistinguishable from a nonexistent project.
     make_active_user(c, "nm@x.de")
     for pid in ("p1", "no-such-project"):
         assert (
@@ -324,7 +324,7 @@ def test_per_project_seq_isolation(quon_client):
     _share(c, h, "pA")
     _share(c, h, "pB")
 
-    # Personal blob first — bumps the PERSONAL stream only.
+    # Personal blob first - bumps the PERSONAL stream only.
     _push(c, h, [{"collection": "chat", "id": "c1", "ciphertext": b64(b"x"), "updated_at": 1}])
 
     r = _push(c, h, [_blob("pA", "a1", b"a"), _blob("pB", "b1", b"b"), _blob("pA", "a2", b"a2")])
@@ -357,7 +357,7 @@ def test_shared_originals_count_against_owner_quota(quon_client, monkeypatch):
     r = _push(c, h, [_blob("p1", "orig:d1:0", b"S" * 60, collection="originals")])
     assert r.json()["results"][0]["status"] == "accepted"
 
-    # Personal push now sees the 60 shared bytes → 60 + 60 > 100 → quota.
+    # Personal push now sees the 60 shared bytes -> 60 + 60 > 100 -> quota.
     r = _push(
         c,
         h,

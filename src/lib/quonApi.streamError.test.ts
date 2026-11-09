@@ -6,10 +6,10 @@ import { chatStream, StreamPayloadError } from "./quonApi";
 import { isTransportFailure } from "./streamResume";
 
 /**
- * Feedback #84: OpenRouter answered 401 to the real chat call; the server
- * forwarded it as an `{error}` event inside a 200 stream. That event must
- * surface as the provider's answer — not be mistaken for a dropped socket and
- * resumed into "Verbindung verloren".
+ * When OpenRouter answers 401 to the real chat call, the server forwards it as
+ * an `{error}` event inside a 200 stream. That event must surface as the
+ * provider's answer - not be mistaken for a dropped socket and resumed into
+ * "Verbindung verloren".
  */
 function sse(events: object[]): Response {
   const body = events.map((e) => `data: ${JSON.stringify(e)}\n\n`).join("");
@@ -20,7 +20,7 @@ afterEach(() => {
   provideHttp({ unrestricted: false, fetch: (...a) => globalThis.fetch(...a) });
 });
 
-describe("chatStream — an {error} event in the stream", () => {
+describe("chatStream: an {error} event in the stream", () => {
   it("throws a StreamPayloadError carrying the provider's message, which is never resumed", async () => {
     const detail =
       "The AI provider rejected this account's API key. If you added your own key, check it under Settings → Providers.";
@@ -54,7 +54,7 @@ describe("chatStream — an {error} event in the stream", () => {
     );
     await expect(run).rejects.toBeInstanceOf(StreamPayloadError);
     await expect(run).rejects.toThrow(detail);
-    // The job id and offset WERE known — exactly the state in which the old
+    // The job id and offset were known - exactly the state in which the old
     // classifier chose to resume instead of surfacing the error.
     expect(jobId).toBe("j84");
     expect(applied).toBe(1);

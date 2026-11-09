@@ -1,7 +1,7 @@
 """Lightweight in-process rate limiting for ``/auth/*`` (brute-force / abuse guard).
 
 Fixed-window per-client-IP counters, no external dependency. Single-container
-scope (state resets on restart) — enough to blunt credential stuffing, signup
+scope (state resets on restart) - enough to blunt credential stuffing, signup
 abuse (each signup can mint a $5 sub-key) and password-reset flooding for the beta.
 
 Client IP comes from ``CF-Connecting-IP`` (set by Cloudflare, not spoofable for
@@ -46,18 +46,18 @@ _RULES: list[tuple[str, int, int]] = [
     # SSRF-probe / fetch-amplification loop.
     ("/fetch-url", 60, 3600),
     # Link previews: one call per web-search answer, each fanning out to a few
-    # public pages — bounds using the instance as a scraping amplifier.
+    # public pages - bounds using the instance as a scraping amplifier.
     ("/link-previews", 60, 3600),
     # Preview-image proxy: several per answer, and browsers cache them; the cap
     # bounds using the instance as an open image relay.
     ("/link-image", 300, 3600),
     # MCP tool proxy: consented tool calls during chats plus tools/list
-    # discovery — generous, but bounds a runaway loop.
+    # discovery - generous, but bounds a runaway loop.
     ("/mcp/", 120, 60),
     ("/admin/", 60, 60),
     # Beta feedback: user-clicked; bounds a spam/email-amplification loop.
     ("/feedback", 10, 3600),
-    # Agents CRUD + results polling (on app-open) — user-scoped, low frequency.
+    # Agents CRUD + results polling (on app-open) - user-scoped, low frequency.
     ("/agents", 120, 60),
 ]
 

@@ -2,7 +2,7 @@
  * Cross-language parity for the redaction span matcher.
  *
  * The fixture is generated FROM the backend's `scrubber.find_spans`, which is the
- * authority — a hand-redaction is enforced by the backend, so a client that
+ * authority - a hand-redaction is enforced by the backend, so a client that
  * disagrees either promises a redaction that never happens (fail-open) or blocks
  * a send that would have been fine. `tests/test_find_spans_parity.py` asserts the
  * same file from the Python side, so the two can only drift by breaking a test.
@@ -31,7 +31,7 @@ describe("findSpansJs matches the backend, case by case", () => {
     expect(names).toContain("umlaut");
     expect(names).toContain("underscore");
     // These are the cases that DISCRIMINATE Unicode word-chars from ASCII \w.
-    // Without them the suite passes with the wrong matcher — it did.
+    // Without them the suite passes with the wrong matcher - it did.
     expect(names).toContain("umlaut BEFORE");
     expect(names).toContain("umlaut AFTER");
     expect(names).toContain("value starting with an umlaut");
@@ -49,12 +49,12 @@ describe("the divergences that would otherwise be silent", () => {
     // JS `\w` is ASCII-only: with it, "Öl" would appear to occur inside "Größe"
     // and the client would promise a redaction the backend never makes.
     expect(findSpansJs("Größe der Kiste", "Öl")).toEqual([]);
-    // …but a real occurrence still matches.
+    // ...but a real occurrence still matches.
     expect(findSpansJs("Öl ist teuer", "Öl")).toEqual([[0, 2]]);
   });
 
   it("does not shift offsets on characters whose lowercase is longer", () => {
-    // "İ".toLowerCase() is 2 chars in JS — lowercasing both sides to compare
+    // "İ".toLowerCase() is 2 chars in JS - lowercasing both sides to compare
     // would corrupt every later offset.
     const text = `İstanbul und Anna`;
     const [span] = findSpansJs(text, "Anna");
@@ -67,7 +67,7 @@ describe("the divergences that would otherwise be silent", () => {
 });
 
 describe("normalizeRedactValue", () => {
-  it("trims and strips ONE layer of wrapping quotes", () => {
+  it("trims and strips one layer of wrapping quotes", () => {
     expect(normalizeRedactValue("  Anna  ")).toBe("Anna");
     expect(normalizeRedactValue('"Anna"')).toBe("Anna");
     expect(normalizeRedactValue("'Anna'")).toBe("Anna");
@@ -92,7 +92,7 @@ describe("occursIn", () => {
   });
 });
 
-describe("verifyRedactions — the fail-closed gate", () => {
+describe("verifyRedactions: the fail-closed gate", () => {
   it("returns null when every term was honoured", () => {
     expect(verifyRedactions("Hallo [PERSON_1], hier [CUSTOM_1]", ["Anna", "48213"])).toBeNull();
   });
@@ -107,7 +107,7 @@ describe("verifyRedactions — the fail-closed gate", () => {
   });
 
   it("does not false-positive on a term that only occurs inside a word", () => {
-    // "partner" was asked for, the text has "Vertragspartnerin" — the backend
+    // "partner" was asked for, the text has "Vertragspartnerin" - the backend
     // would not have redacted that, so blocking the send would be wrong.
     expect(verifyRedactions("Vertragspartnerin", ["partner"])).toBeNull();
   });
@@ -116,13 +116,13 @@ describe("verifyRedactions — the fail-closed gate", () => {
     expect(verifyRedactions("hallo anna", ["Anna"])).toBe("Anna");
   });
 
-  it("does NOT trip on a term that only occurs inside a placeholder", () => {
-    // A placeholder is the PROOF a value was redacted — but it is also text, so a
+  it("does not trip on a term that only occurs inside a placeholder", () => {
+    // A placeholder is the PROOF a value was redacted - but it is also text, so a
     // short term could plausibly match inside one and fail a send that was
     // correct. It doesn't, and the reason is the WORD-BOUNDARY rule, not any
     // special handling: "Person" in "[PERSON_1]" is followed by "_" (a word
     // character) and "1" is preceded by one. Asserted here because the mechanism
-    // is non-obvious — an earlier version "protected" this by stripping
+    // is non-obvious - an earlier version "protected" this by stripping
     // placeholders, and breaking that stripping showed these still passed, i.e.
     // the guard was never doing anything.
     expect(verifyRedactions("Hallo [PERSON_1], Betrag [FINANCIAL_AMOUNT_2]", ["1"])).toBeNull();

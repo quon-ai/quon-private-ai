@@ -4,11 +4,11 @@ import { login, sharedCreds } from "./helpers/account";
 
 // Photo-OCR affordance (PhotoScanDialog + the image routing in ScreenDocuments).
 // The OCR engine itself (PaddleOCR PP-OCRv6 tiny via ONNX WASM) downloads ~6 MB
-// of models from a CDN — deliberately NOT exercised here to keep the gate
-// hermetic; its quality/latency is covered by the 2026-07-06 eval (CER 0 on a
-// printed German letter, Chromium AND WebKit — research-2026-07-06.md §5) and
-// the pure seams are unit-tested (ocr.test.ts). This spec pins the UI contract:
-// images route into the review dialog (NEVER straight into the index — the
+// of models from a CDN - deliberately not exercised here to keep the gate
+// hermetic; its quality is measured separately (CER 0 on a printed German
+// letter, Chromium and WebKit) and the pure seams are unit-tested
+// (ocr.test.ts). This spec pins the UI contract:
+// images route into the review dialog (never straight into the index - the
 // transcript must be user-checked), and Cancel drops the photo without a trace.
 test("photos route into the scan-review dialog; Cancel leaves no document behind", async ({
   page,
@@ -26,7 +26,7 @@ test("photos route into the scan-review dialog; Cancel leaves no document behind
     .locator('input[type="file"][accept="image/*"]:not([capture])')
     .setInputFiles({ name, mimeType: "image/png", buffer: pngPixel() });
 
-  // The review dialog opens (in the model-preparing phase — no network needed)
+  // The review dialog opens (in the model-preparing phase - no network needed)
   // instead of the file landing in the document list.
   const dialog = page.getByRole("dialog");
   await expect(dialog.getByText("Scan photo")).toBeVisible({ timeout: 15_000 });
@@ -38,10 +38,10 @@ test("photos route into the scan-review dialog; Cancel leaves no document behind
   await expect(page.getByText(name)).toHaveCount(0);
 });
 
-// Multi-select from the gallery: picking several photos must scan ALL of them,
-// one review dialog after the other. The gallery input used to lack `multiple`,
-// so the browser handed over only the first file and the rest vanished without
-// a word. The position chip is what makes the queue visible to the user.
+// Multi-select from the gallery: picking several photos must scan all of them,
+// one review dialog after the other. Without `multiple` on the gallery input
+// the browser hands over only the first file and the rest vanish without a
+// word. The position chip is what makes the queue visible to the user.
 test("several gallery photos are reviewed one after another", async ({ page }) => {
   await login(page, sharedCreds());
   await page.goto("/documents");
@@ -70,9 +70,9 @@ test("several gallery photos are reviewed one after another", async ({ page }) =
 // The chat paperclip carries the same scan flow in attach mode: the reviewed
 // text becomes the message attachment (scrubbed before send like any other),
 // no document is created. The paperclip splits image capture into two entries:
-// "Take a photo" (a capture-enabled input → mobile camera) and "Scan from
-// gallery" (capture-free → existing photo); both feed the same review dialog.
-// Hermetic like the test above — Cancel before OCR.
+// "Take a photo" (a capture-enabled input -> mobile camera) and "Scan from
+// gallery" (capture-free -> existing photo); both feed the same review dialog.
+// Hermetic like the test above - Cancel before OCR.
 test("chat paperclip offers camera + gallery scan and opens the review dialog", async ({
   page,
 }) => {
@@ -99,10 +99,10 @@ test("chat paperclip offers camera + gallery scan and opens the review dialog", 
   await expect(page.getByText(name)).toHaveCount(0);
 });
 
-// #77/#78 (Android): "Bilder in jpg Format können nicht hochgeladen werden" —
-// the paperclip's "Attach a document" input had no image type in `accept`, so
-// the system picker greyed every photo out. A photo picked THERE must take the
-// same OCR review path as the camera/gallery entries, never extract.ts.
+// Android: "Bilder in jpg Format können nicht hochgeladen werden" - without an
+// image type in the paperclip's "Attach a document" `accept`, the system picker
+// greys every photo out. A photo picked there must take the same OCR review
+// path as the camera/gallery entries, never extract.ts.
 test("chat: a photo picked through 'Attach a document' opens the scan review, not a failed attach", async ({
   page,
 }) => {
@@ -120,15 +120,15 @@ test("chat: a photo picked through 'Attach a document' opens the scan review, no
   await dialog.getByRole("button", { name: "Cancel" }).click();
   await expect(page.getByRole("dialog")).toHaveCount(0, { timeout: 10_000 });
   await expect(page.getByText(name)).toHaveCount(0);
-  // …and it was never handed to the text extractor (that path's failure copy).
+  // ...and it was never handed to the text extractor (that path's failure copy).
   await expect(page.getByText(/Couldn't read that file|No readable text found/)).toHaveCount(0);
 });
 
-// Cloud escalation (hybrid tier): the fallback is strictly opt-in — an explicit
+// Cloud escalation (hybrid tier): the fallback is strictly opt-in - an explicit
 // consent step must sit between "try the cloud model" and any network call, and
 // the header chip must stop claiming "never leaves this device" afterwards.
 // Hermetic: the on-device engine is forced into its error phase by blocking the
-// model CDNs, and /ocr/cloud is mocked at the network layer — no real OCR, no
+// model CDNs, and /ocr/cloud is mocked at the network layer - no real OCR, no
 // real provider.
 test("cloud escalation needs explicit consent and updates the privacy chip", async ({ page }) => {
   await login(page, sharedCreds());
@@ -175,7 +175,7 @@ test("cloud escalation needs explicit consent and updates the privacy chip", asy
     timeout: 60_000,
   });
 
-  // Offer → consent (no network yet) → send.
+  // Offer -> consent (no network yet) -> send.
   await dialog.getByRole("button", { name: /Try the cloud model/i }).click();
   await expect(dialog.getByText(/Zero-data-retention/)).toBeVisible();
   expect(cloudCalls).toBe(0); // consent shown, nothing sent yet
@@ -192,7 +192,7 @@ test("cloud escalation needs explicit consent and updates the privacy chip", asy
   await expect(page.getByRole("dialog")).toHaveCount(0, { timeout: 10_000 });
 });
 
-/** An 8×8 canvas-generated PNG. NOT the classic hand-crafted 1×1 fixture —
+/** An 8x8 canvas-generated PNG. Not the classic hand-crafted 1x1 fixture -
  *  Chromium's strict ImageBitmap decoder rejects those bytes ("source image
  *  could not be decoded") even though <img> accepts them, and the cloud
  *  escalation path decodes via createImageBitmap before upload. */
@@ -205,12 +205,12 @@ function pngPixel(): Buffer {
 
 /**
  * "Ich will mehrere Screenshots anhängen" (reported): the chat paperclip's
- * gallery scan took exactly ONE photo, so three screenshots meant three
+ * gallery scan took exactly one photo, so three screenshots meant three
  * messages. They are now reviewed one after the other and staged as a SINGLE
- * attachment — one turn, one scrub-before-send pass.
+ * attachment - one turn, one scrub-before-send pass.
  *
  * Hermetic: the OCR engine is never reached (its CDNs aren't available in the
- * gate), so this pins the queue behaviour — the position chip counts up and
+ * gate), so this pins the queue behaviour - the position chip counts up and
  * cancelling a photo advances to the next instead of ending the batch.
  */
 test("the chat paperclip scans several gallery photos in one batch", async ({ page }) => {
@@ -233,7 +233,7 @@ test("the chat paperclip scans several gallery photos in one batch", async ({ pa
   const dialog = page.getByRole("dialog");
   await expect(dialog.getByText("Photo 1 of 3")).toBeVisible({ timeout: 20_000 });
 
-  // Cancelling one photo skips it and moves on — the batch is not aborted.
+  // Cancelling one photo skips it and moves on - the batch is not aborted.
   await dialog.getByRole("button", { name: "Cancel" }).click();
   await expect(dialog.getByText("Photo 2 of 3")).toBeVisible({ timeout: 20_000 });
   await dialog.getByRole("button", { name: "Cancel" }).click();
@@ -247,7 +247,7 @@ test("the chat paperclip scans several gallery photos in one batch", async ({ pa
 
 /**
  * "Take all N": reviewing five screenshots one by one is the cost this buys
- * out of. It is only offered INSIDE a batch and only while photos remain — on
+ * out of. It is only offered inside a batch and only while photos remain - on
  * a single photo there is nothing to skip, and offering an unreviewed shortcut
  * there would just weaken the review step for no gain.
  */
@@ -272,10 +272,10 @@ test("the take-all shortcut is offered only inside a batch", async ({ page }) =>
 });
 
 /**
- * Accepting a photo must advance the batch by EXACTLY one.
+ * Accepting a photo must advance the batch by exactly one.
  *
  * Regression: the dialog calls `onAttach` and then `onClose`, and the chat
- * wiring briefly advanced the queue in BOTH — so every accepted photo silently
+ * wiring briefly advanced the queue in both - so every accepted photo silently
  * swallowed the next one. The batch test above only cancelled, so it passed.
  *
  * Hermetic: the on-device engine is killed (CDNs blocked) and the mocked cloud
@@ -328,7 +328,7 @@ test("accepting a photo advances the batch by exactly one", async ({ page }) => 
   await dialog.getByRole("button", { name: "Send this photo" }).click();
   await expect(dialog.locator("textarea")).toHaveValue("BELEG NUMMER EINS", { timeout: 20_000 });
 
-  // Accept it: the batch must be on photo 2 — NOT on 3, and not finished.
+  // Accept it: the batch must be on photo 2 - not on 3, and not finished.
   await dialog.getByRole("button", { name: "Attach to message" }).click();
   await expect(dialog.getByText("Photo 2 of 3")).toBeVisible({ timeout: 30_000 });
 });

@@ -63,7 +63,7 @@ export function Section({
   );
 }
 
-/** A `[…]`-style placeholder the operator/lawyer must fill in before launch. */
+/** A `[...]`-style placeholder the operator/lawyer must fill in before launch. */
 export function Todo({ children }: { children: React.ReactNode }) {
   return (
     <span className="rounded bg-amber-500/15 px-1 py-0.5 font-medium text-amber-300">

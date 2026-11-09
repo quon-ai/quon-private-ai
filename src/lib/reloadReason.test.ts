@@ -1,5 +1,5 @@
 /** Reload attribution: the "black flash" instrumentation. The load-bearing
- *  case: a RELOAD navigation with no marker produces the UNEXPLAINED line —
+ *  case: a RELOAD navigation with no marker produces the UNEXPLAINED line -
  *  that's the webview-was-killed signal we're hunting. */
 import { beforeEach, afterEach, describe, expect, it, vi } from "vitest";
 

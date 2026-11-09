@@ -1,8 +1,8 @@
-"""A user's own OpenRouter key is verified before it is stored (#84, #91).
+"""A user's own OpenRouter key is verified before it is stored.
 
-Two beta users pasted a key from another vendor; the override wins over the
-provisioned sub-key, so every chat failed with OpenRouter's misleading
-"Missing Authentication header" until they removed it.
+Users paste keys from other vendors; the override wins over the provisioned
+sub-key, so every chat fails with OpenRouter's misleading "Missing
+Authentication header" until they remove it.
 """
 
 from __future__ import annotations
@@ -106,7 +106,7 @@ def test_endpoint_stores_a_verified_key_and_an_empty_body_clears_it(quon_client,
     )
     assert user_settings.get_openrouter_key(me["id"]) == "sk-or-v1-0000"
     # The settings read tells the caller an own key is in use (so the card can
-    # offer "remove") — presence only, never the key.
+    # offer "remove") - presence only, never the key.
     status = quon_client.get("/settings", headers=headers).json()
     assert status["own_openrouter_key"] is True
     assert "sk-or" not in str(status)

@@ -1,15 +1,15 @@
 /**
- * "Sources" strip under an answer that used web search — the citations the model
+ * "Sources" strip under an answer that used web search - the citations the model
  * actually reported (`url_citation` annotations, forwarded by the backend).
  *
- * Deliberately NO direct requests to the cited sites. The obvious implementations
+ * Deliberately no direct requests to the cited sites. The obvious implementations
  * (a favicon service, or an `<img src>` pointed straight at the merchant's
  * `og:image`) would tell every one of those sites the user's IP and that this
- * person just asked about them — exactly the passive leak QUON exists to avoid.
+ * person just asked about them - exactly the passive leak QUON exists to avoid.
  *
  * Preview pictures therefore come through the QUON server: it reads the public
  * page and re-serves the image bytes from our own origin (`/link-previews` +
- * `/link-image`, see quon-scrubber-service/link_preview.py — that endpoint is
+ * `/link-image`, see quon-scrubber-service/link_preview.py - that endpoint is
  * where the SSRF guard lives, since `og:image` is attacker-controlled input).
  * Best-effort throughout: no previews simply means the plain chips.
  */
@@ -60,7 +60,7 @@ export function mergePreviews(sources: WebSource[], previews: LinkPreview[]): Pr
 }
 
 /** Previews keyed by the answer's source set. Module-level, so scrolling a long
- *  chat — or leaving and coming back — never re-fetches the same previews.
+ *  chat - or leaving and coming back - never re-fetches the same previews.
  *
  *  The IN-FLIGHT promise is what gets cached, not just its result: two strips
  *  mounting in the same tick (and React's double-invoked effects in dev) would
@@ -88,7 +88,7 @@ export function SourcesStrip({ sources }: { sources: WebSource[] }) {
         if (!cancelled) setPreviews(p);
       })
       .catch(() => {
-        /* decoration only — the chips already carry the citation */
+        /* decoration only - the chips already carry the citation */
       });
     return () => {
       cancelled = true;

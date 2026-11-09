@@ -1,19 +1,19 @@
 /**
  * Crash-surviving diagnostic breadcrumbs (the "mein Bruder bekommt immer wieder
- * diesen Fehler" report, 2026-07-29).
+ * diesen Fehler" kind of report).
  *
- * iOS's "Auf … ist wiederholt ein Problem aufgetreten" screen means WebKit
+ * iOS's "Auf ... ist wiederholt ein Problem aufgetreten" screen means WebKit
  * killed the page PROCESS repeatedly (usually memory pressure / jetsam). No
- * JavaScript runs at that moment, so no handler can report the crash itself —
+ * JavaScript runs at that moment, so no handler can report the crash itself -
  * the honest best is breadcrumbs written SYNCHRONOUSLY to localStorage *before*
  * it, plus an on-next-launch marker that the previous session never shut down
  * cleanly. That is what this module provides; the user attaches it to feedback
  * ("Technisches Protokoll anhängen") with a visible preview.
  *
  * Privacy: plain localStorage on purpose (it must be readable/writable before
- * unlock and survive a crash mid-write). Only TECHNICAL strings are recorded —
+ * unlock and survive a crash mid-write). Only TECHNICAL strings are recorded -
  * error messages, stack heads, environment facts. Never chat/memory/document
- * content, and console.log/error are deliberately NOT wrapped (app logs could
+ * content, and console.log/error are deliberately not wrapped (app logs could
  * carry user data). Sending is consent-gated in the feedback dialog with the
  * full text shown.
  */
@@ -23,9 +23,9 @@ const ALIVE_KEY = "quon_diag_alive_v1";
 
 const MAX_ENTRIES = 40;
 const MAX_MSG_CHARS = 300;
-// 5 s, not 30: the iPhone crash loops (#68, #76) killed the page in under 30 s
-// every time, so every lifetime read "~0s" and the one number that could have
-// separated "dies at boot" from "dies after a minute" was lost. A localStorage
+// 5 s, not 30: an iPhone crash loop kills the page in under 30 s every time,
+// so with a 30 s refresh every lifetime reads "~0s" and the one number that
+// separates "dies at boot" from "dies after a minute" is lost. A localStorage
 // write every 5 s costs nothing measurable.
 const ALIVE_REFRESH_MS = 5_000;
 /** A session shorter than this that ended uncleanly counts towards a crash
@@ -58,7 +58,7 @@ function writeLog(entries: DiagEntry[]): void {
   try {
     localStorage.setItem(LOG_KEY, JSON.stringify(entries.slice(-MAX_ENTRIES)));
   } catch {
-    /* quota/private mode — diagnostics degrade, the app must not */
+    /* quota/private mode - diagnostics degrade, the app must not */
   }
 }
 
@@ -88,14 +88,14 @@ let installed = false;
  * unclean-shutdown marker. Idempotent; call once from the app shell.
  *
  * Marker semantics, stated honestly: pagehide clears it, so finding it on boot
- * means the last session ended WITHOUT a clean shutdown — a crash OR a
+ * means the last session ended without a clean shutdown - a crash OR a
  * force-close (iOS swiping a PWA away doesn't reliably fire pagehide). It is a
  * strong hint, not proof; the entry says so.
  */
 let sessionStart = 0;
-/** True when THIS boot followed an unclean shutdown (crash marker written).
+/** True when this boot followed an unclean shutdown (crash marker written).
  *  reloadReason.explainBoot() reads it: a boot line is only diagnostic in
- *  combination with that marker — see the export below. */
+ *  combination with that marker - see the export below. */
 let uncleanPrevious = false;
 
 /** Did the previous session end without a clean shutdown? Only meaningful
@@ -106,9 +106,9 @@ export function previousSessionWasUnclean(): boolean {
 
 let crashLoop = 0;
 
-/** How many boots in a row (this one included) followed a SHORT unclean
+/** How many boots in a row (this one included) followed a short unclean
  *  session. 0 after any session that lived past SHORT_SESSION_MS or ended
- *  cleanly. deviceClass.ts turns ≥ 2 into safe mode. Only meaningful after
+ *  cleanly. deviceClass.ts turns >= 2 into safe mode. Only meaningful after
  *  installDiagCapture() has run. */
 export function crashLoopCount(): number {
   return crashLoop;
@@ -140,11 +140,11 @@ export function installDiagCapture(): void {
     const prev = localStorage.getItem(ALIVE_KEY);
     if (prev) {
       uncleanPrevious = true;
-      // "start|lastAlive" since 2026-08-10 (bare lastAlive before that). The
-      // LIFETIME is the diagnostic payload: the black-flash report showed
-      // sessions dying every ~3 minutes like clockwork — a constant lifetime
-      // is the signature of a constant-rate leak (WebContent killed at a
-      // fixed memory ceiling), an irregular one points at external pressure.
+      // "start|lastAlive"; a bare lastAlive from an older build still reads.
+      // The lifetime is the diagnostic payload: sessions dying every ~3 minutes
+      // like clockwork is the signature of a constant-rate leak (WebContent
+      // killed at a fixed memory ceiling), an irregular lifetime points at
+      // external pressure.
       const [startRaw, lastRaw] = prev.includes("|") ? prev.split("|") : [prev, prev];
       const last = Number(lastRaw) || 0;
       const start = Number(startRaw) || last;
@@ -154,7 +154,7 @@ export function installDiagCapture(): void {
           `zuletzt aktiv ${new Date(last).toISOString()}, Lebensdauer ~${lived}s`,
       );
       // A short unclean session extends the loop; a long one breaks it (the
-      // page lived — whatever killed it was not the boot).
+      // page lived - whatever killed it was not the boot).
       if (lived * 1000 < SHORT_SESSION_MS) {
         writeCrashLoop(readCrashLoop() + 1);
         if (crashLoop >= 2) {
@@ -190,11 +190,10 @@ export function installDiagCapture(): void {
     }
   });
 
-  // #68: the two iPhone "Fehler beim Senden" logs showed sessions dying
-  // every few seconds with NO event between the boots. On iOS a PWA that is
-  // backgrounded, restored from bfcache, or loses the network mid-send fails
-  // in ways that are invisible unless the lifecycle itself is recorded.
-  // Facts only — state names and booleans, never content.
+  // A crash log with nothing between the boots cannot say what the page was
+  // doing. On iOS a PWA that is backgrounded, restored from bfcache, or loses
+  // the network mid-send fails in ways that are invisible unless the lifecycle
+  // itself is recorded. Facts only - state names and booleans, never content.
   document.addEventListener("visibilitychange", () => {
     diagAppend(`lifecycle: visibility=${document.visibilityState} online=${navigator.onLine}`);
   });
@@ -220,7 +219,7 @@ export function installDiagCapture(): void {
 }
 
 /** The full report as plain text (environment header + entries), or "" when
- *  nothing has been recorded — the feedback dialog hides the option then. */
+ *  nothing has been recorded - the feedback dialog hides the option then. */
 export function getDiagReport(): string {
   if (typeof window === "undefined") return "";
   const log = readLog();

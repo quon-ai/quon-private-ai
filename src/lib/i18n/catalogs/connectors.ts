@@ -1,6 +1,6 @@
 /**
  * "connectors" namespace UI strings. Keys are prefixed `connectors.*`. Keep
- * `en` and `de` in sync — a missing German key is a compile error via
+ * `en` and `de` in sync - a missing German key is a compile error via
  * catalog.ts's typing.
  *
  * Covers: ScreenConnectors (generic card chrome) + per-connector strings.
@@ -18,7 +18,7 @@ export const connectors = {
     "connectors.moreIntro":
       "Not document sources: a calendar feeds your daily briefing, and your own tool servers add tools to the chat.",
 
-    // Generic card strings (fallbacks — connectors may override via ui keys)
+    // Generic card strings (fallbacks - connectors may override via ui keys)
     "connectors.connect": "Connect",
     "connectors.reimport": "Re-import",
     "connectors.disconnect": "Disconnect",
@@ -37,7 +37,7 @@ export const connectors = {
     "connectors.browse.importSelected": "Import selected ({count})",
     "connectors.browse.importing": "Importing…",
 
-    // Remote document picker (chat paperclip → live source, e.g. Paperless)
+    // Remote document picker (chat paperclip -> live source, e.g. Paperless)
     "connectors.picker.title": "Attach from {name}",
     "connectors.picker.searchPlaceholder": "Search documents…",
     "connectors.picker.hint":

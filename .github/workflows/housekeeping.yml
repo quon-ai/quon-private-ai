@@ -1,25 +1,25 @@
 name: Housekeeping
 
-# Keep CI's own leftovers bounded, so they can never again break CI.
+# Keep CI's own leftovers bounded, so they cannot break CI.
 #
-# They already did, twice on 2026-08-16, and both times the symptom pointed
-# somewhere else entirely:
-#   - 14 GB of pip cache on the runner (also the production box, 83% full),
-#     which `cache: pip` then tried to upload at 1.2 MB/s until the Backend job
-#     died on its timeout — every run, for two days.
-#   - 174 MB of Playwright reports, uploaded after every GREEN run, until
-#     "Artifact storage quota has been hit" turned a passing E2E suite into a
-#     red job. A storage problem manufacturing a test verdict.
+# Two kinds of leftover do that, and both times the symptom points somewhere
+# else entirely:
+#   - a runner-side cache that grows by gigabytes, which `cache: pip` then
+#     tries to upload over a slow uplink until the job dies on its timeout,
+#     every run;
+#   - Playwright reports uploaded after every green run, until "Artifact
+#     storage quota has been hit" turns a passing E2E suite into a red job. A
+#     storage problem manufacturing a test verdict.
 #
-# Both were fixed at the source (no cache round-trips on the self-hosted runner;
+# Both are fixed at the source (no cache round-trips on the self-hosted runner;
 # the report uploads only on failure). This is the second line: caps that hold
-# even when a future change starts producing junk again. Bounded by COUNT, not
-# by age — the pip cache proved an age rule useless when 14 GB accrues in under
-# two weeks.
+# even when a future change starts producing junk again. Bounded by count, not
+# by age: gigabytes accrue in days, so an age rule finds every file "recent"
+# and deletes nothing.
 #
 # runs-on: ubuntu-latest, hardcoded, like ci-heartbeat.yml. Housekeeping that
 # only runs when the machine being kept clean is healthy is not housekeeping.
-# It is API calls only — seconds of hosted time.
+# It is API calls only - seconds of hosted time.
 
 on:
   schedule:

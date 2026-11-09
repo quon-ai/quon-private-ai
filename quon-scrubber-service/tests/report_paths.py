@@ -1,4 +1,4 @@
-"""Where eval reports get written — and why it is not simply "next to the tests".
+"""Where eval reports get written - and why it is not simply "next to the tests".
 
 The reports (REPORT.md, CORPUS_REPORT.md, reports/HISTORY.md) are *tracked*, and
 the test suite rewrote them on every run. That looked harmless and was not:
@@ -6,8 +6,8 @@ the test suite rewrote them on every run. That looked harmless and was not:
     pytest  ->  tracked file changes
             ->  `git status` is dirty
             ->  deploy/tree-fingerprint.sh hashes a different tree
-            ->  every .claude/.preflight-ok stamp is invalidated
-            ->  deploy/ci-gate.sh's clean-tree requirement can never be met
+            ->  every .preflight-ok stamp is invalidated
+            ->  the deploy gate's clean-tree requirement can never be met
 
 i.e. running the gate destroyed the gate's own output, and the deploy path was
 unsatisfiable while looking like a stamp problem. It also produced a stream of

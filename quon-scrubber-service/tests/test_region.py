@@ -1,5 +1,5 @@
 """Strict EU routing (region.py): the chat URL, the catalog filter, the alias
-probe, web search off — and that global mode is untouched."""
+probe, web search off - and that global mode is untouched."""
 
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ class _Resp:
 
 
 class _FakeClient:
-    """GET /models → the EU list; POST /chat/completions → per-alias status."""
+    """GET /models -> the EU list; POST /chat/completions -> per-alias status."""
 
     list_status = 200
     eu_ids: list[str] = []
@@ -111,7 +111,7 @@ def test_refresh_learns_the_list_and_probes_only_stale_aliases(eu):
     assert region.available("~anthropic/claude-sonnet-latest") is True
     assert region.available("~google/gemini-flash-latest") is False
     assert sorted(_FakeClient.posts) == sorted(["~anthropic/claude-sonnet-latest", "~google/gemini-flash-latest"])
-    # An hour later: list refreshed, aliases NOT re-probed (daily) — probes cost money.
+    # An hour later: list refreshed, aliases not re-probed (daily) - probes cost money.
     asyncio.run(region.refresh(CATALOG, now=1000.0 + region.LIST_TTL_S))
     assert _FakeClient.gets == 2
     assert len(_FakeClient.posts) == 2
@@ -136,7 +136,7 @@ def test_eu_catalog_drops_models_the_eu_domain_does_not_serve(eu, monkeypatch):
     asyncio.run(region.refresh(CATALOG, now=1000.0))
     ids = [m.model for m in connections.chat_catalog(None)]
     assert ids == ["~anthropic/claude-sonnet-latest", "mistralai/mistral-large"]
-    # The image model is gone with it — no image generation in strict EU.
+    # The image model is gone with it - no image generation in strict EU.
     assert not any(m.image_output for m in connections.chat_catalog(None))
 
 

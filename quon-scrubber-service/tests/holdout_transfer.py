@@ -7,7 +7,7 @@ The question this answers, and the reason it exists:
     works on the documents it was read from. Both raise corpus recall. Only one
     of them helps a user whose insurer words things differently.
 
-Real documents carry no gold labels, so recall cannot be measured here. What CAN
+Real documents carry no gold labels, so recall cannot be measured here. What can
 be measured without labels is TRANSFER: how often each rule fires per 10k
 characters on the tune set versus a holdout the author never inspected. A rule
 fires at a similar rate on both. A fitted list falls off a cliff.
@@ -16,9 +16,9 @@ fires at a similar rate on both. A fitted list falls off a cliff.
       ~1.0  generalises
       <0.5  substantially fitted to the tune documents
 
-DISCIPLINE, ENFORCED HERE RATHER THAN PROMISED: this module never prints a
-detected VALUE, and never a holdout filename. It emits counts and ratios only.
-That is deliberate — an author who reads the holdout's misses and then "fixes"
+DISCIPLINE, ENFORCED here rather than PROMISED: this module never prints a
+detected value, and never a holdout filename. It emits counts and ratios only.
+That is deliberate - an author who reads the holdout's misses and then "fixes"
 them has converted the holdout into a second tune set, and the number stops
 meaning anything. Values stay in the private per-set report for a human.
 """
@@ -35,9 +35,9 @@ def load(store: Path) -> list[dict]:
     f = store / "documents.jsonl"
     if not f.exists():
         return []
-    # split("\n"), NOT splitlines(): json.dumps escapes real newlines but leaves
+    # split("\n"), not splitlines(): json.dumps escapes real newlines but leaves
     # U+2028/U+2029 (LINE/PARAGRAPH SEPARATOR) raw, and str.splitlines() breaks on
-    # those — so one OCR'd page split a record in half and the reader died on
+    # those - so one OCR'd page split a record in half and the reader died on
     # "Unterminated string". Latent in every JSONL reader written this way.
     return [json.loads(l) for l in f.read_text(encoding="utf-8").split("\n") if l.strip()]
 
@@ -92,11 +92,11 @@ def main() -> int:
     for k in sorted(set(t_types) | set(h_types), key=lambda x: -t_types[x]):
         tr, hr = rate(t_types, t_chars, k), rate(h_types, h_chars, k)
         ratio = (hr / tr) if tr else float("nan")
-        # A LOW ratio has two possible causes and this metric cannot separate them:
+        # A low ratio has two possible causes and this metric cannot separate them:
         # a fitted rule, or a holdout that simply contains less of that thing.
-        # EMAIL sits at 0.60 here and is pure Presidio — never fitted by anyone —
+        # EMAIL sits at 0.60 here and is pure Presidio - never fitted by anyone - 
         # so the low end must be read as "look closer", never as a verdict. Only
-        # the HIGH end is safe to conclude from: a rule cannot transfer well by
+        # the high end is safe to conclude from: a rule cannot transfer well by
         # accident.
         if tr == 0:
             reading = "absent from tune"

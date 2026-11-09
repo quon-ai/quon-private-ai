@@ -1,9 +1,9 @@
 /**
  * Backend-originated user-facing errors. The server returns English `detail`
  * strings (and provider-error strings over the chat stream); these are mapped
- * to localized text by translateApiError (apiErrors.ts). The EN value here MUST
+ * to localized text by translateApiError (apiErrors.ts). The EN value here must
  * equal the backend string so English mode is a faithful passthrough and the
- * detail→key map (apiErrors.ts) stays consistent.
+ * detail->key map (apiErrors.ts) stays consistent.
  */
 export const errors = {
   en: {

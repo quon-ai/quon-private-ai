@@ -1,9 +1,9 @@
 /**
- * "A new version is available" — the missing half of every deploy.
+ * "A new version is available" - the missing half of every deploy.
  *
  * A running instance keeps the JavaScript it loaded. An installed PWA is never
  * reloaded just because the operator deployed, so after a deploy the user goes
- * on using the OLD code — which once cost a bug report for a feature that was
+ * on using the OLD code - which once cost a bug report for a feature that was
  * already live. Nothing here reloads on its own: an unannounced reload would
  * throw away a half-typed message or an answer still streaming. The user is
  * told, and decides.
@@ -23,7 +23,7 @@ export function versionCheckEnabled(): boolean {
 /**
  * Decide whether the deployed build differs from ours. Pure, so the rule is
  * testable without a network: an unreadable or empty answer means "don't
- * know", never "outdated" — a hiccup must not put a permanent banner on screen.
+ * know", never "outdated" - a hiccup must not put a permanent banner on screen.
  */
 export function isOutdated(current: string, deployed: unknown): boolean {
   if (!versionCheckEnabledFor(current)) return false;
@@ -37,7 +37,7 @@ function versionCheckEnabledFor(current: string): boolean {
 }
 
 /**
- * Fetch the deployed build id. `cache: "no-store"` is the whole point — a
+ * Fetch the deployed build id. `cache: "no-store"` is the whole point - a
  * cached answer would report our own build forever. Returns null on any
  * failure (offline, proxy hiccup): silence beats a false alarm.
  */
@@ -62,8 +62,8 @@ export async function checkForUpdate(signal?: AbortSignal): Promise<boolean> {
  * True when an error is "the code I wanted is no longer on the server".
  *
  * A running instance loads chunks by content hash. Deploy, and those hashes are
- * gone — so the next lazy import (the OCR engine, the document extractor) fails
- * with a raw "Failed to fetch dynamically imported module …", which is both
+ * gone - so the next lazy import (the OCR engine, the document extractor) fails
+ * with a raw "Failed to fetch dynamically imported module ...", which is both
  * unactionable and alarming. Reported from the photo scanner.
  *
  * Matches on the message because that is all the platform gives us: Chrome and

@@ -4,9 +4,9 @@ import { createHealthStore, MIN_RESUME_GAP_MS } from "./healthStore";
 import type { HealthStatus } from "./quonApi";
 
 /**
- * Feedback #87: the sidebar pill said „Geschützt" while the header badge was
- * red — each consumer ran its own poll with its own failure state. The store
- * guarantees ONE poll and ONE answer for everyone.
+ * With a poll per consumer the sidebar pill can say „Geschützt" while the
+ * header badge is red - each one has its own failure state. The store
+ * guarantees one poll and one answer for everyone.
  */
 const ok: HealthStatus = {
   status: "ok",
@@ -32,14 +32,14 @@ describe("createHealthStore", () => {
     expect(a).toHaveBeenCalledTimes(1);
     expect(b).toHaveBeenCalledTimes(1);
     await vi.advanceTimersByTimeAsync(3000);
-    expect(check).toHaveBeenCalledTimes(4); // boot + 3 ticks — six-per-second is gone
+    expect(check).toHaveBeenCalledTimes(4); // boot + 3 ticks - six-per-second is gone
     offA();
     offB();
     await vi.advanceTimersByTimeAsync(5000);
-    expect(check).toHaveBeenCalledTimes(4); // nobody listening ⇒ no polling
+    expect(check).toHaveBeenCalledTimes(4); // nobody listening => no polling
   });
 
-  it("a failed foreground poll flips EVERY subscriber to offline at once (no split brain)", async () => {
+  it("a failed foreground poll flips every subscriber to offline at once (no split brain)", async () => {
     let fail = false;
     const check = vi.fn(async () => {
       if (fail) throw new Error("AbortError");
@@ -76,14 +76,14 @@ describe("createHealthStore", () => {
     store.onActive(); // resume poll: the one forgiven failure
     await vi.advanceTimersByTimeAsync(0);
     expect(store.getSnapshot().failed).toBe(false);
-    await vi.advanceTimersByTimeAsync(1000); // the next ordinary poll fails too ⇒ offline
+    await vi.advanceTimersByTimeAsync(1000); // the next ordinary poll fails too => offline
     expect(store.getSnapshot().failed).toBe(true);
     fail = false;
     await vi.advanceTimersByTimeAsync(1000);
     expect(store.getSnapshot()).toEqual({ health: ok, failed: false });
   });
 
-  it("focus/visibility right after boot do not re-probe — one boot probe, not three", async () => {
+  it("focus/visibility right after boot do not re-probe: one boot probe, not three", async () => {
     const check = vi.fn(async () => ok);
     const store = createHealthStore({ check, intervalMs: 30_000, isHidden: () => false });
     store.subscribe(() => {});
@@ -93,7 +93,7 @@ describe("createHealthStore", () => {
     await vi.advanceTimersByTimeAsync(0);
     expect(check).toHaveBeenCalledTimes(1);
     await vi.advanceTimersByTimeAsync(MIN_RESUME_GAP_MS + 1);
-    store.onActive(); // a real return from the background later ⇒ catch up at once
+    store.onActive(); // a real return from the background later => catch up at once
     await vi.advanceTimersByTimeAsync(0);
     expect(check).toHaveBeenCalledTimes(2);
   });

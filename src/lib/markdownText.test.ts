@@ -8,7 +8,7 @@ import { proxiedImageSrc, splitOnHtmlBreaks } from "./markdownText";
  */
 describe("splitOnHtmlBreaks", () => {
   it("splits the shape models actually produce in table cells", () => {
-    // A newline would end the row, so `<br>` is the only option a model has —
+    // A newline would end the row, so `<br>` is the only option a model has -
     // and react-markdown deliberately does not render raw HTML.
     expect(splitOnHtmlBreaks("Klassisch-elegant<br>Sieht aus wie ein Anzug.")).toEqual([
       "Klassisch-elegant",
@@ -25,7 +25,7 @@ describe("splitOnHtmlBreaks", () => {
     expect(splitOnHtmlBreaks("")).toEqual([""]);
   });
 
-  it("does not touch any other tag — only line breaks may ever result", () => {
+  it("does not touch any other tag: only line breaks may ever result", () => {
     // The whole point of splitting instead of parsing: nothing here can turn
     // model output into live markup.
     const evil = "<img src=x onerror=alert(1)> und <script>alert(1)</script>";

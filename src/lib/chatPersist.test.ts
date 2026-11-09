@@ -1,7 +1,7 @@
 /**
  * The persistence projection.
  *
- * The property that matters is NOT "which fields were dropped" — it is that a
+ * The property that matters is not "which fields were dropped" - it is that a
  * projected conversation produces the byte-identical provider request. These
  * tests assert that directly (via `toRelayHistory` and by rebuilding the
  * leading system turns the way ScreenChat does), so a future change to the
@@ -55,10 +55,10 @@ function convo(): StoredChatMessage[] {
 }
 
 describe("size", () => {
-  it("collapses the O(turns × context) growth", () => {
+  it("collapses the O(turns x context) growth", () => {
     const before = JSON.stringify(convo()).length;
     const after = JSON.stringify(toStoredMessages(convo())).length;
-    // 3 attachment copies → 1. The growth class, not a constant factor.
+    // 3 attachment copies -> 1. The growth class, not a constant factor.
     expect(after).toBeLessThan(before / 2.5);
   });
 });
@@ -70,7 +70,7 @@ describe("send equivalence", () => {
   });
 
   it("keeps the last user turn's heavy context byte-identical", () => {
-    // ScreenChat builds the provider request from the LAST user turn only:
+    // ScreenChat builds the provider request from the last user turn only:
     //   [...convo].reverse().find(m => m.role === "user")
     const original = convo();
     const projected = toStoredMessages(original);
@@ -81,7 +81,7 @@ describe("send equivalence", () => {
     expect(lastOf(projected).instruction!.text).toBe(lastOf(original).instruction!.text);
   });
 
-  it("empties — never deletes — the heavy fields on earlier turns", () => {
+  it("empties: never deletes: the heavy fields on earlier turns", () => {
     // Every read site is a truthiness check (`if (lastUser?.rag?.context)`), so
     // "" behaves as absent while keeping the declared shape intact.
     const projected = toStoredMessages(convo());
@@ -119,7 +119,7 @@ describe("scrubbed / rawText de-duplication", () => {
     expect(toRelayHistory([p])[0].content).toBe("no pii here"); // via `scrubbed ?? text`
   });
 
-  it("NEVER drops a differing rawText — that would re-send re-hydrated PII", () => {
+  it("never drops a differing rawText: that would re-send re-hydrated PII", () => {
     // The safety property. `text` is re-hydrated (real values); `rawText` is what
     // may leave the device. If rawText were dropped while differing, the fallback
     // `rawText ?? text` would send the user's real data to the provider.
@@ -158,7 +158,7 @@ describe("shape", () => {
     expect(p.rag!.sources[0].score).toBe(0.7);
   });
 
-  it("keeps reasoning — deliberately persisted so the panel survives a reload", () => {
+  it("keeps reasoning: deliberately persisted so the panel survives a reload", () => {
     const [p] = toStoredMessages([{ id: 2, role: "assistant", text: "a", reasoning: "because…" }]);
     expect(p.reasoning).toBe("because…");
   });
@@ -185,7 +185,7 @@ describe("shape", () => {
 /**
  * The other half of the contract: what `toStoredMessages` keeps has to be what
  * the restore path reads back. A field kept but never walked (or walked but not
- * kept) fails silently — the chat looks fine until the NEXT turn comes back with
+ * kept) fails silently - the chat looks fine until the NEXT turn comes back with
  * bare [PERSON_7] tokens nothing can re-hydrate.
  */
 describe("rehydrationEntities", () => {
@@ -215,11 +215,11 @@ describe("rehydrationEntities", () => {
     ]);
   });
 
-  it("recovers tool-result placeholders — the only record that survives a reload", () => {
+  it("recovers tool-result placeholders: the only record that survives a reload", () => {
     // Tool turns themselves are never persisted (they are local to the run), so
     // if this walk skipped `toolRedactions` the placeholders a Paperless read
-    // contributed would be unrecoverable, and the next answer — which is re-sent
-    // as the assistant's placeholder `rawText` — would render them raw.
+    // contributed would be unrecoverable, and the next answer - which is re-sent
+    // as the assistant's placeholder `rawText` - would render them raw.
     const restored: StoredChatMessage[] = toStoredMessages([
       { id: 1, role: "user", text: "Was steht in den Unterlagen?" },
       {

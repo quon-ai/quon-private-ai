@@ -5,7 +5,7 @@ import type { BlobIn, PushResponse } from "./api/syncApi";
 // The reliability net: a queued delete/edit must be pushed the moment the page
 // is hidden (mobile background/close would otherwise drop it before the debounce
 // fires), and a remote change must be pulled when the page becomes visible or
-// the network returns — so a device left merely open still learns about a delete
+// the network returns - so a device left merely open still learns about a delete
 // made elsewhere. This is what makes a cross-device deletion actually propagate.
 
 const pushed: BlobIn[][] = [];
@@ -28,7 +28,7 @@ vi.mock("./authStore", () => ({ getMasterKey: () => new Uint8Array(32).fill(7) }
 import { createCollectionSync, type SyncStore } from "./collectionSync";
 
 // Minimal localStorage + document/window for the node test env. collectionSync
-// guards these with `typeof … !== "undefined"`, so they must exist to exercise
+// guards these with `typeof ... !== "undefined"`, so they must exist to exercise
 // the visibility/pagehide/online listeners.
 const disk = new Map<string, string>();
 (globalThis as Record<string, unknown>).localStorage = {
@@ -91,8 +91,8 @@ beforeEach(() => {
 describe("collectionSync reliability net (cross-device delete propagation)", () => {
   it("flushes a queued delete tombstone when the page is hidden, before the debounce fires", async () => {
     const store = makeStore();
-    // Huge debounce so the ONLY thing that can push the tombstone is the hidden
-    // flush — proving the reliability net, not the timer.
+    // Huge debounce so the only thing that can push the tombstone is the hidden
+    // flush - proving the reliability net, not the timer.
     const sync = createCollectionSync<Item>({
       collection: "documents",
       deriveKey: () => PK,

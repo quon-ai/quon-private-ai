@@ -1,18 +1,16 @@
-"""Cloud OCR fallback — explicit per-photo escalation for hard cases.
+"""Cloud OCR fallback - explicit per-photo escalation for hard cases.
 
 The on-device tier (browser, PP-OCRv6 tiny) reads printed text well but not
 handwriting. When the user explicitly opts in from the scan dialog, the photo
-is relayed ONCE through this server to a vision model on OpenRouter and only
+is relayed once through this server to a vision model on OpenRouter and only
 the transcript comes back. Nothing is stored and the image bytes are never
 logged; the request enforces OpenRouter's zero-data-retention routing (`zdr`
 + `data_collection: deny`) so it can only be served by ZDR endpoints.
 
 Trust class: same as the cloud PII-extraction path (raw user data transits
-OpenRouter, billed to the caller's own sub-key) — but unlike /scrub it never
+OpenRouter, billed to the caller's own sub-key) - but unlike /scrub it never
 happens implicitly. The endpoint goes to the trusted OpenRouter base URL from
-config only (no user-supplied URL → no SSRF surface).
-
-Design + research: .claude/plans/ocr-hybrid-fallback.md.
+config only (no user-supplied URL, so no SSRF surface).
 """
 
 from __future__ import annotations
@@ -24,11 +22,11 @@ import httpx
 from config import settings
 from provider import ProviderError, friendly_provider_error
 
-# The client downscales to ≤2000 px and re-encodes to JPEG (~0.5–1.5 MB), so
+# The client downscales to <=2000 px and re-encodes to JPEG (~0.5–1.5 MB), so
 # this cap is generous headroom, not a target.
 MAX_IMAGE_BYTES = 8 * 1024 * 1024
 
-# Magic-byte sniffing — the client's claimed MIME type is never trusted.
+# Magic-byte sniffing - the client's claimed MIME type is never trusted.
 _SIGNATURES: list[tuple[bytes, str]] = [
     (b"\xff\xd8\xff", "image/jpeg"),
     (b"\x89PNG\r\n\x1a\n", "image/png"),
@@ -36,7 +34,7 @@ _SIGNATURES: list[tuple[bytes, str]] = [
 
 # Transcription only: the model must not summarize, translate or fill gaps.
 # Illegible spans become a visible marker the user resolves in the (still
-# mandatory) editable review step — VLMs otherwise guess confidently.
+# mandatory) editable review step - VLMs otherwise guess confidently.
 TRANSCRIBE_PROMPT = (
     "Transcribe ALL text in this image exactly as written, top to bottom, "
     "preserving line breaks. The text may be printed or handwritten, in German "
@@ -63,7 +61,7 @@ def _strip_fences(text: str) -> str:
     stripped = text.strip()
     if stripped.startswith("```") and stripped.endswith("```"):
         inner = stripped[3:-3]
-        # A language tag ("```text\n…") sits on the first line — drop it.
+        # A language tag ("```text\n...") sits on the first line - drop it.
         first_nl = inner.find("\n")
         if first_nl != -1 and " " not in inner[:first_nl].strip():
             inner = inner[first_nl + 1 :]
@@ -97,7 +95,7 @@ async def transcribe(image: bytes, mime: str, api_key: str) -> tuple[str, str]:
         ],
         "temperature": 0,
         # Belt and suspenders: OpenRouter's per-request ZDR switch plus the
-        # older provider preference — both restrict routing to endpoints that
+        # older provider preference - both restrict routing to endpoints that
         # neither retain nor train on the request.
         "zdr": True,
         "provider": {"data_collection": "deny"},

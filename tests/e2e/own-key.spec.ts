@@ -3,10 +3,10 @@ import { test, expect } from "@playwright/test";
 import { login, sharedCreds } from "./helpers/account";
 
 /**
- * Feedback #84 / #91: after the budget banner two users pasted a key from
- * another vendor under Settings → Providers. The override wins over the
- * included key, so every chat failed with a misleading "key rejected" until
- * they removed it. The key is now verified when saved: a non-OpenRouter key
+ * A key from another vendor pasted under Settings -> Providers (a natural
+ * reaction to the budget banner) must not be accepted: the override wins over
+ * the included key, so every chat would fail with a misleading "key rejected"
+ * until it is removed. The key is verified when saved: a non-OpenRouter key
  * is refused on the spot and nothing is stored.
  */
 test("a key from another vendor is refused at save time, with the reason", async ({ page }) => {
@@ -25,15 +25,15 @@ test("a key from another vendor is refused at save time, with the reason", async
   await expect(page.getByText("Saved")).toHaveCount(0);
 });
 
-/** The user can take an own key back from the card (#91): before, saving an
- *  empty field did nothing and a wrong key stayed in force for good. Hermetic —
- *  the settings read is mocked to say an own key is in use. */
+/** The user can take an own key back from the card: if saving an empty field
+ *  did nothing, a wrong key would stay in force for good. Hermetic - the
+ *  settings read is mocked to say an own key is in use. */
 test("an own key can be removed from the card; the included key is used again", async ({
   page,
 }) => {
   let ownKey = true;
   let clearedWith: string | null = null;
-  // "**/settings" also matches the app's own /settings PAGE — only the API
+  // "**/settings" also matches the app's own /settings PAGE - only the API
   // fetch is rewritten, the document navigation passes through untouched.
   await page.route("**/settings", async (route) => {
     const req = route.request();
@@ -48,7 +48,7 @@ test("an own key can be removed from the card; the included key is used again", 
     if (route.request().method() !== "PUT") return route.fallback();
     clearedWith = JSON.parse(route.request().postData() ?? "{}").api_key ?? null;
     ownKey = false;
-    const res = await route.fetch(); // the real clear (nothing was stored) → real settings body
+    const res = await route.fetch(); // the real clear (nothing was stored) -> real settings body
     const body = await res.json();
     await route.fulfill({ response: res, json: { ...body, own_openrouter_key: false } });
   });

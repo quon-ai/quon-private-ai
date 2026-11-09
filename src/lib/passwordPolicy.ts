@@ -1,11 +1,11 @@
 /**
- * Password strength policy — enforced CLIENT-SIDE by design.
+ * Password strength policy - enforced CLIENT-SIDE by design.
  *
  * QUON is zero-knowledge: the server only ever receives the derived `authToken`,
  * never the password, so it cannot check strength. This shared helper is used at
  * every place a password is set (register, recovery reset, change-password) so the
  * rule is identical. Deliberately dependency-free (no zxcvbn) to stay light in the
- * bundle — the real protection is length + the Argon2id KDF; this just blocks the
+ * bundle - the real protection is length + the Argon2id KDF; this just blocks the
  * worst, most-guessable choices.
  */
 
@@ -14,7 +14,7 @@ import { tr } from "./i18n/i18n";
 export const MIN_PASSWORD_LENGTH = 12;
 
 // A small denylist of the most common/guessable passwords (normalized lowercase).
-// Not exhaustive — it only stops the obvious ones.
+// Not exhaustive - it only stops the obvious ones.
 const COMMON = new Set([
   "password",
   "passwort",

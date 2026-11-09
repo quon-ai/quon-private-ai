@@ -1,22 +1,22 @@
 #!/usr/bin/env python3
-"""Concurrency benchmark for the scrub path — the dimension the ledger never had.
+"""Concurrency benchmark for the scrub path - the dimension the ledger never had.
 
-Every latency number this project has recorded is ONE request at a time:
+Every latency number this project has recorded is one request at a time:
 `bench-scrub.sh` and `measure-latency.sh` both measure a lone caller. That
 answers "is the filter fast?" and is silent on "does it hold N users", which is
-a different question with a different answer on a box with ONE physical core.
-The production t3.large reports CoreCount 1 / ThreadsPerCore 2 — the second
+a different question with a different answer on a box with one physical core.
+The production t3.large reports CoreCount 1 / ThreadsPerCore 2 - the second
 vCPU is a hyperthread, which is exactly why GLiNER measured no thread scaling
 (1579 ms vs 1506 ms for one thread vs two). Two concurrent detections contend
 for one core; they do not run side by side.
 
 What it measures: the CPU-bound detection base (spaCy/Presidio + regex, plus
-GLiNER when GLINER_ENABLED=true) under N concurrent callers, with NO cloud
+GLiNER when GLINER_ENABLED=true) under N concurrent callers, with no cloud
 enrichment (api_key=None), so the number is this machine's compute rather than
 OpenRouter's queue. Reports per-request p50/p95/max, throughput and peak RSS.
 
-⚠️ Read the output as a CEILING, not a forecast. All N callers press send in the
-same millisecond, which real users never do. The useful signal is the SHAPE —
+Read the output as a ceiling, not a forecast. All N callers press send in the
+same millisecond, which real users never do. The useful signal is the SHAPE -
 how p95 degrades as N grows, and where RSS lands against the host's memory.
 
     python scripts/bench-concurrency.py --levels 1,2,5,10 --chars 400 --rounds 3
@@ -41,7 +41,7 @@ import scrubber  # noqa: E402
 from models import ScrubOptions  # noqa: E402
 
 # A realistic German chat message carrying several PII shapes, padded to length.
-# Synthetic on purpose — never pin a benchmark with real personal data.
+# Synthetic on purpose - never pin a benchmark with real personal data.
 SEED = (
     "Hallo, hier ist Martin Schneider aus Duesseldorf. Meine Nummer ist "
     "0211 44556677 und die Mail martin.schneider@beispiel.de. Die Rechnung "
@@ -98,7 +98,7 @@ async def main() -> int:
     text = make_text(args.chars)
     opts = ScrubOptions(language="de", show_entities=True)
 
-    # WARM FIRST, ALWAYS. GLiNER's model load is 23.9s and spaCy's is seconds;
+    # WARM first, always. GLiNER's model load is 23.9s and spaCy's is seconds;
     # folding either into the first measured request reports a cold start as a
     # concurrency problem. Same reason main.py warms in lifespan.
     t0 = time.perf_counter()

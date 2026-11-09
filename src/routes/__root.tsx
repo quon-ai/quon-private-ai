@@ -108,11 +108,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: ReactNode }) {
-  // Expose the per-request CSP nonce (src/server.ts → router.tsx `ssr.nonce`) to
+  // Expose the per-request CSP nonce (src/server.ts -> router.tsx `ssr.nonce`) to
   // the client: the framework's hydration code reads <meta property="csp-nonce">
   // and applies it to anything it injects client-side. Only rendered when SSR ran
   // with a nonce (production builds). React 19's head hoisting may emit the tag
-  // twice — harmless, the client reads the first match.
+  // twice - harmless, the client reads the first match.
   const nonce = useRouter().options.ssr?.nonce;
   return (
     <html lang={resolveInitialLang()}>

@@ -12,9 +12,9 @@ import {
 } from "./quonApi";
 
 // The zero-evidence language tie-break sent with every scrub (see
-// ScrubOptions.language_hint): the backend uses it ONLY when the text itself
-// carries no language signal — bare noun queries like "Milchreis Rezept",
-// the single biggest real-world PERSON-FP class (2026-07-08 review).
+// ScrubOptions.language_hint): the backend uses it only when the text itself
+// carries no language signal - bare noun queries like "Milchreis Rezept",
+// the single biggest real-world PERSON-FP class.
 describe("browserLanguageHint", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
@@ -67,7 +67,7 @@ describe("applyPlaceholders", () => {
 
   it("replaces every occurrence in a single pass (no cascade)", () => {
     const out = applyPlaceholders("[A_1] then [A_1]", { "[A_1]": "[A_2]", "[A_2]": "BOOM" });
-    expect(out).toBe("[A_2] then [A_2]"); // [A_2] from the map is NOT re-expanded
+    expect(out).toBe("[A_2] then [A_2]"); // [A_2] from the map is not re-expanded
   });
 
   it("re-hydrates lightly mutated tokens a model echoes back", () => {
@@ -87,9 +87,9 @@ describe("applyPlaceholders", () => {
     );
   });
 
-  it("re-hydrates a BRACKET-LESS token the model inlined (report: PERSON_1s → name)", () => {
+  it("re-hydrates a BRACKET-LESS token the model inlined (report: PERSON_1s -> name)", () => {
     // The model dropped the brackets forming a German genitive; the answer showed
-    // a raw "PERSON_1" instead of the name — most visible after toggling Filter
+    // a raw "PERSON_1" instead of the name - most visible after toggling Filter
     // off on a follow-up turn (the historical map still holds the value).
     const map = { "[PERSON_1]": "Anna", "[IBAN_2]": "CH93…" };
     expect(applyPlaceholders("PERSON_1s Bedürfnisse", map)).toBe("Annas Bedürfnisse");
@@ -98,7 +98,7 @@ describe("applyPlaceholders", () => {
 
   it("never alters a bare uppercase_number token that isn't a placeholder", () => {
     const map = { "[PERSON_1]": "Anna" };
-    // no map entry → pure no-op, even though the shape matches
+    // no map entry -> pure no-op, even though the shape matches
     expect(applyPlaceholders("Norm ISO_9001 und Modell GPT_4", map)).toBe(
       "Norm ISO_9001 und Modell GPT_4",
     );
@@ -109,11 +109,11 @@ describe("applyPlaceholders", () => {
   });
 });
 
-// report #5 (2026-07-15 UX walkthrough): an expired session used to surface as
-// "QUON is unreachable" (scrub) or "Model provider error — session expired"
-// (relay) — both send the user to fix the wrong thing. `isUnauthorizedError` is
-// the shared classifier ScreenChat/authStore use to tell a real 401 apart from a
-// generic network/server failure; `setUnauthorizedHandler` is the hook authStore
+// An expired session must not surface as "QUON is unreachable" (scrub) or
+// "Model provider error - session expired" (relay) - both send the user to fix
+// the wrong thing. `isUnauthorizedError` is the shared classifier
+// ScreenChat/authStore use to tell a real 401 apart from a generic
+// network/server failure; `setUnauthorizedHandler` is the hook authStore
 // registers so any authenticated call reaching a genuine 401 forces the app back
 // to the sign-in screen instead of every subsequent call failing confusingly.
 describe("isUnauthorizedError", () => {
@@ -148,7 +148,7 @@ describe("setUnauthorizedHandler / request() 401 handling", () => {
     expect(handler).toHaveBeenCalledTimes(1);
   });
 
-  it("does NOT fire the handler for a non-401 failure (server error, not a session issue)", async () => {
+  it("does not fire the handler for a non-401 failure (server error, not a session issue)", async () => {
     const handler = vi.fn();
     setUnauthorizedHandler(handler);
     vi.stubGlobal(

@@ -3,18 +3,17 @@
  * (ProjectItem.defaultModelId / defaultProtection / defaultReasoningEffort).
  *
  * A project's defaults only SEED the initial state of a chat opened/created in
- * that project — they never fight later manual per-chat changes, and (as of the
- * 2026-07 fix below) they never leak into the GLOBAL protection/model/reasoning
- * state either. ScreenChat calls `resolveProjectChatSeed` once per chat open
- * (keyed on the logical chat) and hands the result to `applyProjectChatSeed`,
- * which only ever writes the chat-local override state (`chatProtectionOverride`
- * / `chatModelOverride` / `chatEffortOverride` — plain `useState` in ScreenChat,
- * reset on every chat switch). It is never given a reference to the global
+ * that project - they never fight later manual per-chat changes, and they never
+ * leak into the global protection/model/reasoning state either. ScreenChat
+ * calls `resolveProjectChatSeed` once per chat open (keyed on the logical chat)
+ * and hands the result to `applyProjectChatSeed`, which only ever writes the
+ * chat-local override state (`chatProtectionOverride` / `chatModelOverride` /
+ * `chatEffortOverride` - plain `useState` in ScreenChat, reset on every chat
+ * switch). It is never given a reference to the global
  * `quon.setProtectionLevel` / `quon.setActiveModel` setters, so seeding cannot
- * mutate Settings/the dashboard/other chats even by accident — see
- * `applyProjectChatSeed`'s JSDoc and its unit tests for the regression this
- * closes (ScreenChat used to call the global setters directly here, so opening
- * one chat in a "None"-default project silently flipped filtering off app-wide).
+ * mutate Settings/the dashboard/other chats even by accident - with the global
+ * setters in reach, opening one chat in a "None"-default project would silently
+ * flip filtering off app-wide (`applyProjectChatSeed`'s unit tests pin this).
  * Anything unset in the seed means "keep the effective (override ?? global)
  * behavior as it already was".
  */
@@ -28,7 +27,7 @@ export interface ProjectChatSeed {
   /** Model to select now (validated: an enabled option in the current list). */
   modelId?: string;
   /**
-   * The project's default model when it is NOT (yet) an enabled option — the
+   * The project's default model when it is not (yet) an enabled option - the
    * /models list loads async, so the caller retries once the list updates
    * instead of setting an id the "keep a valid model" guard would kick out.
    */
@@ -70,7 +69,7 @@ export function resolveProjectChatSeed(
 }
 
 /** The chat-LOCAL override setters a seed may be applied through. Deliberately
- *  narrower than the global `quon` store setters — a caller can only ever wire
+ *  narrower than the global `quon` store setters - a caller can only ever wire
  *  this to per-chat `useState` overrides, never to `quon.setProtectionLevel` /
  *  `quon.setActiveModel`, so the seeding path has no channel to reach global
  *  state even by mistake. */
@@ -82,11 +81,11 @@ export interface ProjectChatSeedSetters {
 }
 
 /**
- * Apply a resolved seed via the given LOCAL per-chat override setters — and
+ * Apply a resolved seed via the given local per-chat override setters - and
  * only those. See the module docstring: this function's signature is the
  * enforcement mechanism for "project defaults never touch global state" (it
  * simply has no global setter to call). `seed.pendingModelId` is intentionally
- * NOT applied here — the caller retries it once `/models` lands (see
+ * not applied here - the caller retries it once `/models` lands (see
  * `resolveProjectChatSeed`'s docs on `pendingModelId`).
  */
 export function applyProjectChatSeed(seed: ProjectChatSeed, setters: ProjectChatSeedSetters): void {

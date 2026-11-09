@@ -59,12 +59,12 @@ describe("resolveProjectChatSeed", () => {
   });
 });
 
-// Regression coverage for report #3 (2026-07-15 UX walkthrough): project chat
-// defaults used to call quon.setProtectionLevel/quon.setActiveModel directly —
-// GLOBAL store writes — so opening one chat in a "None"-default project flipped
-// filtering off app-wide. applyProjectChatSeed's signature only accepts
-// chat-local override setters, so there is no global setter it *could* call;
-// these tests lock in that it only ever calls exactly the given override setters.
+// Project chat defaults must never write the global store: seeding through
+// quon.setProtectionLevel/quon.setActiveModel would mean opening one chat in a
+// "None"-default project flips filtering off app-wide. applyProjectChatSeed's
+// signature only accepts chat-local override setters, so there is no global
+// setter it *could* call; these tests lock in that it only ever calls exactly
+// the given override setters.
 describe("applyProjectChatSeed", () => {
   function spySetters() {
     return {
@@ -83,7 +83,7 @@ describe("applyProjectChatSeed", () => {
     expect(setters.setReasoningOverride).not.toHaveBeenCalled();
   });
 
-  it("routes every field to its own LOCAL override setter", () => {
+  it("routes every field to its own local override setter", () => {
     const setters = spySetters();
     applyProjectChatSeed(
       {

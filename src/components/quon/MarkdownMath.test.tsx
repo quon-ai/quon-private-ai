@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { hasMath } from "@/lib/markdownText";
 import MarkdownMath from "./MarkdownMath";
 
-// The screenshot that started this: "(Elternhaus $\\rightarrow$ Mieterin …)"
+// The screenshot that started this: "(Elternhaus $\\rightarrow$ Mieterin ...)"
 // printed with the dollar signs and the backslash in the middle of a sentence.
 describe("MarkdownMath", () => {
   it("typesets inline TeX instead of printing it", () => {
@@ -34,7 +34,7 @@ describe("hasMath (the lazy-chunk gate)", () => {
     expect(hasMath("Formel \\(x+1\\) hier")).toBe(true);
   });
 
-  it("is false for prose with dollar amounts — that must not become math mode", () => {
+  it("is false for prose with dollar amounts: that must not become math mode", () => {
     expect(hasMath("Das kostet $5 und $10 zusammen.")).toBe(false);
     expect(hasMath("Budget: $3.50")).toBe(false);
     expect(hasMath("Kein Dollar hier.")).toBe(false);

@@ -1,12 +1,12 @@
 /**
  * "onboarding" namespace UI strings. Keys are prefixed `onboarding.*`. Keep `en` and `de`
- * in sync — a missing German key is a compile error via catalog.ts's typing.
+ * in sync - a missing German key is a compile error via catalog.ts's typing.
  *
- * The step-1 "Redacted N" callout is count-driven — `onboarding.callout.normal.one` /
+ * The step-1 "Redacted N" callout is count-driven - `onboarding.callout.normal.one` /
  * `.other` are picked via `plural()`. Neither language actually inflects "redacted" /
  * "geschwärzt" by count, but the pair still exists (rather than a single interpolated
  * template) so the count-1 case can read "1 redacted" instead of forcing every count
- * through the same `{count}` template — and so a future language that DOES inflect
+ * through the same `{count}` template - and so a future language that does inflect
  * drops in cleanly.
  */
 export const onboarding = {

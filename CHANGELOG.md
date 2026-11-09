@@ -5,10 +5,16 @@
 All notable changes to QUON are documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and the project aims to follow [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
-once it reaches 1.0.
+and the project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
+since 1.0.
 
 ## [Unreleased]
+
+## [1.0.0] - 2026-11-08
+
+The first stable release. From here on, a change that breaks the configuration
+keys, the HTTP contract or the stored data bumps the major version; everything
+below the heading was unreleased work since 0.10.0.
 
 ### Added
 
@@ -23,7 +29,14 @@ once it reaches 1.0.
   and sees what a model would receive: names, e-mail addresses, phone numbers,
   IBANs and more as placeholders, with the list of what was replaced. Nothing
   is stored and no model is called. Off by default (`DEMO_SCRUB_ENABLED`),
-  capped in length, rate-limited per IP and for all visitors together.
+  capped in length, rate-limited per IP and for all visitors together. The
+  page is English by default with its own German switch, explains the round
+  trip in four steps, and sends interested visitors to the operator's contact
+  (`DEMO_CONTACT_URL`, `DEMO_CONTACT_EMAIL`).
+- **The detection evaluation, published.** `docs/detection-evaluation.md`
+  describes how detection quality is measured and what the numbers cannot see,
+  `docs/detection-whitepaper.md` holds the experiment record, and the app
+  serves the page at `/docs/detection`.
 
 ### Changed
 
@@ -35,6 +48,9 @@ once it reaches 1.0.
 
 ### Fixed
 
+- **The demo page accepts input only once it is ready.** A click or a paste in
+  the first moments after loading used to be lost; the controls now wait for
+  the page to finish loading.
 - **Third-party notices of the backend are generated from the runtime
   requirements only**, in a venv without bytecode. The previous file had been
   produced from the development venv and carried a compiled module that

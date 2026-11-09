@@ -2,12 +2,12 @@ import { Children, isValidElement, type ReactElement, type ReactNode } from "rea
 
 /**
  * Pull the header cells and body rows out of the element tree react-markdown
- * produced for a GFM table, so the renderer can lay the SAME content out two
+ * produced for a GFM table, so the renderer can lay the same content out two
  * ways (a real table on wide screens, stacked cards on a phone).
  *
  * Works on the rendered children rather than the source AST on purpose: the
- * cells already contain their inline formatting — bold runs, links, proxied
- * images, the `<br>` handling — so nothing has to be re-implemented or lost for
+ * cells already contain their inline formatting - bold runs, links, proxied
+ * images, the `<br>` handling - so nothing has to be re-implemented or lost for
  * the mobile layout.
  *
  * Returns null whenever the shape isn't the plain thead/tbody table we know how
@@ -31,9 +31,9 @@ function childrenOf(node: ReactNode): ReactNode[] {
 /**
  * Cells of one `<tr>`, in order; null when the row holds no cells.
  *
- * Matches on "is an element", NOT on the tag name. react-markdown builds a cell
- * as `createElement(components.td, …)`, so when `td`/`th` are overridden — which
- * they are — the element's `type` is the override FUNCTION and the string "td"
+ * Matches on "is an element", not on the tag name. react-markdown builds a cell
+ * as `createElement(components.td, ...)`, so when `td`/`th` are overridden - which
+ * they are - the element's `type` is the override FUNCTION and the string "td"
  * never appears until React renders it. Checking for the tag looked right and
  * silently found nothing.
  */
@@ -60,7 +60,7 @@ export function extractTable(tableChildren: ReactNode): ExtractedTable | null {
     }
   }
 
-  // A header row and at least one data row — otherwise there is nothing to
+  // A header row and at least one data row - otherwise there is nothing to
   // label the stacked cells with, and the plain table is the honest fallback.
   if (!headers || headers.length < 2 || rows.length === 0) return null;
   return { headers, rows };

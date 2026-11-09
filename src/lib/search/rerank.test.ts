@@ -49,8 +49,8 @@ describe("rerankAndGate", () => {
   });
 
   // Regression: the Talbach false positive. A travel query pulled 3 microbiome
-  // chunks at blended ~0.40 — same-language (German↔German) cosine inflation
-  // with ZERO keyword overlap. Un-anchored mid-cosine hits must be dropped.
+  // chunks at blended ~0.40 - same-language (German<->German) cosine inflation
+  // with zero keyword overlap. Un-anchored mid-cosine hits must be dropped.
   it("drops zero-overlap candidates at ~0.40 cosine (same-language noise)", () => {
     const q = queryTermSet("was kann man in talbach mit einem kind machen");
     const out = rerankAndGate(
@@ -101,9 +101,9 @@ describe("rerankAndGate", () => {
   describe("strict candidates (long notes via strictOf)", () => {
     const strictAll = () => true;
 
-    it("requires BOTH an anchor and cosine ≥ STRICT_SIM_FLOOR", () => {
+    it("requires both an anchor and cosine >= STRICT_SIM_FLOOR", () => {
       const q = queryTermSet("ferritin befund");
-      // Anchored but below the strict cosine floor → out.
+      // Anchored but below the strict cosine floor -> out.
       expect(
         rerankAndGate(
           [hit("Ferritin Referenz", STRICT_SIM_FLOOR - 0.05)],
@@ -114,7 +114,7 @@ describe("rerankAndGate", () => {
           strictAll,
         ),
       ).toEqual([]);
-      // High cosine but no anchor → out.
+      // High cosine but no anchor -> out.
       expect(
         rerankAndGate(
           [hit("ganz anderes thema", NO_ANCHOR_SIM_FLOOR + 0.1)],
@@ -125,7 +125,7 @@ describe("rerankAndGate", () => {
           strictAll,
         ),
       ).toEqual([]);
-      // Anchor + high cosine → in.
+      // Anchor + high cosine -> in.
       expect(
         rerankAndGate(
           [hit("Ferritin Referenz", STRICT_SIM_FLOOR + 0.05)],
@@ -168,7 +168,7 @@ describe("rerankAndGate", () => {
   });
 });
 
-describe("rerankAndGate — pinned bypass (opt-in via pinnedOf)", () => {
+describe("rerankAndGate: pinned bypass (opt-in via pinnedOf)", () => {
   const pinnedFlag = (item: { pinned?: boolean }) => !!item.pinned;
 
   it("without pinnedOf, behaviour is byte-identical to before (default undefined)", () => {
@@ -185,7 +185,7 @@ describe("rerankAndGate — pinned bypass (opt-in via pinnedOf)", () => {
       { text: "Notfallkontakt: Nadine, +49 176 12345678", pinned: true },
       { text: "Völlig anderes irrelevantes Thema", pinned: false },
     ];
-    // Both scored far below every floor — only the pinned one should survive.
+    // Both scored far below every floor - only the pinned one should survive.
     const hits = items.map((it) => ({ item: it, score: 0.05 }));
     const out = rerankAndGate(hits, q, (it) => it.text, 3, undefined, undefined, pinnedFlag);
     expect(out).toHaveLength(1);
@@ -228,10 +228,10 @@ describe("rerankAndGate — pinned bypass (opt-in via pinnedOf)", () => {
     expect(out.map((r) => r.item.pinned)).toContain(true);
   });
 
-  it("P5 crowd-out fix: ≥3 pinned items no longer block ALL relevance retrieval (finalK=3)", () => {
+  it("P5 crowd-out fix: >=3 pinned items no longer block all relevance retrieval (finalK=3)", () => {
     // The reproduced bug: [...pinned, ...rest].slice(0, finalK) with 3 pinned
-    // items and finalK=3 (the real MEMORY_K) left ZERO room for a genuinely
-    // relevant, non-pinned hit — pinning a 3rd fact silently disabled ALL
+    // items and finalK=3 (the real MEMORY_K) left zero room for a genuinely
+    // relevant, non-pinned hit - pinning a 3rd fact silently disabled all
     // topical retrieval forever.
     const q = queryTermSet("ferritin befund");
     const items = [
@@ -283,7 +283,7 @@ describe("capPreservingRelevance (shared crowd-out guard, re-applied by rag.ts's
     expect(out).toHaveLength(3);
   });
 
-  it("pinned fills every slot when there are NO non-pinned survivors", () => {
+  it("pinned fills every slot when there are no non-pinned survivors", () => {
     const sorted = [
       { item: { text: "p1", pinned: true }, score: 0.9 },
       { item: { text: "p2", pinned: true }, score: 0.9 },
@@ -293,7 +293,7 @@ describe("capPreservingRelevance (shared crowd-out guard, re-applied by rag.ts's
   });
 });
 
-describe("rerankAndGate — recency bonus (opt-in via recencyOf)", () => {
+describe("rerankAndGate: recency bonus (opt-in via recencyOf)", () => {
   const now = Date.now();
   const daysAgo = (n: number) => now - n * 24 * 60 * 60 * 1000;
 
@@ -326,7 +326,7 @@ describe("rerankAndGate — recency bonus (opt-in via recencyOf)", () => {
   });
 
   it("a sub-floor item stays out regardless of freshness, even one recency alone would cross", () => {
-    // Score is JUST under ABS_FLOOR — if recency were (wrongly) applied before the
+    // Score is just under ABS_FLOOR - if recency were (wrongly) applied before the
     // floor check, a same-day item would gain the full +0.05 bonus and clear it.
     // The floor must be evaluated on cosine+lexical only, so this must still be excluded.
     const q = queryTermSet("x");
@@ -362,7 +362,7 @@ describe("rerankAndGate — recency bonus (opt-in via recencyOf)", () => {
       3,
       (it) => it.updatedAt,
     );
-    // Both at/beyond the window get zero bonus — scores stay at the floor, tied.
+    // Both at/beyond the window get zero bonus - scores stay at the floor, tied.
     expect(out.map((r) => r.score)).toEqual([ABS_FLOOR, ABS_FLOOR]);
   });
 });

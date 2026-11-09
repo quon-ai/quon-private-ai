@@ -2,15 +2,15 @@ import { test, expect } from "@playwright/test";
 
 import { clickSend, login, openChat, sharedCreds } from "./helpers/account";
 
-// "Resend without filter" (RedactionDetail → ScreenChat.resendWithoutFilter, see
+// "Resend without filter" (RedactionDetail -> ScreenChat.resendWithoutFilter, see
 // src/lib/unfilteredResend.ts): a one-shot, per-message escape hatch for when the
 // scrubber false-positives on casual text and mangles the question. Deliberately
-// NOT a permanent allow-list — clicking it only bypasses detection for ONE resend
-// of THIS message's original text, appended as a brand-new turn. We assert the
+// Not a permanent allow-list - clicking it only bypasses detection for one resend
+// of this message's original text, appended as a brand-new turn. We assert the
 // full round trip: the first (real, unmocked /scrub) send redacts the PII on the
 // wire, expanding the detail + confirming the resend then puts the CLEAR original
 // text on the wire for the SECOND relay call, and the resent bubble is labeled
-// distinctly ("Sent without filter") — never mistaken for "0 redacted" or the
+// distinctly ("Sent without filter") - never mistaken for "0 redacted" or the
 // existing "Sent unprotected" (protection-level-None) chip.
 
 test("resend without filter sends the clear original text and labels the bubble distinctly", async ({
@@ -41,7 +41,7 @@ test("resend without filter sends the clear original text and labels the bubble 
   await page.getByPlaceholder("Ask anything, keep your data personal").fill(original);
   await clickSend(page);
 
-  // 1) The real (unmocked) scrubber redacts the email — bubble + wire both prove it.
+  // 1) The real (unmocked) scrubber redacts the email - bubble + wire both prove it.
   await expect(page.getByText("Erste Antwort.")).toBeVisible({ timeout: 30_000 });
   const redactedBubbleStatus = page.getByRole("button", { name: "1 item redacted" });
   await expect(redactedBubbleStatus).toBeVisible();
@@ -49,13 +49,13 @@ test("resend without filter sends the clear original text and labels the bubble 
   expect(bodies[0]).toContain("[EMAIL_1]");
   expect(bodies[0]).not.toContain(email);
 
-  // Sending minted a session id in the URL (?c=...) — remember it. Navigating to
-  // bare "/chat" (no ?c=) always starts a FRESH chat, so returning to THIS chat
+  // Sending minted a session id in the URL (?c=...) - remember it. Navigating to
+  // bare "/chat" (no ?c=) always starts a FRESH chat, so returning to this chat
   // after visiting the dashboard must go back to this exact URL.
   const chatUrl = page.url();
   expect(chatUrl).toContain("/chat?c=");
 
-  // Snapshot the dashboard's live "kept private" trust counter BEFORE the resend,
+  // Snapshot the dashboard's live "kept private" trust counter before the resend,
   // so we can assert it does not grow afterwards (nothing is redacted by an
   // unfiltered send). The shared e2e account accumulates this across the whole
   // suite, so we compare before/after rather than an absolute value.
@@ -74,7 +74,7 @@ test("resend without filter sends the clear original text and labels the bubble 
   await expect(resendButton).toBeVisible();
   await resendButton.click();
 
-  // Armed state: a plain, honest sentence — no scare language — plus an explicit
+  // Armed state: a plain, honest sentence - no scare language - plus an explicit
   // confirm. Nothing is sent yet (still only the first request recorded).
   await expect(
     page.getByText("Sends your original text — nothing will be redacted."),
@@ -85,10 +85,10 @@ test("resend without filter sends the clear original text and labels the bubble 
 
   await confirmButton.click();
 
-  // 3) The SECOND relay call's LAST turn (the resend) carries the CLEAR original
-  // text with no placeholder. The EARLIER turns in the same payload legitimately
-  // still contain "[EMAIL_1]" — prior history is never retroactively unscrubbed
-  // (see toRelayHistory / relayHistory.ts) — so we assert on the last message
+  // 3) The SECOND relay call's last turn (the resend) carries the CLEAR original
+  // text with no placeholder. The earlier turns in the same payload legitimately
+  // still contain "[EMAIL_1]" - prior history is never retroactively unscrubbed
+  // (see toRelayHistory / relayHistory.ts) - so we assert on the last message
   // specifically, not the raw JSON string.
   await expect(page.getByText("Zweite Antwort.")).toBeVisible({ timeout: 30_000 });
   expect(bodies).toHaveLength(2);
@@ -96,19 +96,19 @@ test("resend without filter sends the clear original text and labels the bubble 
   const resentTurn = secondPayload.messages.at(-1)?.content;
   expect(resentTurn).toBe(original);
   expect(resentTurn).not.toContain("[EMAIL_1]");
-  // The history's FIRST turn is untouched — still the placeholder, proving this
+  // The history's first turn is untouched - still the placeholder, proving this
   // resend didn't retroactively unscrub the earlier (garbled) message.
   expect(secondPayload.messages[0]?.content).toContain("[EMAIL_1]");
 
-  // 4) The new bubble is labeled distinctly — never "N items redacted" (that would
+  // 4) The new bubble is labeled distinctly - never "N items redacted" (that would
   // claim scrubbing happened) and never the existing "Sent unprotected" chip used
   // for protection-level None (that's a different, ongoing trust signal, not a
   // one-shot per-message choice).
   await expect(page.getByText("Sent without filter")).toBeVisible();
-  await expect(page.getByRole("button", { name: "1 item redacted" })).toHaveCount(1); // only the FIRST bubble
+  await expect(page.getByRole("button", { name: "1 item redacted" })).toHaveCount(1); // only the first bubble
   await expect(page.getByText("Sent unprotected")).toHaveCount(0);
 
-  // 5) The trust counter must NOT have grown from the unfiltered resend.
+  // 5) The trust counter must not have grown from the unfiltered resend.
   await page.goto("/dashboard");
   await page.getByRole("button", { name: "Change" }).click();
   const trustLineAfter = await page
@@ -117,7 +117,7 @@ test("resend without filter sends the clear original text and labels the bubble 
   expect(trustLineAfter).toBe(trustLineBefore);
 });
 
-// The resend action must not appear at all on a message with nothing redacted —
+// The resend action must not appear at all on a message with nothing redacted -
 // there is nothing to fall back to, and offering it would be a confusing no-op.
 test("a message with no redactions has no resend-without-filter action", async ({ page }) => {
   await page.route("**/chat/stream", async (route) => {
@@ -141,7 +141,7 @@ test("a message with no redactions has no resend-without-filter action", async (
 
   await expect(page.getByText("Ok.")).toBeVisible({ timeout: 30_000 });
   // "No personal data found" renders but is a plain, unclickable line (no detail
-  // to expand) — so the resend action is unreachable, not merely hidden-by-toggle.
+  // to expand) - so the resend action is unreachable, not merely hidden-by-toggle.
   await expect(page.getByText("No personal data found")).toBeVisible();
   await expect(page.getByRole("button", { name: "Resend without filter" })).toHaveCount(0);
 });

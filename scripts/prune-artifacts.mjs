@@ -6,17 +6,17 @@
 //   DRY_RUN=true node scripts/prune-artifacts.mjs
 //
 // The distinction below is the whole design. `playwright-report` is a debugging
-// aid: nobody has ever opened the report of a passing suite, and 174 MB of them
-// exhausted the artifact quota on 2026-08-16 — which then failed an E2E job
-// whose tests had all passed. The SBOM and licence inventories are the opposite:
+// aid: nobody opens the report of a passing suite, and enough of them exhaust
+// the artifact quota, which then fails an E2E job whose tests have all passed.
+// The SBOM and licence inventories are the opposite:
 // they are the machine-readable evidence an EU-CRA or procurement review asks
 // for, they carry deliberate 30/90-day retention, and this script must never
 // delete them. Anything not named in KEEP_NEWEST is left alone by default, so a
 // new artifact kind is safe until someone deliberately adds it here.
 //
-// Bounded by COUNT, not age. An age rule was tried for the runner's pip cache
-// the same day and deleted nothing: 14 GB had accrued in under two weeks, so
-// every file was "recent". A count cap cannot be outrun by volume.
+// Bounded by count, not age. An age rule deletes nothing when gigabytes accrue
+// in days, because every file is "recent". A count cap cannot be outrun by
+// volume.
 import { appendFileSync } from "node:fs";
 
 const KEEP_NEWEST = {
@@ -98,7 +98,7 @@ if (!dryRun) {
       await api(`actions/artifacts/${a.id}`, { method: "DELETE" });
       deleted++;
     } catch (e) {
-      // One failed delete must not abort the sweep — the next run retries it.
+      // One failed delete must not abort the sweep - the next run retries it.
       console.error(`could not delete ${a.id} (${a.name}): ${e.message}`);
     }
   }

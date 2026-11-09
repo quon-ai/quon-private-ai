@@ -8,13 +8,12 @@ import { isProtected, useQuonState } from "@/lib/quonStore";
 import { protectionLevelMeta } from "./ProtectionSlider";
 
 /**
- * The "Geschützt" pill — clickable now, and it tells the truth.
+ * The "Geschützt" pill - clickable, and it tells the truth.
  *
- * Before this it was a hardcoded green dot with a static label, disconnected
- * from the live health probe. A beta user read that exactly right (feedback
- * #50/#51): a trust badge you cannot interrogate is decoration, and decoration
- * next to sensitive data breeds distrust. The pill now
- *  - takes its color from the SAME status the health probe drives everywhere
+ * A hardcoded green dot with a static label, disconnected from the live health
+ * probe, is the wrong shape: a trust badge you cannot interrogate is
+ * decoration, and decoration next to sensitive data breeds distrust. The pill
+ *  - takes its color from the same status the health probe drives everywhere
  *    else (green active / yellow degraded / red unreachable),
  *  - opens a popover naming what is protecting you right now: protection
  *    level, detection engine (cloud/local) and its reachability, and how many
@@ -44,10 +43,10 @@ export function ProtectionPill() {
       ? t("nav.statusOffline")
       : t("nav.protected");
 
-  // Detection is local, unconditionally — spaCy + GLiNER + the regex net run
-  // in-process since 2026-08-22, and the LLM tier is gone. The copy stopped
-  // being conditional when the condition stopped existing; a flag that could
-  // say "cloud" here would be a bug, not a mode.
+  // Detection is local, unconditionally - spaCy + GLiNER + the regex net run
+  // in-process and there is no LLM tier. The copy is not conditional because
+  // the condition does not exist; a flag that could say "cloud" here would be
+  // a bug, not a mode.
   const engineReady = status === "active";
 
   return (

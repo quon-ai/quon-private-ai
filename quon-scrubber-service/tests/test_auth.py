@@ -25,8 +25,8 @@ def test_register_pending_then_verify_activates(quon_client):
 
 
 def test_onboarding_pending_reported_once_at_verify(quon_client):
-    """A brand-new signup is eligible for the first-login onboarding flow — the
-    /auth/verify response is the ONE place that reports it (true), because it
+    """A brand-new signup is eligible for the first-login onboarding flow - the
+    /auth/verify response is the one place that reports it (true), because it
     is the only unambiguous server-observable "just came alive" event: verify
     and the client's later unlock() may happen on different devices, so nothing
     else can be relied on client-side. It must never be reported true again
@@ -42,7 +42,7 @@ def test_onboarding_pending_reported_once_at_verify(quon_client):
 
 def test_onboarding_pending_false_for_login_after_verify(quon_client):
     """login() (a returning user unlocking on a fresh device/browser, or after
-    logout) must report onboarding_pending False — the flag is a one-shot
+    logout) must report onboarding_pending False - the flag is a one-shot
     "brand new" signal consumed entirely at verify time, not a standing account
     property login should ever resurface."""
     c = quon_client
@@ -94,7 +94,7 @@ def test_me_requires_session(quon_client):
 
 
 def test_duplicate_active_email_fakes_pending_signup(quon_client, monkeypatch):
-    """Registering an already-active email must NOT reveal the account exists:
+    """Registering an already-active email must not reveal the account exists:
     same 201 'pending' response as a fresh signup (anti-enumeration). The owner
     gets a notice email instead of a verify link."""
     import email_service

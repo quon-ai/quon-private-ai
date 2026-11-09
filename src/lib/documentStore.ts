@@ -1,5 +1,5 @@
 /**
- * Document store — uploaded files, extracted + embedded **on-device**, then
+ * Document store - uploaded files, extracted + embedded **on-device**, then
  * end-to-end encrypted and synced as opaque blobs (collection `documents`).
  *
  * One blob per document (chunks nested), mirroring the chat-history pattern: a
@@ -29,13 +29,13 @@ export interface DocChunk {
   embedding?: number[];
 }
 
-/** Where a document came from. Absent = manual upload. Additive/optional — the
+/** Where a document came from. Absent = manual upload. Additive/optional - the
  *  seam connectors hang off: idempotent re-import (`ref` is a stable id), clean
  *  removal (filter by `connector`), and future write-back/re-sync. */
 export interface DocSource {
   /** Connector id, e.g. "obsidian" (matches Connector.id). */
   connector: string;
-  /** Stable id within the source — for Obsidian the vault-relative path. */
+  /** Stable id within the source - for Obsidian the vault-relative path. */
   ref: string;
   /** Content hash, to skip re-embedding unchanged items on re-import. */
   hash?: string;
@@ -44,7 +44,7 @@ export interface DocSource {
 /** Manifest of a document's synced original bytes: the ciphertext lives in the
  *  `originals` collection as `chunkCount` blobs (`orig:<docId>:<i>`), `size` is
  *  the plaintext byte length (integrity check after reassembly+decrypt). Its
- *  presence tells other devices an original CAN be fetched — without shipping
+ *  presence tells other devices an original can be fetched - without shipping
  *  the bytes in the DocItem blob. Additive: older builds simply ignore it. */
 export interface OriginalManifest {
   size: number;
@@ -59,7 +59,7 @@ export interface DocItem {
   error?: string;
   chunks: DocChunk[];
   /** Clean extracted text (pre-chunking) for viewing / re-attaching in chat.
-   *  Absent on documents ingested before this field existed → reconstructed from
+   *  Absent on documents ingested before this field existed -> reconstructed from
    *  chunks by `getDocumentText`. */
   fullText?: string;
   dim?: number;
@@ -74,13 +74,13 @@ export interface DocItem {
   original?: OriginalManifest;
   /** "Always in context": a pinned document is injected into every in-scope chat
    *  send (like a pinned Memory fact), bypassing relevance retrieval. Optional +
-   *  additive — syncs as ciphertext through the existing `documents` collection,
+   *  additive - syncs as ciphertext through the existing `documents` collection,
    *  no migration. */
   pinned?: boolean;
   /** Hand-redactions saved ON this document ("Immer schwärzen" in the viewer /
    *  Review panel). Merged into `always_redact` for every scrub that involves
    *  this document, so the values are enforced (scrubText verifies) without
-   *  polluting the user's global Settings list. Optional + additive — syncs as
+   *  polluting the user's global Settings list. Optional + additive - syncs as
    *  ciphertext like every other doc field, no migration. */
   redactTerms?: string[];
   createdAt: number;
@@ -114,7 +114,7 @@ function sortDocs(list: DocItem[]): DocItem[] {
 }
 
 function normalize(list: DocItem[]): DocItem[] {
-  // A doc left "processing" means ingest was interrupted (tab closed / reload) —
+  // A doc left "processing" means ingest was interrupted (tab closed / reload) -
   // no worker survives that, so surface it as failed rather than a spinner that
   // never resolves. The user can re-upload.
   return sortDocs(
@@ -128,7 +128,7 @@ function normalize(list: DocItem[]): DocItem[] {
   );
 }
 
-// Resolves once the initial IndexedDB hydration has merged into `docs` — lets
+// Resolves once the initial IndexedDB hydration has merged into `docs` - lets
 // background work (the originals upload scan) wait for the real list instead of
 // racing the async load with a timer. Re-armed on resetDocuments (logout) so a
 // second session waits for its own hydration.
@@ -280,7 +280,7 @@ export function upsertDocument(doc: DocItem): void {
 }
 
 /** Assign (or clear, with `undefined`) the project a document belongs to.
- *  Pure metadata — chunks/embeddings are untouched. Fires sync push. */
+ *  Pure metadata - chunks/embeddings are untouched. Fires sync push. */
 export function setDocumentProject(id: string, projectId: string | undefined): void {
   ensureLoaded();
   const existing = docs.find((d) => d.id === id);
@@ -292,7 +292,7 @@ export function setDocumentProject(id: string, projectId: string | undefined): v
   for (const l of changeListeners) l(next);
 }
 
-/** Add ONE saved hand-redaction to a document. Case-insensitive de-dup —
+/** Add one saved hand-redaction to a document. Case-insensitive de-dup -
  *  matching is case-insensitive anyway, a second spelling is just a confusing
  *  duplicate. Bumps `updatedAt`, so it syncs like any doc edit. */
 export function addDocumentRedactTerm(id: string, term: string): void {
@@ -323,7 +323,7 @@ export function removeDocumentRedactTerm(id: string, term: string): void {
   for (const l of changeListeners) l(next);
 }
 
-/** Union of saved hand-redactions across the given documents — what a scrub
+/** Union of saved hand-redactions across the given documents - what a scrub
  *  involving them must additionally enforce. Case-insensitive de-dup. */
 export function collectRedactTerms(docIds: readonly string[]): string[] {
   ensureLoaded();
@@ -352,7 +352,7 @@ export function setDocumentPinned(id: string, pinned: boolean): void {
   for (const l of changeListeners) l(next);
 }
 
-/** Rename a document. The filename is only a label — chunks, embeddings and the
+/** Rename a document. The filename is only a label - chunks, embeddings and the
  *  connector `source` (which drives idempotent re-import) are untouched, so a
  *  renamed connector document is still recognised as the same file on re-import.
  *  Returns the trimmed name that was stored, or null when nothing changed. */
@@ -369,7 +369,7 @@ export function renameDocument(id: string, filename: string): string | null {
   return clean;
 }
 
-/** Attach (or clear, with `undefined`) the synced-original manifest — called by
+/** Attach (or clear, with `undefined`) the synced-original manifest - called by
  *  originalSync once every chunk is uploaded. Fires sync push, so the manifest
  *  reaches other devices through the normal `documents` collection. */
 export function setDocumentOriginal(id: string, original: OriginalManifest | undefined): void {
@@ -380,7 +380,7 @@ export function setDocumentOriginal(id: string, original: OriginalManifest | und
     existing.original?.chunkCount === original?.chunkCount &&
     existing.original?.size === original?.size
   ) {
-    return; // no-op — don't bump updatedAt / re-push
+    return; // no-op - don't bump updatedAt / re-push
   }
   const next = { ...existing, original, updatedAt: Date.now() };
   docs = sortDocs([next, ...docs.filter((d) => d.id !== id)]);
@@ -399,13 +399,13 @@ export function deleteDocument(id: string): void {
   void deleteOriginal(id); // cached original bytes must not outlive the document
   emit();
   for (const l of deleteListeners) l([id]);
-  // Detail listeners get the full doc — originalSync needs `original.chunkCount`
+  // Detail listeners get the full doc - originalSync needs `original.chunkCount`
   // to tombstone the synced byte chunks, which the id-only event can't carry.
   for (const l of deleteDetailListeners) l(existing);
 }
 
-/** Subscribe to LOCAL document deletions with the full deleted item (remote
- *  tombstones don't fire this — the deleting device cleans up its own synced
+/** Subscribe to local document deletions with the full deleted item (remote
+ *  tombstones don't fire this - the deleting device cleans up its own synced
  *  original chunks). Used by documents/originalSync.ts. */
 export function onDocumentDeleted(cb: (doc: DocItem) => void): () => void {
   deleteDetailListeners.add(cb);
@@ -436,7 +436,7 @@ export function applyRemoteDocumentDeletion(id: string): void {
 export function resetDocuments(): void {
   docs = [];
   loadStarted = false;
-  armLoadedPromise(); // the next session's scan must wait for ITS hydration
+  armLoadedPromise(); // the next session's scan must wait for its hydration
   void idbClear(IDB);
   void clearOriginals();
   try {

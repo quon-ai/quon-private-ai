@@ -1,7 +1,7 @@
--- 0001_init.sql — QUON multi-user auth, E2E sync, and OpenRouter key tables.
+-- 0001_init.sql - QUON multi-user auth, E2E sync, and OpenRouter key tables.
 --
 -- All timestamps are epoch milliseconds. BLOB columns hold raw bytes (salts,
--- nonces, wrapped keys, ciphertext). The server NEVER stores plaintext PII or
+-- nonces, wrapped keys, ciphertext). The server never stores plaintext PII or
 -- unwrapped user key material; the only key it can use is the per-user
 -- OpenRouter sub-key, which is sealed at rest with QUON_SERVER_SECRET.
 

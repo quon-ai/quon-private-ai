@@ -6,10 +6,22 @@ local ``.env`` file. Example: ``GLINER_ENABLED=true``.
 
 from __future__ import annotations
 
+import tomllib
 from functools import lru_cache
+from pathlib import Path
 from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def _package_version() -> str:
+    """The release version from pyproject.toml, so /health and the OpenAPI
+    document report what is running; "0.0.0" when the file is not shipped."""
+    try:
+        with (Path(__file__).resolve().parent / "pyproject.toml").open("rb") as fh:
+            return str(tomllib.load(fh)["project"]["version"])
+    except (OSError, KeyError, TypeError, ValueError):
+        return "0.0.0"
 
 
 class Settings(BaseSettings):
@@ -21,7 +33,7 @@ class Settings(BaseSettings):
     )
 
     # --- Service ---------------------------------------------------------
-    version: str = "0.1.0"
+    version: str = _package_version()
     host: str = "0.0.0.0"
     port: int = 8000
     # SQLite file for accounts, sessions, E2E sync blobs and per-user keys.
@@ -31,29 +43,29 @@ class Settings(BaseSettings):
 
 
 
-    # --- NER (spaCy / Presidio) — primary detector -----------------------
+    # --- NER (spaCy / Presidio) - primary detector -----------------------
     # The fast, always-on detector. Runs a Presidio AnalyzerEngine backed by
     # spaCy NER models to catch person names (plus structured PII patterns),
     # in ~tens of ms on CPU. Set to false to fall back to regex + LLM only.
     ner_enabled: bool = True
     # spaCy model per language. `_md` is the balanced default (good recall, ~40MB
-    # each, fast on CPU). NOTE on German: `_lg` is NOT recommended — empirically it
+    # each, fast on CPU). NOTE on German: `_lg` is not recommended - empirically it
     # labels common "Dr. <Name>" phrases as MISC and drops the real name, hurting
     # recall, while the POS filter below (model-independent) is what actually
     # removes the capitalized-verb false positives. `_sm` is the smallest footprint;
-    # avoid `_trf` (transformer) — too slow on CPU.
+    # avoid `_trf` (transformer) - too slow on CPU.
     spacy_model_de: str = "de_core_news_md"
     spacy_model_en: str = "en_core_web_md"
     # PERSON precision filters. spaCy NER on German often tags capitalized
     # sentence-initial verbs/nouns ("Mache", "Rechne", "Fasse") as person names
     # and emits function-word runs ("kannst du mir") as multi-token spans. The POS
-    # filter requires a proper-noun (PROPN) token in EVERY candidate span (single
+    # filter requires a proper-noun (PROPN) token in every candidate span (single
     # or multi-token); a capitalization guard drops lowercase mistags; the denylist
     # (merged with a builtin German set) drops known salutations/imperative verbs.
     ner_person_pos_filter: bool = True
     ner_person_denylist: str = ""  # extra comma-separated words, case-insensitive
     # Casing is spaCy NER's main signal. On all-lowercase input ("kannst du mir
-    # …") it both hallucinates PERSON spans and misses real names, so we suppress
+    # ...") it both hallucinates PERSON spans and misses real names, so we suppress
     # NER PERSON candidates when the text carries no case signal and defer name
     # detection to the LLM enrichment layer (which handles lowercase far better).
     # Structured PII (email/phone/IBAN) is case-insensitive and stays unaffected.
@@ -78,7 +90,7 @@ class Settings(BaseSettings):
     # accuracy, arXiv 2606.11477) at ~$0.002/page. Routed via OpenRouter with
     # zero-data-retention enforced; billed to the caller's own sub-key.
     ocr_cloud_model: str = "google/gemini-3.1-flash-lite"
-    ocr_cloud_timeout: float = 60.0  # seconds — one image, no streaming
+    ocr_cloud_timeout: float = 60.0  # seconds - one image, no streaming
 
 
     # Drop DATE entities that are relative durations / time-spans ("3 Wochen",
@@ -87,7 +99,7 @@ class Settings(BaseSettings):
     drop_relative_durations: bool = True
     # Hard cap on a single scrub. Long documents are now chunked for the LLM (with
     # per-chunk resilience), so this is a sanity bound sized to fit a multi-page
-    # attachment — it must be >= the frontend ATTACHMENT_CHAR_BUDGET (50k) so an
+    # attachment - it must be >= the frontend ATTACHMENT_CHAR_BUDGET (50k) so an
     # uploaded document is never silently re-truncated server-side.
     max_text_length: int = 50000
 
@@ -100,7 +112,7 @@ class Settings(BaseSettings):
     safety_net: bool = True
 
     # Also include deterministic currency amounts (e.g. "145.000 €", "$4.2M") in
-    # the safety net. Trade-off: this redacts ANY amount, including public figures
+    # the safety net. Trade-off: this redacts any amount, including public figures
     # like a company's reported revenue. Set to false to leave amounts to the LLM.
     safety_net_amounts: bool = True
 
@@ -111,11 +123,10 @@ class Settings(BaseSettings):
     safety_net_addresses: bool = True
 
     # Spelled-out dates ("12. März 2025", "March 14th") in the deterministic net.
-    # Written dates were LLM-only until 2026-08-19, when the golden-58 comparison
-    # showed a 7B leaking 5 of them while the 24B caught them — a model-dependent
-    # hole in a guarantee that should not depend on the model. Flagged like the
-    # other net additions so an operator who considers dates non-sensitive can
-    # leave them to the LLM.
+    # Left to a model they leak model-dependently (on the golden set a 7B missed
+    # 5 of them where a 24B caught all) - a hole in a guarantee that should not
+    # depend on the model. Flagged like the other net additions so an operator
+    # who considers dates non-sensitive can switch them off.
     safety_net_spelled_dates: bool = True
 
     # --- GLiNER: a span-scoring encoder as a third detector -------------------
@@ -129,7 +140,7 @@ class Settings(BaseSettings):
     # on the tune set without editing code.
     # Swept on golden-58 (labelled, never the holdout): 0.5 / 0.65 / 0.8 all gave
     # the same 98.4% recall, and FP fell 31 -> 29 -> 26. Free precision, so take it.
-    # 0.8 -> 0.65, and the FP cost is REAL — an earlier version of this comment
+    # 0.8 -> 0.65, and the FP cost is real - an earlier version of this comment
     # claimed it was free, on the strength of a corpus FP count that sat at 5
     # through the entire sweep. That probe is simply not sensitive here. The
     # golden-58 set, which has 154 must-not-redact values, does move:
@@ -140,7 +151,7 @@ class Settings(BaseSettings):
     #   0.65        12             37             100%
     #
     # So: 17 fewer leaks for 5 more over-redactions. Taken deliberately, because
-    # the two failures are not symmetric — a leak puts real personal data in a
+    # the two failures are not symmetric - a leak puts real personal data in a
     # third party's logs and cannot be undone, while a false positive shows the
     # user a placeholder where an ordinary word should be, in a product that
     # ships a Review mode for exactly that. 0.70 is dominated (7 more leaks than
@@ -165,7 +176,7 @@ class Settings(BaseSettings):
     #: Paired with gliner_torch_threads=1: GLiNER does not thread-scale WITHIN a
     #: chunk (measured 1579ms on one thread vs 1506ms on two), so giving each
     #: chunk one thread and running several chunks is strictly better than the
-    #: reverse — and it stops the two from oversubscribing the box.
+    #: reverse - and it stops the two from oversubscribing the box.
     gliner_max_workers: int = 0
     #: Intra-op threads per chunk. 1 by default; see gliner_max_workers.
     gliner_torch_threads: int = 1
@@ -173,34 +184,34 @@ class Settings(BaseSettings):
     # Separate flag so detection and judgement can be measured independently.
     gliner_veto: bool = True
     #: How far a competing label must beat "person" before it vetoes a candidate
-    #: NER did NOT flag as tentative. A MARGIN, not an absolute score: "Mercedes
+    #: NER did not flag as tentative. A MARGIN, not an absolute score: "Mercedes
     #: Jacobi Jäckel" scores company 0.95 / person 0.93, so any absolute bar low
     #: enough to catch brands also leaks that real name. Brands measured at +0.83
     #: to +1.00 margin (person 0.00), real names at negative margin.
     gliner_veto_person_margin: float = 0.4
-    #: …AND the competing label must be confident in absolute terms. Margin alone is
-    #: too loose: "Kayla Villa" scores company 0.71 with NO person span, so its
+    #: ...AND the competing label must be confident in absolute terms. Margin alone is
+    #: too loose: "Kayla Villa" scores company 0.71 with no person span, so its
     #: margin is +0.71 and a margin-only rule vetoed a real name. Both bars are
-    #: needed — confident, AND clearly better than "person".
+    #: needed - confident, AND clearly better than "person".
     #
-    # 0.90/0.50 -> 0.80/0.40 on 2026-08-22, swept on 45 ECHR judgments (TAB):
+    # 0.80/0.40, swept on 45 ECHR judgments (TAB) against four reported FPs:
     #
-    #   0.90 / 0.50   PERSON 396/404   FP 153   kills 2 of 4 beta FPs
+    #   0.90 / 0.50   PERSON 396/404   FP 153   kills 2 of 4 reported FPs
     #   0.80 / 0.40   PERSON 396/404   FP 150   kills 3 of 4      <- taken
     #   0.75 / 0.30   PERSON 395/404   FP 150   kills 3 of 4  (a name for nothing)
     #
-    # The old bar was too high by a hair: "MDS UI" scores software 0.88 and
-    # missed the veto by two hundredths. Recall does not move until 0.75, where
+    # 0.90/0.50 is too high by a hair: "MDS UI" scores software 0.88 and
+    # misses the veto by two hundredths. Recall does not move until 0.75, where
     # it costs a name and buys no further precision.
     #
-    # ALSO SWEPT AND REJECTED: adding "substance" and "generic term" to
+    # Also SWEPT AND REJECTED: adding "substance" and "generic term" to
     # CONTRAST_LABELS, to catch "Vitamin D" (substance 0.93) and "Verdict"
-    # (generic term 0.66). It BACKFIRED — FP 153 -> 178. Enriching the label set
+    # (generic term 0.66). It BACKFIRED - FP 153 -> 178. Enriching the label set
     # raises the person score on other spans ("end user" 0.83 -> 0.90), so the
     # veto loses more than it gains. Contrast labels are not free; sweep them.
-    # --- V1 cross-check: the winning verifier from the 2026-08-23 trial ------
-    # Every PERSON claim that survives the guards and vetoes gets ONE more
-    # question: does GLiNER, shown ±120 chars around the claim, give it ANY
+    # --- V1 cross-check: GLiNER as a second opinion on every PERSON claim ----
+    # Every PERSON claim that survives the guards and vetoes gets one more
+    # question: does GLiNER, shown ±120 chars around the claim, give it any
     # person score at or above this floor? Below the floor -> drop; model
     # unavailable or erroring -> keep (fail open, a verifier may only remove).
     #
@@ -215,11 +226,11 @@ class Settings(BaseSettings):
     #
     # 0.05 over 0.02: identical numbers, and the higher of two equivalent
     # floors leaves more margin below it for model-version drift. The -2 TAB
-    # names at 0.05 ("Lichfield Reynolds", "Mrs Åkerblom") were accepted by
-    # the operator on 2026-08-23; German/salted recall is untouched. Known
-    # residual: "Risikoperson" CONTAINS "person", so the cross-check scores it
-    # as one — that is the click-to-dismiss UI's case, not this gate's.
-    # Majority-of-windows — MEASURED AND REJECTED as a default (2026-08-23).
+    # names at 0.05 ("Lichfield Reynolds", "Mrs Åkerblom") are an accepted
+    # cost; German/salted recall is untouched. Known residual: "Risikoperson"
+    # contains "person", so the cross-check scores it as one - that is the
+    # click-to-dismiss UI's case, not this gate's.
+    # Majority-of-windows - measured and rejected as a default.
     # The idea: the any-window rule kept "user" on ARCHITECTURE.md (dozens of
     # occurrences, one corroborating window of four sampled), which looks like
     # the corpus's applicant-x372 lesson one layer up. The measurement:
@@ -227,9 +238,9 @@ class Settings(BaseSettings):
     #   any        ledger 5/129 firing   salted 182/204   TAB 375/385
     #   majority   ledger 3/129          salted 182/204   TAB 368/385  (-7)
     #
-    # It kills "user" and "L" — and seven real court names with them. The
+    # It kills "user" and "L" - and seven real court names with them. The
     # frequency-as-evidence assumption breaks exactly where names matter: in a
-    # legal document ONE person's surname repeats fifty times, and most of its
+    # legal document one person's surname repeats fifty times, and most of its
     # windows are citation-shaped. Two ledger FPs are not worth seven names.
     # The knob stays for experimentation; the default stays honest.
     gliner_crosscheck_majority: bool = False
@@ -237,8 +248,8 @@ class Settings(BaseSettings):
     gliner_crosscheck_floor: float = 0.05
 
     gliner_veto_min_score: float = 0.80
-    #: "" (fp32) or "int8". LEAVE IT EMPTY — measured on the production box
-    #: 2026-08-20, torch dynamic int8 DESTROYS this model:
+    #: "" (fp32) or "int8". Leave it empty - measured on the production box,
+    #: torch dynamic int8 destroys this model:
     #:
     #:     fp32  threshold 0.65 -> person 0.992, iban 0.988, date 0.974
     #:     int8  threshold 0.65 -> nothing. At 0.001: iban 0.036, and
@@ -257,11 +268,11 @@ class Settings(BaseSettings):
     gliner_quantize: str = ""
 
     # --- Model provider: OpenRouter --------------------------------------
-    # The provider API key is SERVER-SIDE only — it must never reach the browser.
+    # The provider API key is SERVER-SIDE only - it must never reach the browser.
     # Set it in .env (preferred, git-ignored) or the environment.
     openrouter_api_key: str = ""
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
-    # In-region routing (region.py): "global" (default) or "eu" — chat goes to
+    # In-region routing (region.py): "global" (default) or "eu" - chat goes to
     # the EU domain, the catalog is filtered to in-region models, web search
     # is off. Key management stays on openrouter_base_url.
     openrouter_region: str = "global"
@@ -274,7 +285,7 @@ class Settings(BaseSettings):
     # --- Auth / sessions -------------------------------------------------
     # Public base URL of the frontend, used to build email verification links.
     app_base_url: str = "http://localhost:8080"
-    # httpOnly session cookie. cookie_secure MUST be true in production (HTTPS);
+    # httpOnly session cookie. cookie_secure must be true in production (HTTPS);
     # set false only for local http dev. SameSite=Lax + a CSRF token guard
     # cross-site requests.
     cookie_name: str = "quon_session"
@@ -285,8 +296,8 @@ class Settings(BaseSettings):
     email_token_ttl_hours: int = 24
 
     # Server master secret (any string; hashed to a 32-byte key). Seals the
-    # per-user OpenRouter sub-key at rest. MUST be set in production and kept
-    # stable — rotating it makes existing sealed sub-keys unreadable.
+    # per-user OpenRouter sub-key at rest. Must be set in production and kept
+    # stable - rotating it makes existing sealed sub-keys unreadable.
     quon_server_secret: str = ""
 
     # --- OpenRouter provisioning (server-side only) ----------------------
@@ -301,26 +312,26 @@ class Settings(BaseSettings):
     admin_token: str = ""
 
     # Gate self-service signup: when set, POST /auth/register requires a matching
-    # OAuth client id ("App key") of the OPERATOR's Dropbox app — instance-level,
+    # OAuth client id ("App key") of the OPERATOR's Dropbox app - instance-level,
     # set once so end users get a one-click "Connect Dropbox" (no per-user app
-    # registration). A client id is PUBLIC by design (PKCE, no secret involved);
+    # registration). A client id is public by design (PKCE, no secret involved);
     # served to the frontend via GET /connectors/config. Empty = the Dropbox
     # connector shows an honest "operator has not enabled this" note.
     dropbox_app_key: str = ""
     # Azure app registration (Microsoft identity platform) for the OneDrive
-    # connector — same model as dropbox_app_key: the OPERATOR registers ONE app
+    # connector - same model as dropbox_app_key: the OPERATOR registers one app
     # for the instance and every user authorizes their own account against it.
-    # A SPA client id is PUBLIC by design (PKCE, no secret). Register it with
+    # A SPA client id is public by design (PKCE, no secret). Register it with
     # redirect URI <origin>/connectors as platform "Single-page application"
     # and the `common` tenant (personal + work/school accounts). Empty = the
     # OneDrive connector shows an honest "operator has not enabled this" note.
     ms_client_id: str = ""
 
-    # invite_code. Empty = open registration (default). Used for the closed beta —
+    # invite_code. Empty = open registration (default). Used for the closed beta - 
     # hand the code to invited testers; it replaces the Caddy basic-auth gate.
     signup_invite_code: str = ""
     # The scrub-only demo (POST /demo/scrub, no account): a visitor pastes a
-    # text and sees the placeholders. OFF by default so a self-hosted instance
+    # text and sees the placeholders. Off by default so a self-hosted instance
     # exposes nothing new; the hosted landing turns it on. The text is
     # processed in memory for one request and never stored or logged. The
     # per-IP limit lives in ratelimit.py; the ceiling below bounds every
@@ -334,18 +345,18 @@ class Settings(BaseSettings):
     demo_contact_email: str = ""
 
     # SSRF guard: provider base_urls (BYOK / custom connections) must be https and
-    # resolve to public IPs. Set true ONLY for a self-host pointing at a local
-    # provider (e.g. http://localhost:11434) — it disables the guard.
+    # resolve to public IPs. Set true only for a self-host pointing at a local
+    # provider (e.g. http://localhost:11434) - it disables the guard.
     allow_private_provider_urls: bool = False
 
-    # The middle ground between "public hosts only" and switching the guard OFF:
+    # The middle ground between "public hosts only" and switching the guard off:
     # a comma-separated list of hostnames that are allowed to resolve to a private
-    # address. Written for a self-hosted PII endpoint — a vLLM box in our own VPC
+    # address. Written for a self-hosted PII endpoint - a vLLM box in our own VPC
     # is exactly what the guard would otherwise reject, and reaching for
-    # allow_private_provider_urls there would ALSO unblock every user-supplied
+    # allow_private_provider_urls there would also unblock every user-supplied
     # BYOK url, i.e. hand out SSRF to the instance metadata service (on EC2 that
     # is credentials). This list is OPERATOR-supplied, never user-supplied, and is
-    # matched on the HOSTNAME only — exactly, case-insensitively, no wildcards.
+    # matched on the HOSTNAME only - exactly, case-insensitively, no wildcards.
     # https and a resolvable host are still required.
     # Example: PROVIDER_PRIVATE_HOST_ALLOWLIST=llm.internal.example.com
     provider_private_host_allowlist: str = ""
@@ -355,16 +366,16 @@ class Settings(BaseSettings):
     rate_limit_enabled: bool = True
     # The limiter keys on the CLIENT address. Behind the bundled Caddy that is
     # the hop Caddy appended to X-Forwarded-For; a client-sent header is never
-    # trusted. Set this ONLY when the instance sits behind Cloudflare, which
-    # strips any CF-Connecting-IP a client sends — on a plain self-host, Caddy
+    # trusted. Set this only when the instance sits behind Cloudflare, which
+    # strips any CF-Connecting-IP a client sends - on a plain self-host, Caddy
     # passes the header through and a spoofer would get a fresh bucket per
-    # request (found 2026-10-31).
+    # request.
     trust_cf_connecting_ip: bool = False
 
     # --- Sync: original document bytes ------------------------------------
     # Per-user total-bytes cap for the `originals` sync collection (client-side
-    # encrypted original file bytes, chunked ≤ ~3 MiB per blob). A push that
-    # would exceed it is rejected per-blob with status "quota" — the document's
+    # encrypted original file bytes, chunked <= ~3 MiB per blob). A push that
+    # would exceed it is rejected per-blob with status "quota" - the document's
     # extracted text keeps syncing normally; only the layout-view bytes stay
     # device-local. Tombstoned blobs store empty ciphertext, so deleting a
     # document frees its quota. Override via ORIGINALS_QUOTA_BYTES.
@@ -372,7 +383,7 @@ class Settings(BaseSettings):
 
     # --- Email verification ------------------------------------------------
     # "auto" (default): required when SMTP_HOST is set, otherwise an account is
-    # active the moment it is created — the home-server case, where nobody runs
+    # active the moment it is created - the home-server case, where nobody runs
     # a mail relay. "required": always (without SMTP the link is only logged, as
     # [DEV EMAIL]). "off": never, even with SMTP. Without verification there is
     # no anti-enumeration dance on /auth/register either: a duplicate gets 409.
@@ -385,21 +396,21 @@ class Settings(BaseSettings):
     smtp_user: str = ""
     smtp_password: str = ""
     smtp_from: str = "QUON <no-reply@quon.local>"
-    # Recipient for beta-feedback emails (POST /feedback). Empty → falls back to
+    # Recipient for beta-feedback emails (POST /feedback). Empty -> falls back to
     # smtp_from (operator sees it in the no-reply inbox). Set FEEDBACK_EMAIL in
     # the device .env to route feedback to a real inbox.
     feedback_email: str = ""
     # Optional: mirror each feedback submission into a GitHub issue so it lands
     # in a trackable backlog instead of only an inbox. Both must be set or the
-    # mirroring is simply off (see github_issues.py). The token wants ONLY
-    # "Issues: write" on that one repository — it is a write credential to a
+    # mirroring is simply off (see github_issues.py). The token wants only
+    # "Issues: write" on that one repository - it is a write credential to a
     # third party, so scope it as narrowly as GitHub allows.
     github_token: str = ""
     github_repo: str = ""  # "owner/name"
     # Transport: STARTTLS upgrade (port 587, the default) vs. implicit TLS /
     # SMTPS (port 465, e.g. Cloudflare Email Service smtp.mx.cloudflare.net:465).
     smtp_starttls: bool = True
-    # Force implicit TLS. Leave false to auto-detect: port 465 ⇒ implicit TLS.
+    # Force implicit TLS. Leave false to auto-detect: port 465 => implicit TLS.
     smtp_ssl: bool = False
 
     @property
@@ -410,7 +421,7 @@ class Settings(BaseSettings):
 
     # --- CORS ------------------------------------------------------------
     # Comma-separated list of allowed origins for the browser client. With cookie
-    # auth, credentials are sent, so this MUST be explicit origins (not "*") in
+    # auth, credentials are sent, so this must be explicit origins (not "*") in
     # production. cors_allow_credentials enables Set-Cookie across origins.
     cors_allow_origins: str = "*"
     cors_allow_credentials: bool = True
@@ -425,7 +436,7 @@ class Settings(BaseSettings):
             return False
         if mode == "auto":
             return bool(self.smtp_host)
-        # "required" — and anything unrecognised ("requried", "true", "on"):
+        # "required" - and anything unrecognised ("requried", "true", "on"):
         # a typo must never open registration. Fail closed.
         return True
 

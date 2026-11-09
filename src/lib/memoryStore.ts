@@ -1,5 +1,5 @@
 /**
- * Memory store — the user's facts/notes, end-to-end encrypted and synced as
+ * Memory store - the user's facts/notes, end-to-end encrypted and synced as
  * opaque blobs (collection `memory`) exactly like chat history.
  *
  * Same shape as the Documents store: a `useSyncExternalStore` hook + an
@@ -24,11 +24,11 @@ export type MemoryKind = "fact" | "note";
  *  (the shape the Auto-Memory sweep produces); anything longer is free-form
  *  content and is saved as a note. Retrieval trusts the two tiers differently:
  *  items above this length get the STRICT relevance gate (keyword anchor + high
- *  cosine — see rag.ts), because long pasted content chunk-embeds into many
+ *  cosine - see rag.ts), because long pasted content chunk-embeds into many
  *  vectors and is the main source of spurious context hits. */
 export const FACT_MAX_CHARS = 300;
 
-/** Effective kind for a text about to be saved: long texts are always notes —
+/** Effective kind for a text about to be saved: long texts are always notes -
  *  a multi-paragraph "fact" defeats the tier semantics above. */
 export function kindForText(text: string, chosen: MemoryKind): MemoryKind {
   return text.length > FACT_MAX_CHARS ? "note" : chosen;
@@ -70,37 +70,37 @@ export interface MemoryItem {
   sourceDocId?: string;
   /** User-curated "always consider this" flag. A pinned item is a retrieval
    *  candidate on every in-scope chat turn, bypassing the relevance gate's
-   *  cosine floor — meant for a FEW short, deliberately important facts (see
+   *  cosine floor - meant for a few short, deliberately important facts (see
    *  `FACT_MAX_CHARS` and `rag.ts`'s `memoryChunksInScope`, which only honours
    *  this for items at/under the fact-length ceiling; a pinned long note still
    *  gets the strict tier, so pinning can't be used to force-inject arbitrary
    *  pasted content). Optional and unset for all existing items; a plain field
    *  on the record, so it round-trips through the existing encrypted sync
    *  (`collectionSync.ts` serializes the whole item generically) and the
-   *  IndexedDB local cache unchanged — no migration needed. */
+   *  IndexedDB local cache unchanged - no migration needed. */
   pinned?: boolean;
   /**
-   * Lifecycle status (P5, see `.claude/plans/memory-lifecycle-p5.md`). Absent
-   * (the shape of every pre-P5 item) means "active" — see `isActiveMemory`.
+   * Lifecycle status. Absent (the shape of every item written before the field
+   * existed) means "active" - see `isActiveMemory`.
    * "superseded" = replaced by a newer/merged item (`supersededBy` names it);
    * "archived" = the user tucked it away via the future "attic" review.
-   * Reversible in both cases (`reviveMemoryItem`) — nothing here is ever a
+   * Reversible in both cases (`reviveMemoryItem`) - nothing here is ever a
    * hard delete. No migration: a plain optional field, same precedent as
    * `pinned` above. */
   status?: "active" | "superseded" | "archived";
   /** For status "superseded": the item that replaced this one. */
   supersededBy?: string;
-  /** Ids of items THIS item has superseded (provenance trail; may include
-   *  items later revived — not pruned on revive). */
+  /** Ids of items this item has superseded (provenance trail; may include
+   *  items later revived - not pruned on revive). */
   supersedes?: string[];
   /** Last time the user explicitly confirmed this item is still current (the
    *  future "attic" review's "Noch aktuell?" action). Distinct from `updatedAt`
-   *  (an edit) and `lastUsedAt` (a retrieval hit) — see `findAtticItems` in
+   *  (an edit) and `lastUsedAt` (a retrieval hit) - see `findAtticItems` in
    *  memoryExtract.ts and the staleness date-suffix in rag.ts. */
   lastConfirmedAt?: number;
   /** Last time this item was actually surfaced into a chat's context by RAG
    *  (`touchMemoryUsage`, called from rag.ts's `retrieveContext`). Deliberately
-   *  does NOT bump `updatedAt` — see `touchMemoryUsage`'s doc comment. */
+   *  does not bump `updatedAt` - see `touchMemoryUsage`'s doc comment. */
   lastUsedAt?: number;
   /** How many times this item has been surfaced into context (companion to
    *  `lastUsedAt`; same non-bumping-updatedAt rule). */
@@ -109,11 +109,11 @@ export interface MemoryItem {
   updatedAt: number;
 }
 
-/** True when an item is in the (implicit) "active" lifecycle state — the
+/** True when an item is in the (implicit) "active" lifecycle state - the
  *  absence of `status` (every pre-P5 item, and the common case) counts as
  *  active, same as an unset `pinned` counts as "not pinned". Retrieval
  *  (`rag.ts`), the sweep's dedup (`memoryExtract.ts`) and conflict/near-dup
- *  detection all filter through this — a superseded/archived item must never
+ *  detection all filter through this - a superseded/archived item must never
  *  be silently treated as current. */
 export function isActiveMemory(item: Pick<MemoryItem, "status">): boolean {
   return item.status !== "superseded" && item.status !== "archived";
@@ -204,7 +204,7 @@ export function upsertMemoryItem(item: MemoryItem): void {
 
 // --- lifecycle (P5): usage tracking + supersede/revive ----------------------
 
-/** Batches multiple `touchMemoryUsage` calls to the SAME item into one sync
+/** Batches multiple `touchMemoryUsage` calls to the same item into one sync
  *  push (a memory re-used across several turns of one chat shouldn't push
  *  once per hit). Keyed by item id. */
 const usageTouchTimers = new Map<string, ReturnType<typeof setTimeout>>();
@@ -215,25 +215,25 @@ export const USAGE_PUSH_DEBOUNCE_MS = 5000;
  * Record that a memory item was actually surfaced into a chat's context
  * (called from `rag.ts`'s `retrieveContext`). Bumps `lastUsedAt`/`useCount`.
  *
- * Deliberately does NOT bump `updatedAt`: doing so would (a) distort the
- * recency-boost ranking in `rerankAndGate` — a frequently-*retrieved* item
+ * Deliberately does not bump `updatedAt`: doing so would (a) distort the
+ * recency-boost ranking in `rerankAndGate` - a frequently-*retrieved* item
  * would look like a frequently-*edited* one and keep winning ties it hasn't
- * earned — and (b) spam the sync layer on every single chat turn (same class
+ * earned - and (b) spam the sync layer on every single chat turn (same class
  * of bug as the fresh-device `activeModelId` correction out-timestamping the
- * real choice — see `quon.correctActiveModel`'s doc comment).
+ * real choice - see `quon.correctActiveModel`'s doc comment).
  *
- * Sync strategy (chosen deliberately safe over complete — see
+ * Sync strategy (chosen deliberately safe over complete - see
  * memory-lifecycle-p5.md §"Data model"): the local update lands immediately
  * (IndexedDB + in-memory), but the debounced PUSH carries the item's
  * UNCHANGED `updatedAt`. `collectionSync.ts` pushes `store.updatedAtOf(item)`
  * as the authoritative LWW timestamp, and the server (`sync.py`) only ever
- * REJECTS an incoming write when it is OLDER than what's stored — so a push
+ * REJECTS an incoming write when it is OLDER than what's stored - so a push
  * with an unchanged timestamp can never clobber a genuinely newer edit,
  * local or remote. The trade-off: a receiving device already holding this
  * exact item at that exact `updatedAt` will locally DROP the pull
  * (`applyRemoteMemory`'s `existing.updatedAt >= item.updatedAt` guard), so a
  * usage bump doesn't always propagate to devices already in sync. That's
- * acceptable — usage is a soft staleness signal (feeds the "attic" review),
+ * acceptable - usage is a soft staleness signal (feeds the "attic" review),
  * never user-authored content, so safety against ever clobbering a real edit
  * wins over completeness.
  */
@@ -245,7 +245,7 @@ export function touchMemoryUsage(id: string): void {
     ...existing,
     lastUsedAt: Date.now(),
     useCount: (existing.useCount ?? 0) + 1,
-    // updatedAt intentionally unchanged — see the doc comment above.
+    // updatedAt intentionally unchanged - see the doc comment above.
   };
   items = items.map((x) => (x.id === id ? next : x));
   void idbPut(IDB, next);
@@ -267,7 +267,7 @@ export function touchMemoryUsage(id: string): void {
  * Mark `loserId` as superseded by `winnerId`: sets `status:"superseded"` +
  * `supersededBy` on the loser and records the link on the winner's
  * `supersedes[]`. Both are real edits (bump `updatedAt`, fire the sync push)
- * — this is the reversible alternative to deleting: `reviveMemoryItem`
+ * - this is the reversible alternative to deleting: `reviveMemoryItem`
  * restores the loser. No-op if either id is unknown or they're the same item.
  */
 export function supersedeMemoryItem(loserId: string, winnerId: string): void {
@@ -303,7 +303,7 @@ export function supersedeMemoryItem(loserId: string, winnerId: string): void {
 /** Reverse a supersede OR an archive: clears `status`/`supersededBy`, making
  *  the item active again. A real edit (bumps `updatedAt`, fires the sync
  *  push). No-op if the item is unknown or already active. The winner's
- *  `supersedes[]` provenance trail is intentionally left as-is — it's a
+ *  `supersedes[]` provenance trail is intentionally left as-is - it's a
  *  historical record, not a live pointer. */
 export function reviveMemoryItem(id: string): void {
   ensureLoaded();
@@ -335,8 +335,8 @@ export function archiveMemoryItem(id: string): void {
 }
 
 /** Record that the user confirmed an item is still current (the "attic"
- *  review's "Noch aktuell?" → yes action). Bumps `lastConfirmedAt` only —
- *  deliberately NOT `updatedAt` (this isn't a content edit; keeping the two
+ *  review's "Noch aktuell?" -> yes action). Bumps `lastConfirmedAt` only -
+ *  deliberately not `updatedAt` (this isn't a content edit; keeping the two
  *  separate is what lets `findAtticItems`/the staleness date-suffix in
  *  rag.ts tell "confirmed recently" apart from "edited recently"). */
 export function confirmMemoryItem(id: string): void {
@@ -351,7 +351,7 @@ export function confirmMemoryItem(id: string): void {
 }
 
 /** Assign (or clear, with `undefined`) the project a memory item belongs to.
- *  Pure metadata — embeddings are untouched, so no re-embedding. Fires sync push. */
+ *  Pure metadata - embeddings are untouched, so no re-embedding. Fires sync push. */
 export function setMemoryProject(id: string, projectId: string | undefined): void {
   ensureLoaded();
   const existing = items.find((x) => x.id === id);

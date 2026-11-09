@@ -1,5 +1,5 @@
 /**
- * The sync status store — the surface that makes a wedged collection visible.
+ * The sync status store - the surface that makes a wedged collection visible.
  *
  * The distinction these lock in: progress is transient (answers "is it still
  * running?"), blocked is durable (answers "this will never sync until you act").
@@ -31,7 +31,7 @@ describe("progress", () => {
 
   it("aggregates concurrent collections into one counter", () => {
     // The 6 personal engines each flush on their own timer, so the banner has
-    // to read as ONE operation rather than six competing ones.
+    // to read as one operation rather than six competing ones.
     reportSyncStart("chat", 100);
     reportSyncStart("documents", 50);
     reportSyncProgress("chat", 30, 100);
@@ -73,7 +73,7 @@ describe("progress", () => {
 });
 
 describe("blocked", () => {
-  it("survives the push completing — it is not progress", () => {
+  it("survives the push completing: it is not progress", () => {
     // The whole point: the operation "finishes", but the item still can't sync.
     reportSyncStart("chat", 5);
     reportSyncBlocked({ collection: "chat", id: "huge", reason: "toobig", bytes: 5_000_000 });

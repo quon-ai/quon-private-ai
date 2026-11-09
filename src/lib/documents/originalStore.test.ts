@@ -51,7 +51,7 @@ describe("originalKind", () => {
     expect(originalKind("image/webp", "pic.webp")).toBe("image");
   });
 
-  it("has no layout view for plain-text formats (extracted text IS the original)", () => {
+  it("has no layout view for plain-text formats (extracted text is the original)", () => {
     expect(originalKind("text/plain", "notes.txt")).toBeNull();
     expect(originalKind("application/json", "data.json")).toBeNull();
     expect(originalKind("text/csv", "table.csv")).toBeNull();
@@ -66,11 +66,11 @@ describe("shouldStoreOriginal", () => {
     expect(shouldStoreOriginal("text/html", "page.html", 1024)).toBe(true);
   });
 
-  it("keeps no bytes for markdown — its rendered view works from extracted text", () => {
+  it("keeps no bytes for markdown: its rendered view works from extracted text", () => {
     expect(shouldStoreOriginal("text/markdown", "readme.md", 1024)).toBe(false);
   });
 
-  it("keeps photo bytes — for OCR scans the photo IS the source of truth", () => {
+  it("keeps photo bytes: for OCR scans the photo is the source of truth", () => {
     expect(shouldStoreOriginal("image/jpeg", "scan.jpg", 3 * 1024 * 1024)).toBe(true);
     expect(shouldStoreOriginal("image/png", "brief.png", 1024)).toBe(true);
   });

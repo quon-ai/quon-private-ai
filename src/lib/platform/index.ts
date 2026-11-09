@@ -1,28 +1,28 @@
 /**
  * The platform capability seam.
  *
- * QUON runs in three shells — the browser (the reference implementation), a
+ * QUON runs in three shells - the browser (the reference implementation), a
  * Tauri desktop app, and later a mobile one. Feature code must ask for a
  * CAPABILITY, never for a platform: no `if (isMac)` outside this directory.
  * That is the single rule that keeps one codebase from becoming three.
  *
- * The web implementation IS today's behaviour, so the hosted build is unchanged
+ * The web implementation is today's behaviour, so the hosted build is unchanged
  * by construction and every existing test still describes the shipped product.
  *
- * Why this exists before anything else native (measured 2026-08-04): the Tauri
- * webview's origin is `tauri://localhost`, so every call to QUON's own API is
- * CROSS-SITE, and `cookie_samesite` is "lax" — the session cookie is simply not
- * sent. Browser `fetch` therefore cannot log in from the shell no matter what
- * CORS allows. The seam is not tidiness; it is the prerequisite for the desktop
- * app doing anything at all, and the same seam later carries IMAP (raw sockets)
- * and real filesystem access.
+ * Why this exists before anything else native: the Tauri webview's origin is
+ * `tauri://localhost`, so every call to QUON's own API is CROSS-SITE, and
+ * `cookie_samesite` is "lax" - the session cookie is simply not sent. Browser
+ * `fetch` therefore cannot log in from the shell no matter what CORS allows.
+ * The seam is not tidiness; it is the prerequisite for the desktop app doing
+ * anything at all, and the same seam later carries IMAP (raw sockets) and real
+ * filesystem access.
  */
 
 export type PlatformKind = "web" | "tauri" | "capacitor";
 
 /** Detected once. Tauri v2 injects `__TAURI_INTERNALS__` into the page; the
- *  Capacitor Android shell injects `Capacitor` (its native bridge) — and only
- *  reports native when it IS native: the same bridge object exists, with
+ *  Capacitor Android shell injects `Capacitor` (its native bridge) - and only
+ *  reports native when it is native: the same bridge object exists, with
  *  `isNativePlatform() === false`, when a Capacitor-built bundle runs in a
  *  plain browser tab. */
 export function platformKind(): PlatformKind {
@@ -39,7 +39,7 @@ export const isNative = (): boolean => platformKind() !== "web";
 /**
  * A fetch that is not bound by the page's origin.
  *
- * On the web this is exactly `globalThis.fetch` — same CORS rules, same cookie
+ * On the web this is exactly `globalThis.fetch` - same CORS rules, same cookie
  * jar, no behaviour change. In a native shell it routes through the host, which
  * has its own cookie jar and no notion of CORS, so a session cookie survives
  * and a LAN service (a Paperless without TLS, a Nextcloud) becomes reachable.
@@ -50,7 +50,7 @@ export interface HttpCapability {
   fetch: typeof globalThis.fetch;
   /** A fetch whose response BODY streams. Only needed where `fetch` cannot
    *  (the Capacitor shell's native fetch buffers whole responses); absent means
-   *  `fetch` already streams — the browser and the Tauri plugin both do. */
+   *  `fetch` already streams - the browser and the Tauri plugin both do. */
   streamingFetch?: typeof globalThis.fetch;
 }
 
@@ -71,7 +71,7 @@ function nativeFetch(): Promise<typeof globalThis.fetch> {
   return nativeFetchPromise;
 }
 
-/** The streaming fetch for the Capacitor shell, imported on first use — the
+/** The streaming fetch for the Capacitor shell, imported on first use - the
  *  module is small, but the web bundle has no reason to carry it. */
 let capacitorStreamPromise: Promise<typeof globalThis.fetch> | null = null;
 function capacitorStream(): Promise<typeof globalThis.fetch> {
@@ -81,7 +81,7 @@ function capacitorStream(): Promise<typeof globalThis.fetch> {
   return capacitorStreamPromise;
 }
 
-/** The fetch to use for a response the caller READS AS A STREAM (the chat
+/** The fetch to use for a response the caller reads AS A STREAM (the chat
  *  answer, its resume). Same as `http().fetch` wherever that streams. */
 export function streamingFetch(): typeof globalThis.fetch {
   const h = http();
@@ -91,26 +91,25 @@ export function streamingFetch(): typeof globalThis.fetch {
 /**
  * The http capability.
  *
- * In a native shell this resolves LAZILY — each call awaits the plugin module
- * on first use — rather than requiring an install step to have completed
- * first. That ordering requirement was a real bug, found by running the macOS
- * app (2026-08-05): the router kicked off the import without awaiting it, the
- * first health poll won the race, went out through the browser fetch, and was
- * refused by CORS — the app showed "QUON nicht erreichbar" against a perfectly
- * healthy API. A seam that only works if something ran earlier is a seam that
- * will be wrong again; resolving on demand cannot be raced.
+ * In a native shell this resolves LAZILY - each call awaits the plugin module
+ * on first use - rather than requiring an install step to have completed
+ * first. With an install step the first health poll races the import: it wins,
+ * goes out through the browser fetch, and is refused by CORS, so the app shows
+ * "QUON nicht erreichbar" against a perfectly healthy API. A seam that only
+ * works if something ran earlier will be wrong again; resolving on demand
+ * cannot be raced.
  */
 export function http(): HttpCapability {
   if (httpImpl) return httpImpl;
   if (platformKind() === "capacitor") {
     // The Android shell enables CapacitorHttp (capacitor.config.ts), which
-    // replaces the WebView's `fetch` with the native HTTP stack — own cookie
-    // jar, no CORS — before any app code runs. Resolved per call, not captured
+    // replaces the WebView's `fetch` with the native HTTP stack - own cookie
+    // jar, no CORS - before any app code runs. Resolved per call, not captured
     // at module load, so the patched function is the one used.
     return {
       unrestricted: true,
       fetch: (...args) => globalThis.fetch(...args),
-      // The chat answer (SSE) — CapacitorHttp cannot stream, so those two
+      // The chat answer (SSE) - CapacitorHttp cannot stream, so those two
       // requests go through the app's own native plugin (streamHttp.ts).
       streamingFetch: async (...args) => (await capacitorStream())(...args),
     };
@@ -128,11 +127,11 @@ export function http(): HttpCapability {
   };
 }
 
-// --- mail (IMAP) — native-only ---------------------------------------------
+// --- mail (IMAP) - native-only ---------------------------------------------
 
 export interface MailMessageData {
   uid: number;
-  /** RFC Message-ID when present — the idempotency key for ingest. */
+  /** RFC Message-ID when present - the idempotency key for ingest. */
   messageId: string | null;
   from: string | null;
   to: string | null;
@@ -143,7 +142,7 @@ export interface MailMessageData {
 
 export interface MailFetchData {
   uidValidity: number;
-  /** The stored cursor was invalidated (UIDVALIDITY rotated) — re-import
+  /** The stored cursor was invalidated (UIDVALIDITY rotated) - re-import
    *  converges because ingest is idempotent by Message-ID. */
   reset: boolean;
   messages: MailMessageData[];
@@ -154,7 +153,7 @@ export interface MailFetchData {
 /**
  * IMAP access, implemented in the Rust host (src-tauri/src/mail.rs): TLS, the
  * protocol and MIME parsing never enter the webview, and the password lives in
- * the OS keychain — storePassword is write-only from the page's perspective.
+ * the OS keychain - storePassword is write-only from the page's perspective.
  *
  * `null` on the web: a browser has no TCP. Feature code must treat null as
  * "this source doesn't exist here", not as an error.
@@ -172,7 +171,7 @@ export interface MailCapability {
   storePassword(host: string, username: string, password: string): Promise<void>;
   deletePassword(host: string, username: string): Promise<void>;
   listFolders(host: string, port: number, username: string): Promise<string[]>;
-  /** Server-side IMAP SEARCH; headers only — nothing is bulk-downloaded. */
+  /** Server-side IMAP SEARCH; headers only - nothing is bulk-downloaded. */
   search(args: {
     host: string;
     port: number;
@@ -207,9 +206,9 @@ export function provideMail(impl: MailCapability | null): void {
   mailImpl = impl;
 }
 
-/** Memoised Tauri invoke, imported on first use — same no-install-step rule as
+/** Memoised Tauri invoke, imported on first use - same no-install-step rule as
  *  http(): a capability that only works if something ran earlier is a bug
- *  factory (see the 2026-08-05 entry in the file header). */
+ *  factory (see http()'s doc). */
 let invokePromise: Promise<
   (cmd: string, args?: Record<string, unknown>) => Promise<unknown>
 > | null = null;
@@ -276,7 +275,7 @@ export function mail(): MailCapability | null {
   };
 }
 
-// --- files (real filesystem) — native-only ---------------------------------
+// --- files (real filesystem) - native-only ---------------------------------
 
 export interface PickedFolder {
   path: string;
@@ -284,13 +283,13 @@ export interface PickedFolder {
 }
 
 export interface ListedFile {
-  /** Root-relative path with `/` separators — the connector's stable ref. */
+  /** Root-relative path with `/` separators - the connector's stable ref. */
   refPath: string;
   size: number;
 }
 
 /** One entry of a mkdir call. `reason` is the host's machine code for
- *  "rejected" (symlink, file_exists, hidden, …) — worded in firstParty.ts. */
+ *  "rejected" (symlink, file_exists, hidden, ...) - worded in firstParty.ts. */
 export interface MkdirResult {
   path: string;
   status: "created" | "existed" | "rejected";
@@ -314,8 +313,8 @@ export interface WriteResult {
 /**
  * Real filesystem access, implemented in the Rust host (src-tauri/src/files.rs).
  * The OS folder picker runs HOST-side and registers the pick as a granted
- * root; list/read are canonicalize+prefix contained there — the page can never
- * name a path the user didn't grant. The writes — mkdir, move, write — are all
+ * root; list/read are canonicalize+prefix contained there - the page can never
+ * name a path the user didn't grant. The writes - mkdir, move, write - are all
  * non-destructive (never delete, never overwrite) and walk their paths without
  * following symlinks. `null` on the web (the FS Access API / input fallback
  * covers reading there).
@@ -367,17 +366,17 @@ export function files(): FilesCapability | null {
   };
 }
 
-// --- embeddings — native-only (the black-flash fix) ------------------------
+// --- embeddings - native-only (the black-flash fix) ------------------------
 
 /**
  * On-device text embeddings in the Rust host, so the webview never loads the
- * ~20MB ONNX/WASM ML runtime (whose WebKit WASM compilation got the WebContent
- * process CPU-killed — issue #36/#37). SAME quantized MiniLM + tokenizer as the
- * browser; calibrated retrieval-equivalent (native queries retrieve the same
- * best match from browser-embedded vectors — src-tauri/tests/embed_parity.rs),
- * so vectors keep ONE embModel id and native/web never re-embed each other.
+ * ~20MB ONNX/WASM ML runtime (its WebKit WASM compilation gets the WebContent
+ * process CPU-killed). Same quantized MiniLM + tokenizer as the browser;
+ * calibrated retrieval-equivalent (native queries retrieve the same best match
+ * from browser-embedded vectors - src-tauri/tests/embed_parity.rs), so vectors
+ * keep one embModel id and native/web never re-embed each other.
  *
- * `null` on the web — the browser worker path stays exactly as before.
+ * `null` on the web - the browser worker path stays exactly as before.
  */
 export interface EmbedCapability {
   warm(): Promise<void>;

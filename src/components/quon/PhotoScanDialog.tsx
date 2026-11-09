@@ -14,7 +14,7 @@ type Phase = "model" | "recognize" | "review" | "error";
 /**
  * Review step for photo scans: the photo is OCR'd fully on-device (see
  * lib/documents/ocr.ts) and the transcript is shown EDITABLE before anything
- * is saved — printed text reads reliably (our eval: CER ≤2% on photographed
+ * is saved - printed text reads reliably (our eval: CER <=2% on photographed
  * German/English documents), handwriting often doesn't, and the user is told
  * so instead of silently indexing garbage. Zero-knowledge: photo and text
  * never leave the device unencrypted.
@@ -23,14 +23,14 @@ type Phase = "model" | "recognize" | "review" | "error";
  * - default ("Save to Documents"): the normal ingest pipeline runs with the
  *   reviewed text; the photo is kept as the encrypted original for the viewer.
  * - `attachMode` (chat paperclip): confirm hands the reviewed text back to the
- *   caller as a message attachment instead — no document is created and the
+ *   caller as a message attachment instead - no document is created and the
  *   photo is discarded; the text then goes through the same scrub-before-send
  *   path as any attachment.
  *
  * Cloud escalation (hybrid, like the PII scrubber): when the on-device result
  * is poor (handwriting, hard photos) the user can EXPLICITLY send this one
  * photo via the QUON server to a cloud vision model (ZDR routing, never
- * stored). It never happens automatically — the on-device promise holds until
+ * stored). It never happens automatically - the on-device promise holds until
  * the user opts out per photo, and the header chip switches wording so the
  * dialog never claims a privacy level it no longer has.
  */
@@ -51,7 +51,7 @@ export function PhotoScanDialog({
    *  without this the user can't tell how many are still coming. */
   queue?: { index: number; total: number };
   /** Take every remaining photo without stopping for review. Set by the parent
-   *  when the user pressed "take them all" — reviewing five screenshots one at
+   *  when the user pressed "take them all" - reviewing five screenshots one at
    *  a time is the cost this buys out of. */
   autoAccept?: boolean;
   /** Offered only inside a batch; the parent flips `autoAccept`. */
@@ -66,7 +66,7 @@ export function PhotoScanDialog({
   const [saving, setSaving] = useState(false);
   // Bumping retries the whole OCR run (e.g. after an offline model download).
   const [attempt, setAttempt] = useState(0);
-  // Which engine produced the current transcript — drives the honesty chip.
+  // Which engine produced the current transcript - drives the honesty chip.
   const [tier, setTier] = useState<"device" | "cloud">("device");
   const [cloudState, setCloudState] = useState<"idle" | "confirm" | "busy">("idle");
   const [cloudError, setCloudError] = useState<string | null>(null);
@@ -108,7 +108,7 @@ export function PhotoScanDialog({
       } catch (err) {
         if (cancelled) return;
         // "Failed to fetch dynamically imported module" means this instance
-        // outlived its build (the OCR chunk was replaced by a deploy) — not
+        // outlived its build (the OCR chunk was replaced by a deploy) - not
         // that the scanner is broken. Say what actually helps; the update bar
         // with its reload button is showing by now (UpdateBanner listens for
         // exactly this).
@@ -156,7 +156,7 @@ export function PhotoScanDialog({
   }
 
   // In "take them all" mode a finished transcript is accepted straight away.
-  // An OCR FAILURE deliberately does not auto-skip: the error phase stays on
+  // An OCR failure deliberately does not auto-skip: the error phase stays on
   // screen so a photo that could not be read is noticed rather than silently
   // dropped from the batch.
   useEffect(() => {
@@ -190,7 +190,7 @@ export function PhotoScanDialog({
 
   const busy = phase === "model" || phase === "recognize";
 
-  // Escalation affordance — only offered while the transcript is on-device
+  // Escalation affordance - only offered while the transcript is on-device
   // (after a cloud read there is nothing stronger to escalate to).
   const cloudBlock = tier === "device" && (
     <div className="flex flex-col gap-2 rounded-lg border border-quon-border bg-quon-surface-2 p-2.5">
@@ -336,7 +336,7 @@ export function PhotoScanDialog({
           </button>
           {/* Only inside a batch, and only while photos remain: reviewing five
               screenshots one by one is exactly what this buys out of. Honest
-              about the cost — the rest is taken UNREVIEWED. */}
+              about the cost - the rest is taken UNREVIEWED. */}
           {onAcceptAll && queue && queue.total > 1 && queue.index < queue.total && !autoAccept && (
             <button
               onClick={() => {
@@ -365,7 +365,7 @@ export function PhotoScanDialog({
 }
 
 function defaultFilename(file: File): string {
-  // Camera captures arrive as generic "image.jpg" — date-stamp those; keep
+  // Camera captures arrive as generic "image.jpg" - date-stamp those; keep
   // meaningful gallery names as-is.
   const generic = /^(image|img|photo|capture)[-_ ]?\d*\.(jpe?g|png|webp|heic|heif)$/i;
   if (file.name && !generic.test(file.name)) return file.name;

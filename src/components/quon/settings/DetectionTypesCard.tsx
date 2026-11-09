@@ -10,7 +10,7 @@ import { EntityTypeChecklist } from "./EntityTypeChecklist";
 const CARD = "rounded-xl border border-quon-border bg-quon-surface p-4";
 
 /**
- * Choose which entity TYPES QUON redacts (Names, Amounts, Dates, Address …).
+ * Choose which entity TYPES QUON redacts (Names, Amounts, Dates, Address ...).
  * Everything on by default; unchecking a type adds it to `disabledEntityTypes`
  * (sent as `disabled_types` with each /scrub, per-project overridable).
  */
@@ -45,8 +45,8 @@ export function DetectionTypesCard() {
           {t("settings.typesDisabledWarning", { count: disabledEntityTypes.length })}
         </p>
       )}
-      {/* #54: the status the header badge shows, stated where the setting is
-          made — and a link to what the engines actually do. "Later in the chat
+      {/* The status the header badge shows, stated where the setting is
+          made - and a link to what the engines actually do. "Later in the chat
           is a bit late." */}
       <p
         className={`mt-3 border-t border-quon-border pt-3 text-[10px] ${

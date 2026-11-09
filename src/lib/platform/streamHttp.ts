@@ -2,7 +2,7 @@
  * A `fetch` whose response body STREAMS in the Capacitor Android shell.
  *
  * CapacitorHttp replaces `fetch` with a native request whose Response is built
- * from the complete text/json/blob — it cannot stream. For the chat answer
+ * from the complete text/json/blob - it cannot stream. For the chat answer
  * that meant two things on the phone: no token-by-token rendering, and the
  * server's leading `{job}` SSE event (what makes a cut stream resumable) never
  * arrived before a failure, so backgrounding surfaced an error instead of a
@@ -10,8 +10,8 @@
  * this wraps its events into a standard Response with a ReadableStream body,
  * so quonApi's SSE reader needs no other path.
  *
- * Bytes cross the bridge base64-encoded and are decoded here as raw bytes —
- * never as text — so a multi-byte UTF-8 character split across two chunks is
+ * Bytes cross the bridge base64-encoded and are decoded here as raw bytes -
+ * never as text - so a multi-byte UTF-8 character split across two chunks is
  * reassembled by the caller's streaming TextDecoder exactly as with a browser
  * fetch.
  */
@@ -48,12 +48,12 @@ export function provideStreamHttpPlugin(impl: StreamHttpPlugin | null): void {
  * The plugin proxy. The bridge the WebView injects (`window.Capacitor`) is only
  * the low-level transport; `registerPlugin` and the proxies that turn native
  * events into `addListener` callbacks are `@capacitor/core`'s runtime, which
- * has to be IMPORTED — found on the device 2026-09-07, when the first build
- * warned "plugin unavailable" and every send failed before a request left.
- * Dynamic import: this module is itself only loaded in the Capacitor branch of
- * the seam, so the web bundle still carries nothing Capacitor.
+ * has to be imported - without it the device warns "plugin unavailable" and
+ * every send fails before a request leaves. Dynamic import: this module is
+ * itself only loaded in the Capacitor branch of the seam, so the web bundle
+ * still carries nothing Capacitor.
  */
-// ⚠️ The proxy must never be a promise's RESOLVED VALUE: it answers every
+// The proxy must never be a promise's resolved value: it answers every
 // property with a native call, so promise resolution probes `.then` on it and
 // gets "StreamHttp.then() is not implemented on android" (seen on the device).
 // Hence a promise that resolves to nothing and sets the module variable.
@@ -104,7 +104,7 @@ export async function streamFetch(
   if (signal?.aborted) throw new DOMException("The operation was aborted.", "AbortError");
 
   const body = init.body == null ? undefined : String(init.body);
-  // Minted HERE, not by the native side: the listeners must know which events
+  // Minted here, not by the native side: the listeners must know which events
   // are theirs before the native thread can emit the first one, and `start()`
   // resolving is not ordered against that thread.
   const id = mintId();
@@ -121,7 +121,7 @@ export async function streamFetch(
 
   // Body events are queued and handed to the stream on PULL, in order. Calling
   // controller.error() directly would discard chunks still queued behind a
-  // slow reader — a browser fetch delivers every byte it received before the
+  // slow reader - a browser fetch delivers every byte it received before the
   // failure, and the SSE reader's resume offset depends on that.
   type Item = Uint8Array | { end: true } | { error: unknown };
   const queue: Item[] = [];

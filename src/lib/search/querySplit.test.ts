@@ -30,7 +30,7 @@ describe("splitQuery", () => {
 
   it("drops pure-stopword fragments and de-duplicates", () => {
     const out = splitQuery("und und, Hallo");
-    // "und"/"und" carry no topical signal → only the full string + "Hallo".
+    // "und"/"und" carry no topical signal -> only the full string + "Hallo".
     expect(out).toContain("Hallo");
     expect(out.filter((p) => p === "und")).toHaveLength(0);
     // No duplicates.

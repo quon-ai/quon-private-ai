@@ -1,18 +1,17 @@
 name: Supply chain
 
-# Runs where CI_RUNNER says, same switch as ci.yml. These jobs were RED every
-# day for over a week — failing in ~4s with zero steps executed, the signature
-# of an exhausted GitHub Actions allowance, not of a real finding. So the
-# vulnerability scan, licence gate and SBOM silently did not run through a week
-# of dependency additions. Self-hosted minutes are free, which removes the
-# cause rather than papering over it.
+# Runs where CI_RUNNER says, same switch as ci.yml. On the hosted pool these
+# jobs are the first to hit an exhausted GitHub Actions allowance: a job that
+# fails in seconds with zero steps executed is that, not a finding, and it
+# means the vulnerability scan, licence gate and SBOM silently stop running.
+# Self-hosted minutes are free, which removes the cause rather than papering
+# over it.
 #
-# ⚠️ Same rule as ci.yml: NEVER set CI_RUNNER on a public repository.
+# Same rule as ci.yml: never set CI_RUNNER on a public repository.
 #
-# ⚠️ Also the same rule on caching: an empty `cache:` input disables it, because
+# Also the same rule on caching: an empty `cache:` input disables it, because
 # a GitHub cache round-trip from the self-hosted runner costs a 1.2 MB/s uplink
-# to re-fetch directories that box already keeps. See ci.yml's header for the
-# measurement that made this non-negotiable.
+# to re-fetch directories that box already keeps. See ci.yml's header.
 
 # SBOM + license + known-vulnerability compliance for both ecosystems (npm
 # frontend, pip backend). Runs on PRs and pushes to main, plus a weekly schedule
@@ -54,17 +53,17 @@ jobs:
       # Production deps only, fail on high/critical (dev-tool advisories don't
       # reach users). Downgrade to `moderate` once the baseline is clean if you
       # want a tighter gate.
-      # Wrapper, not raw `npm audit`: advisories with NO fix in UNREACHABLE deps
-      # (see scripts/check-audit.mjs ALLOW list — written reason + expiry each)
+      # Wrapper, not raw `npm audit`: advisories with no fix in UNREACHABLE deps
+      # (see scripts/check-audit.mjs ALLOW list - written reason + expiry each)
       # must not keep the gate permanently red. A gate that is red for known
-      # reasons trains people to ignore red; four real advisories sat unnoticed
-      # on main exactly that way until 2026-08-13.
+      # reasons trains people to ignore red, and real advisories then sit
+      # unnoticed behind the known ones.
       - name: npm audit (production, with documented exceptions)
         run: node scripts/check-audit.mjs
       # Catches what `npm audit` structurally cannot: a compromised-maintainer
       # or typosquat release pulled in before any advisory exists. Was
       # `minimumReleaseAge` in bunfig.toml, which never ran (nothing here uses
-      # bun) — see the header of the script.
+      # bun) - see the header of the script.
       - name: Minimum release age (production deps)
         run: node scripts/check-release-age.mjs
       - uses: actions/setup-python@v7
@@ -78,16 +77,15 @@ jobs:
           # The two spaCy models are pinned to official explosion release
           # wheels by URL. They are not PyPI distributions, so pip-audit says
           # "Dependency not found on PyPI and could not be audited" and
-          # --strict makes that fatal — six red runs that were not
-          # vulnerabilities. Auditing them via PyPI is impossible by
+          # --strict makes that fatal although it is not a vulnerability.
+          # Auditing them via PyPI is impossible by
           # construction, so they are filtered here rather than by dropping
           # --strict, which would also silence genuinely unauditable deps.
           grep -v '^https://' quon-scrubber-service/requirements.txt > /tmp/req-pypi.txt
-          # No per-advisory ignores here any more: the three cryptography
-          # advisories of 2026 (PYSEC-2026-3552/3553/3554) closed when
-          # presidio-anonymizer 2.2.366 lifted its cap and requirements.txt
-          # floored cryptography at 50.0.2 (2026-10-31). Any new advisory
-          # fails this job, which is the point of --strict.
+          # No per-advisory ignores here. Any advisory fails this job, which
+          # is the point of --strict; the fix belongs in requirements.txt
+          # (cryptography is floored there at a patched release), not in an
+          # ignore list.
           pip-audit -r /tmp/req-pypi.txt --strict
 
   # --- OSV-Scanner: unified OSV report across all lockfiles (blocking) ------
@@ -97,20 +95,17 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
-      # Official OSV-Scanner action — note the SUB-PATH. The repository ROOT
-      # carries an action.yml with name/description/branding but NO `runs:`
+      # Official OSV-Scanner action - note the SUB-PATH. The repository ROOT
+      # carries an action.yml with name/description/branding but no `runs:`
       # section, so `google/osv-scanner-action@vX` resolves and then fails with
       #   Top level 'runs:' section is required for .../action.yml
       # which reads like a bad ref and is not one. Dependabot bumps the tag
-      # happily; it cannot know the path is wrong. Broken this way since the
-      # v2.3.8 bump, unnoticed because nothing watches this workflow.
+      # happily; it cannot know the path is wrong.
       #
-      # Second breakage from the SAME bump, found 2026-08-24: v2 REMOVED
-      # `--skip-git`, so the binary exited 127 with "flag provided but not
-      # defined" and the scanner never ran at all — six red runs that looked
-      # like findings and were an unparsed flag. Skipping the root git repo is
-      # the v2 DEFAULT (`--include-git-root` opts back in), so the fix is to
-      # delete the line, not to translate it.
+      # No `--skip-git`: v2 removed the flag, and an unknown flag makes the
+      # binary exit 127 ("flag provided but not defined") before it scans
+      # anything, a red run that looks like a finding. Skipping the root git
+      # repo is the v2 default (`--include-git-root` opts back in).
       - uses: google/osv-scanner-action/osv-scanner-action@v2.3.8
         with:
           scan-args: |-
@@ -136,7 +131,7 @@ jobs:
       - name: npm license inventory
         run: npx --yes license-checker --production --summary > npm-licenses.txt || true
       # --excludePrivatePackages: the gate judges DEPENDENCIES. The root package
-      # is private:true, and in the public edition it is itself AGPL-3.0 — without
+      # is private:true, and in the public edition it is itself AGPL-3.0 - without
       # this flag the gate would fail on the project's own licence.
       - name: npm license gate (no GPL/AGPL/SSPL in production)
         run: |
@@ -150,9 +145,9 @@ jobs:
       # pip-licenses reads INSTALLED packages, so install the runtime deps first.
       - name: install backend runtime deps
         run: pip install -r quon-scrubber-service/requirements.txt pip-licenses
-      # --partial-match: without it pip-licenses compares the WHOLE licence
+      # --partial-match: without it pip-licenses compares the whole licence
       # string, so "MPL-1.1 OR GPL-2.0-only OR LGPL-2.1-or-later" (tld, via
-      # presidio-analyzer and courlan) passed a 'GPL' gate unseen (2026-10-30).
+      # presidio-analyzer and courlan) passes a 'GPL' gate unseen.
       # tld is ignored by name because QUON elects its MPL-1.1 option.
       - name: pip license inventory + gate
         run: |
@@ -177,27 +172,22 @@ jobs:
       - uses: actions/checkout@v7
       # anchore/sbom-action wraps Syft; scans npm + pip from source and emits a
       # CycloneDX document. Uploaded as a build artifact (and attached to the run).
-      # No `artifact-name:` — that input makes this action upload the SBOM
-      # ITSELF, and the explicit upload below then stored a SECOND copy under a
-      # different name. Two 5 MB artifacts, 90-day retention, of the same
-      # document. Writing the file only, and uploading it once, halves the
-      # footprint and leaves retention controllable in one place.
-      # `upload-artifact: false` is the input that actually stops it. Omitting
-      # `artifact-name:` does NOT — verified 2026-08-24: this action uploaded
-      # /tmp/sbom-action-*/quon-sbom.cyclonedx.json itself, hit the storage
-      # quota and failed the job BEFORE the guarded upload below ever ran. The
-      # continue-on-error underneath was protecting the wrong step.
+      # `upload-artifact: false`, so the action only writes the file and the
+      # guarded step below is the single upload. Left to itself the action
+      # uploads the SBOM too (omitting `artifact-name:` does not stop it): the
+      # job then holds two copies of the same 5 MB document at 90-day
+      # retention, and a storage-quota failure inside the action fails the job
+      # before the continue-on-error upload below ever runs.
       - uses: anchore/sbom-action@v0
         with:
           path: .
           format: cyclonedx-json
           output-file: quon-sbom.cyclonedx.json
           upload-artifact: false
-      # continue-on-error: on 2026-08-18 this job went red with "Artifact storage
-      # quota has been hit" while the scan itself had succeeded — a storage
-      # problem masquerading as a compliance failure, the same shape that turned
-      # a passing E2E suite red two days earlier. The scan verdict is the gate;
-      # the artifact is evidence, and missing evidence is a warning, not a fail.
+      # continue-on-error: "Artifact storage quota has been hit" must not turn
+      # a successful scan into a red job, a storage problem masquerading as a
+      # compliance failure. The scan verdict is the gate; the artifact is
+      # evidence, and missing evidence is a warning, not a fail.
       - uses: actions/upload-artifact@v7
         if: ${{ !cancelled() }}
         continue-on-error: true

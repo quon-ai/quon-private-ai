@@ -1,7 +1,7 @@
 """Production-config fail-fast: with Secure cookies (the HTTPS-deployment
 signal) the app must refuse to boot without QUON_SERVER_SECRET or with a
-wildcard CORS origin — both previously failed only at runtime (500 on saving
-a BYOK key; silently-broken cookie auth)."""
+wildcard CORS origin - without the check both fail only at runtime (500 on
+saving a BYOK key; silently-broken cookie auth)."""
 
 from __future__ import annotations
 
@@ -37,8 +37,8 @@ def test_prod_boot_rejects_wildcard_cors(monkeypatch, tmp_path):
 
 
 def test_prod_boot_rejects_empty_cors(monkeypatch, tmp_path):
-    """An EMPTY value resolves to ["*"] (config.cors_origins_list) and must be
-    refused exactly like the literal wildcard — the raw-string check missed it.
+    """An empty value resolves to ["*"] (config.cors_origins_list) and must be
+    refused exactly like the literal wildcard - the raw-string check missed it.
     """
     monkeypatch.setattr(settings, "database_path", str(tmp_path / "q.db"))
     monkeypatch.setattr(settings, "cookie_secure", True)
@@ -58,7 +58,7 @@ def test_dev_boot_unaffected(monkeypatch, tmp_path):
 
 
 def _prod_base(monkeypatch, tmp_path):
-    """A valid production config — the open-registration checks below vary only
+    """A valid production config - the open-registration checks below vary only
     the invite code / provisioning / shared key on top of this."""
     monkeypatch.setattr(settings, "database_path", str(tmp_path / "q.db"))
     monkeypatch.setattr(settings, "cookie_secure", True)
@@ -69,7 +69,7 @@ def _prod_base(monkeypatch, tmp_path):
 def test_open_registration_with_shared_key_warns_loudly(monkeypatch, tmp_path, caplog):
     """Empty SIGNUP_INVITE_CODE + no provisioning + a shared key = anyone who
     reaches the host can register, bill the operator's uncapped key, and (as the
-    first account) become admin. Must WARN — but not refuse to boot: open signup
+    first account) become admin. Must WARN - but not refuse to boot: open signup
     is legitimate when users bring their own keys."""
     _prod_base(monkeypatch, tmp_path)
     monkeypatch.setattr(settings, "signup_invite_code", "")
@@ -114,8 +114,8 @@ def test_no_warning_when_provisioning_gives_each_user_a_capped_key(
 
 def test_prod_boot_warns_when_registration_is_open_without_verification(monkeypatch, tmp_path, caplog):
     """A public instance that activates accounts on creation and asks for no
-    invite code must say so on every boot — loudly, whether or not a shared
-    provider key is set (until 2026-10-31 only the shared key triggered it)."""
+    invite code must say so on every boot - loudly, whether or not a shared
+    provider key is set."""
     import logging
 
     _prod_base(monkeypatch, tmp_path)

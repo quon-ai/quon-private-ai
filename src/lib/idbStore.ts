@@ -1,7 +1,7 @@
 /**
  * Minimal async IndexedDB key-value backing for the Memory / Documents stores.
  *
- * localStorage caps at ~5MB per origin — a handful of documents' embeddings blow
+ * localStorage caps at ~5MB per origin - a handful of documents' embeddings blow
  * that, after which persistence silently fails (data lost on reload). IndexedDB
  * has orders-of-magnitude more room and is async (no main-thread serialization
  * stall). Each store keeps its working copy in memory; this just persists records
@@ -15,7 +15,7 @@
  *
  * Everything fails soft: if IndexedDB is unavailable (SSR, private mode, denied),
  * reads return [] and writes no-op, and the in-memory store still works for the
- * session — the server sync remains the durable source of truth either way.
+ * session - the server sync remains the durable source of truth either way.
  */
 
 import { diagAppend } from "./diagLog";
@@ -30,16 +30,16 @@ import { resetAllSyncCursors } from "./syncCursor";
 
 const DB_NAME = "quon";
 // v2 adds the "projects" store; v3 adds "originals" (sealed original file bytes
-// behind the document viewer — a local cache, re-fillable from the `originals`
+// behind the document viewer - a local cache, re-fillable from the `originals`
 // sync collection via documents/originalSync.ts); v4 adds
-// "memory_suggestions" (the Auto-Memory review queue — local-only, never synced);
+// "memory_suggestions" (the Auto-Memory review queue - local-only, never synced);
 // v5 adds "jobs" (client-runmode agents + runs, synced E2E via the `jobs`
-// collection — see agents/jobsStore.ts); v6 adds "images" (generated-image
-// bytes behind a chat message — a sealed local cache like "originals",
+// collection - see agents/jobsStore.ts); v6 adds "images" (generated-image
+// bytes behind a chat message - a sealed local cache like "originals",
 // re-fillable from the `originals` sync collection via chat/generatedImages.ts).
 // onupgradeneeded only fires on a version change, so the bump is what creates the
 // new store for existing users; the handler iterates IDB_STORES and creates any
-// missing store (idempotent — existing data untouched).
+// missing store (idempotent - existing data untouched).
 const DB_VERSION = 6;
 export const IDB_STORES = [
   "documents",
@@ -54,10 +54,10 @@ export type IdbStoreName = (typeof IDB_STORES)[number];
 
 let dbPromise: Promise<IDBDatabase | null> | null = null;
 
-/** The database did not exist — first run on this device, or the browser
- *  evicted it (feedback #88). Any sync cursor that survived in localStorage now
- *  vouches for blobs that are gone: reset them so the next pull refills the
- *  cache from the server. Silent on a genuine first run (no cursors). */
+/** The database did not exist - first run on this device, or the browser
+ *  evicted it. Any sync cursor that survived in localStorage now vouches for
+ *  blobs that are gone: reset them so the next pull refills the cache from the
+ *  server. Silent on a genuine first run (no cursors). */
 function onFreshDatabase(): void {
   const n = resetAllSyncCursors();
   if (n > 0) {
@@ -75,14 +75,14 @@ function openDb(): Promise<IDBDatabase | null> {
     let settled = false;
     const settle = (db: IDBDatabase | null) => {
       if (settled) {
-        db?.close(); // a late second connection — one is enough
+        db?.close(); // a late second connection - one is enough
         return;
       }
       settled = true;
       if (db) {
         // Another tab/window wants to upgrade (or delete) the database: let it.
-        // Without this, THIS build is the one blocking the next version bump
-        // in every other window — exactly how an installed PWA that was never
+        // Without this, this build is the one blocking the next version bump
+        // in every other window - exactly how an installed PWA that was never
         // reloaded can keep a fresh tab from opening the store at all.
         db.onversionchange = () => {
           db.close();
@@ -94,7 +94,7 @@ function openDb(): Promise<IDBDatabase | null> {
     // The upgrade cannot proceed (another QUON window holds the old version
     // open, or a newer build already moved past ours): open whatever version
     // is on disk instead of hanging. A store this build expects may then be
-    // missing — every access already fails soft on that.
+    // missing - every access already fails soft on that.
     const openCurrent = (why: string) => {
       diagAppend(`local cache: ${why} — using the stored version for now`);
       try {
@@ -155,7 +155,7 @@ function isSealedRecord(rec: unknown): rec is SealedRecord {
 }
 
 /** All records in a store (empty array if IndexedDB is unavailable). Waits for
- *  the local cache key — i.e. resolves only once the user has unlocked. */
+ *  the local cache key - i.e. resolves only once the user has unlocked. */
 export async function idbGetAll<T extends { id: string }>(name: IdbStoreName): Promise<T[]> {
   await whenLocalCacheKey();
   const db = await openDb();
@@ -171,7 +171,7 @@ export async function idbGetAll<T extends { id: string }>(name: IdbStoreName): P
   });
   const out: T[] = [];
   const legacy: T[] = []; // plaintext rows from before at-rest encryption
-  const dead: string[] = []; // sealed under another account's key → unreadable
+  const dead: string[] = []; // sealed under another account's key -> unreadable
   for (const rec of raw) {
     if (isSealedRecord(rec)) {
       const item = openLocal<T>(rec.enc1);
@@ -184,7 +184,7 @@ export async function idbGetAll<T extends { id: string }>(name: IdbStoreName): P
   }
   // One-time migration: re-write legacy plaintext rows sealed.
   if (legacy.length) void idbPutAll(name, legacy);
-  // Hygiene: rows this account can never open just waste space — drop them. The
+  // Hygiene: rows this account can never open just waste space - drop them. The
   // owning account re-pulls its data from the server sync on next login.
   for (const id of dead) void idbDelete(name, id);
   return out;
@@ -196,7 +196,7 @@ export async function idbPut<T extends { id: string }>(name: IdbStoreName, item:
 }
 
 /** Insert/replace many records in a single transaction. Records are sealed with
- *  the local cache key; without a key (locked/anonymous) the write is skipped —
+ *  the local cache key; without a key (locked/anonymous) the write is skipped -
  *  plaintext never touches disk. */
 export async function idbPutAll<T extends { id: string }>(
   name: IdbStoreName,
@@ -207,7 +207,7 @@ export async function idbPutAll<T extends { id: string }>(
   const sealed: SealedRecord[] = [];
   for (const item of items) {
     const enc1 = sealLocal(item);
-    if (!enc1) return; // no cache key → keep in memory only (fail soft)
+    if (!enc1) return; // no cache key -> keep in memory only (fail soft)
     sealed.push({ id: item.id, enc1 });
   }
   return new Promise((resolve) => {
@@ -225,7 +225,7 @@ export async function idbPutAll<T extends { id: string }>(
 }
 
 /** A sealed binary row: raw bytes encrypted under the local cache key. Kept as
- *  a Uint8Array (structured clone), not a base64 SealedRecord — originals run to
+ *  a Uint8Array (structured clone), not a base64 SealedRecord - originals run to
  *  megabytes and the JSON detour would multiply the allocation. */
 interface SealedBytesRecord {
   id: string;
@@ -234,7 +234,7 @@ interface SealedBytesRecord {
 
 /** One binary record by id, unsealed. Null when absent, IndexedDB is unavailable,
  *  or the row was sealed under a different account's key (then it can never be
- *  opened here again → deleted, same hygiene as idbGetAll). Waits for the local
+ *  opened here again -> deleted, same hygiene as idbGetAll). Waits for the local
  *  cache key, i.e. resolves only once the user has unlocked. */
 export async function idbGetBytes(name: IdbStoreName, id: string): Promise<Uint8Array | null> {
   await whenLocalCacheKey();
@@ -258,7 +258,7 @@ export async function idbGetBytes(name: IdbStoreName, id: string): Promise<Uint8
 }
 
 /** Insert/replace one binary record, sealed with the local cache key. Returns
- *  false (skipping the write) without a key — plaintext never touches disk. */
+ *  false (skipping the write) without a key - plaintext never touches disk. */
 export async function idbPutBytes(
   name: IdbStoreName,
   id: string,
@@ -267,7 +267,7 @@ export async function idbPutBytes(
   const db = await openDb();
   if (!db) return false;
   const bin = sealLocalBytes(bytes);
-  if (!bin) return false; // no cache key → keep in memory only (fail soft)
+  if (!bin) return false; // no cache key -> keep in memory only (fail soft)
   return new Promise((resolve) => {
     try {
       const tx = db.transaction(name, "readwrite");

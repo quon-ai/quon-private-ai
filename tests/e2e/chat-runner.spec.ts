@@ -3,7 +3,7 @@ import { test, expect, type Page } from "@playwright/test";
 import { login, openChat, sharedCreds } from "./helpers/account";
 
 // Echoing + delayed relay mock: the reply echoes the last user content (so every
-// message gets a DISTINCT reply — that's how we detect "all bubbles overwritten with
+// message gets a DISTINCT reply - that's how we detect "all bubbles overwritten with
 // the last answer"), after `delayMs` (a window to interact mid-generation).
 async function mockRelay(page: Page, delayMs: number) {
   await page.route("**/chat/stream", async (route) => {
@@ -30,7 +30,7 @@ async function mockRelay(page: Page, delayMs: number) {
 
 const box = (page: Page) => page.getByPlaceholder("Ask anything, keep your data personal");
 const send = (page: Page) => page.getByRole("button", { name: "Send" }).click();
-// the chat bubbles live in <main>; the sidebar Recents list does not — scope to it so a
+// the chat bubbles live in <main>; the sidebar Recents list does not - scope to it so a
 // Recents entry titled like a message isn't mistaken for a bubble.
 const main = (page: Page) => page.locator("main");
 
@@ -58,9 +58,9 @@ test("New chat pressed mid-generation gives a clean, separate chat", async ({ pa
   await box(page).fill("first chat message");
   await send(page);
   // TRUE sync point: wait for the send to have COMMITTED its session (?c= in
-  // the URL). The old bubble-text wait was a false signal — getByText matched
+  // the URL). The old bubble-text wait was a false signal - getByText matched
   // the COMPOSER's text inside <main> while the scrub was still in flight, so
-  // "New chat" got clicked mid-scrub, its /chat→/chat navigation was a no-op,
+  // "New chat" got clicked mid-scrub, its /chat->/chat navigation was a no-op,
   // and the send's own ?c= navigation then erased the press entirely (proven
   // via trace + console instrumentation). The mock stream is still ~1.5s from
   // finishing here, so the press below remains genuinely mid-GENERATION.
@@ -69,8 +69,8 @@ test("New chat pressed mid-generation gives a clean, separate chat", async ({ pa
 
   await page.getByRole("button", { name: "New chat", exact: true }).click();
   // The navigation must actually land (URL loses ?c=<old session>) before the
-  // second message goes out — toHaveValue("") alone is a no-op sync point (the
-  // composer is already empty after send #1).
+  // second message goes out - toHaveValue("") alone is a no-op sync point (the
+  // composer is already empty after the first send).
   await expect(page).toHaveURL(/\/chat$/);
   await expect(box(page)).toHaveValue("");
 
@@ -78,7 +78,7 @@ test("New chat pressed mid-generation gives a clean, separate chat", async ({ pa
   await send(page);
   await expect(main(page).getByText("Echo: second chat message")).toBeVisible({ timeout: 60_000 });
 
-  // BUG 2: the new chat's transcript holds ONLY its own turn.
+  // BUG 2: the new chat's transcript holds only its own turn.
   await expect(main(page).getByText("first chat message")).toHaveCount(0);
   await expect(main(page).getByText("Echo: first chat message")).toHaveCount(0);
 });
@@ -125,7 +125,7 @@ test("a new chat is immediately sendable while another chat is still generating"
   // confirm the first chat is generating (its Send turned into Stop)
   await expect(page.getByRole("button", { name: "Stop generating" })).toBeVisible();
 
-  // Switch to a new chat — it must NOT inherit the generating state.
+  // Switch to a new chat - it must not inherit the generating state.
   await page.getByRole("button", { name: "New chat", exact: true }).click();
   await expect(page.getByRole("button", { name: "Stop generating" })).toHaveCount(0);
 
@@ -153,7 +153,7 @@ test("distinct replies survive a full page reload (persisted ids stay unique)", 
   await page.reload();
 
   // After re-hydrating from the persisted session, both replies are still present and
-  // distinct — a duplicate persisted id would collapse them on reload.
+  // distinct - a duplicate persisted id would collapse them on reload.
   await expect(main(page).getByText("Echo: reload uno")).toHaveCount(1);
   await expect(main(page).getByText("Echo: reload dos")).toHaveCount(1);
 });

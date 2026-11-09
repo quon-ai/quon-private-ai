@@ -3,16 +3,16 @@
 Companion to ``realworld_ingest.py`` (Google Takeout / Gemini-Apps activity).
 Open WebUI stores every conversation in a SQLite DB (``webui.db``, table
 ``chat``, one JSON blob per conversation). This extracts just the **user-typed
-prompts** — the same production register the Takeout corpus captures, from a
-second real source — and MERGES them into the shared prompts file, keeping the
+prompts** - the same production register the Takeout corpus captures, from a
+second real source - and MERGES them into the shared prompts file, keeping the
 existing Takeout prompts.
 
-Privacy posture (identical to realworld_ingest.py — this is REAL personal data,
+Privacy posture (identical to realworld_ingest.py - this is real personal data,
 treat like .env / quon.db):
-- Reads a webui.db that lives OUTSIDE the repo (pulled to ~/.quon/realworld/
+- Reads a webui.db that lives outside the repo (pulled to ~/.quon/realworld/
   _import/ or given as an argument); output stays in ~/.quon/realworld/.
-- Extracts ONLY role=="user" message content — never assistant replies.
-- Never prints prompt content to stdout — only aggregate counts.
+- Extracts only role=="user" message content - never assistant replies.
+- Never prints prompt content to stdout - only aggregate counts.
 - The output file (prompts.jsonl) is git-ignored by living outside the repo and
   must never be committed or included in a deploy rsync.
 
@@ -20,9 +20,9 @@ Usage:
     python tests/realworld_openwebui.py /path/to/webui.db [more.db ...]
     # default: ~/.quon/realworld/_import/webui.db if no path is given
 
-Output: appended to ``~/.quon/realworld/prompts.jsonl`` — one
-``{"text","source":"openwebui","date"}`` per NEW line (existing prompts kept,
-exact-duplicate texts — within OpenWebUI and against the existing corpus —
+Output: appended to ``~/.quon/realworld/prompts.jsonl`` - one
+``{"text","source":"openwebui","date"}`` per new line (existing prompts kept,
+exact-duplicate texts - within OpenWebUI and against the existing corpus - 
 collapsed). Override the dir with ``QUON_REALWORLD_DIR``.
 """
 
@@ -36,7 +36,7 @@ from collections import Counter
 from datetime import datetime, timezone
 from pathlib import Path
 
-# Minimum characters for a prompt to count (drops "ok", "danke", stray blanks) —
+# Minimum characters for a prompt to count (drops "ok", "danke", stray blanks) - 
 # mirror realworld_ingest.py's len<2 guard, a touch higher for chat noise.
 _MIN_LEN = 3
 # Cap very long pasted blobs so one giant paste can't dominate the eval; the

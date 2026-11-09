@@ -1,5 +1,5 @@
 """Admin foundation + API: role bootstrap, access control, invites,
-entitlements, suspension, audit. All metadata-level — no content access."""
+entitlements, suspension, audit. All metadata-level - no content access."""
 
 from __future__ import annotations
 
@@ -99,7 +99,7 @@ def test_suspend_blocks_login_and_api_and_reactivate(quon_client):
     r = c.post("/auth/login", json={"email": "user@x.de", "auth_token": b64(b"B" * 32)})
     assert r.status_code == 403
 
-    # Re-activate → login works again.
+    # Re-activate -> login works again.
     csrf = _login(c, "admin@x.de", b"A" * 32)
     c.post(f"/admin/users/{uid}/status", json={"status": "active"}, headers=csrf)
     r = c.post("/auth/login", json={"email": "user@x.de", "auth_token": b64(b"B" * 32)})
@@ -143,7 +143,7 @@ def test_invite_lifecycle_single_use(quon_client, monkeypatch):
     assert code  # plaintext only on create
     assert all(i["code"] is None for i in c.get("/admin/invites", headers=csrf).json())
 
-    # Gate on: static code required — the single-use invite is accepted instead.
+    # Gate on: static code required - the single-use invite is accepted instead.
     monkeypatch.setattr(settings, "signup_invite_code", "static-beta")
     body = register_body("anna@x.de", b"C" * 32) | {"invite_code": code}
     assert c.post("/auth/register", json=body).status_code == 201
@@ -283,10 +283,9 @@ def test_admin_cannot_delete_self(quon_client):
 
 
 def test_last_active_survives_logout(quon_client):
-    """Reported 2026-08-07 (screenshot: a user showing "—"): the admin table
-    derived "last active" from live session rows, and logout DELETEs the
-    session — so the users who tidily log out were the ones losing their
-    date. It now lives on the user row."""
+    """Deriving "last active" from live session rows loses it on logout,
+    because logout DELETEs the session - the users who tidily log out were the
+    ones showing " - " in the admin table. It lives on the user row instead."""
     c = quon_client
     _admin_and_user(c)  # leaves the client logged in as user@x.de
 
@@ -295,7 +294,7 @@ def test_last_active_survives_logout(quon_client):
     csrf = {"X-QUON-CSRF": c.cookies.get("quon_csrf")}
     assert c.post("/auth/logout", headers=csrf).status_code == 200
 
-    # Old behavior: no sessions → last_seen NULL → "—". Now: still there.
+    # Old behavior: no sessions -> last_seen NULL -> " - ". Now: still there.
     admin = _login(c, "admin@x.de", b"A" * 32)
     users = c.get("/admin/users", headers=admin).json()
     row = next(u for u in users if u["email"] == "user@x.de")
@@ -303,7 +302,7 @@ def test_last_active_survives_logout(quon_client):
 
 
 def test_last_active_write_is_throttled(quon_client):
-    """One users-row write per 5 minutes, not per request — the per-request
+    """One users-row write per 5 minutes, not per request - the per-request
     write stays on the session row only."""
     import db
 

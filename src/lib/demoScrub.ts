@@ -10,7 +10,7 @@ import { PLACEHOLDER_RE } from "./quonApi";
 export type Segment =
   { kind: "text"; text: string } | { kind: "placeholder"; text: string; type: string };
 
-/** "[EMAIL_1]" → "EMAIL"; anything else → "UNKNOWN" (styled neutrally). */
+/** "[EMAIL_1]" -> "EMAIL"; anything else -> "UNKNOWN" (styled neutrally). */
 export function placeholderType(placeholder: string): string {
   const m = /^\[([A-Z]+)_\d+\]$/.exec(placeholder);
   return m ? m[1] : "UNKNOWN";

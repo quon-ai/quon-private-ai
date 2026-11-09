@@ -2,14 +2,14 @@
 
 Two distinct, server-only uses:
 
-* **Hashing** — a salted Argon2id *verifier* for the high-entropy client
+* **Hashing** - a salted Argon2id *verifier* for the high-entropy client
   ``authToken`` and SHA-256 hashes for opaque session / email-token secrets,
   compared in constant time. The server never stores these secrets in clear.
   (The brute-force-hardening Argon2 already ran client-side over the password;
   ``authToken`` is high-entropy, so INTERACTIVE limits keep login cheap on a Pi.)
 
-* **Sealing** — authenticated encryption (secretbox) of the per-user OpenRouter
-  sub-key *at rest*, under a key derived from ``QUON_SERVER_SECRET``. This is NOT
+* **Sealing** - authenticated encryption (secretbox) of the per-user OpenRouter
+  sub-key *at rest*, under a key derived from ``QUON_SERVER_SECRET``. This is not
   zero-knowledge: the relay legitimately needs the sub-key. It keeps provider
   secrets encrypted on disk and strictly out of the browser.
 """
@@ -33,7 +33,7 @@ _MEM = nacl.pwhash.argon2id.MEMLIMIT_INTERACTIVE
 # logins don't each pay a production Argon2 verify. Fail-closed by design:
 # params must match between registration and login (the verifier is a
 # deterministic re-derivation), so flipping this on an EXISTING database
-# invalidates every verifier — nothing gets weaker-but-accepted. main.py's
+# invalidates every verifier - nothing gets weaker-but-accepted. main.py's
 # production guard refuses to boot with this flag + COOKIE_SECURE=true.
 if os.environ.get("QUON_TEST_LIGHT_KDF") == "1":
     _OPS = nacl.pwhash.argon2id.OPSLIMIT_MIN

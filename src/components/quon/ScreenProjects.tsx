@@ -89,7 +89,7 @@ const EFFORT_OPTIONS: Array<{ value: ReasoningEffort; labelKey: MessageKey }> = 
   { value: "high", labelKey: "projects.effortHigh" },
 ];
 
-/** Colour swatch aria-label — the id itself (e.g. "indigo") isn't user-facing text. */
+/** Colour swatch aria-label - the id itself (e.g. "indigo") isn't user-facing text. */
 const COLOUR_NAME_KEY: Record<ProjectColor, MessageKey> = {
   indigo: "projects.colourIndigo",
   green: "projects.colourGreen",
@@ -266,7 +266,7 @@ function ProjectDetail({ id }: { id: string }) {
   const [defEffort, setDefEffort] = useState<string>(GLOBAL_DEFAULT);
   // null = use the global type set; an array = this project's own drop-list.
   const [defDisabledTypes, setDefDisabledTypes] = useState<string[] | null>(null);
-  // Model options for the default-model select — same source as the chat picker:
+  // Model options for the default-model select - same source as the chat picker:
   // the backend /models list, falling back to the bundled CHAT_MODELS.
   const [models, setModels] = useState<ChatModel[]>(CHAT_MODELS);
 
@@ -289,17 +289,17 @@ function ProjectDetail({ id }: { id: string }) {
         if (!cancelled) setShareMemberCount(m.length);
       })
       .catch(() => {
-        /* transient — the dialog falls back to generic "this project is shared" copy */
+        /* transient - the dialog falls back to generic "this project is shared" copy */
       });
     return () => {
       cancelled = true;
     };
   }, [id, shareRole]);
-  // Members list includes the owner themselves; the copy talks about OTHER people.
+  // Members list includes the owner themselves; the copy talks about other people.
   const otherShareMembers = shareMemberCount !== null ? Math.max(shareMemberCount - 1, 0) : null;
 
   // One-time "your access was revoked" banner (sharedSync flags this when a
-  // grant this device was tracking disappears from a successful /shares list —
+  // grant this device was tracking disappears from a successful /shares list -
   // see quonStore's revokedSharedProjectIds docstring).
   const revokedSharedProjectIds = useQuonState().revokedSharedProjectIds;
   const accessRevoked = revokedSharedProjectIds.includes(id);
@@ -380,10 +380,10 @@ function ProjectDetail({ id }: { id: string }) {
     });
   }
 
-  // Owner deleting a shared project must stop sharing FIRST: `deleteProjectAndOrphanContent`
+  // Owner deleting a shared project must stop sharing first: `deleteProjectAndOrphanContent`
   // only touches this device's local store, so without this the server-side share
-  // (and every member's grant) would leak — orphaned forever, members frozen with
-  // no explanation. If unshare fails, abort WITHOUT deleting locally so the two
+  // (and every member's grant) would leak - orphaned forever, members frozen with
+  // no explanation. If unshare fails, abort without deleting locally so the two
   // never drift apart.
   async function removeProject(event: { preventDefault: () => void }) {
     event.preventDefault(); // keep the AlertDialog open; we close it manually below
@@ -402,8 +402,8 @@ function ProjectDetail({ id }: { id: string }) {
       }
       setDeleteBusy(false);
       // The unshare above makes this device's own next refreshSharedSync() no
-      // longer list `id` — indistinguishable, from that helper's point of
-      // view, from a member being revoked. That flag is meant for OTHER
+      // longer list `id` - indistinguishable, from that helper's point of
+      // view, from a member being revoked. That flag is meant for other
       // members, not the owner who just deleted their own project; clear it
       // so no stale "revoked" banner lingers for an id that's about to stop
       // existing locally anyway.
@@ -417,14 +417,14 @@ function ProjectDetail({ id }: { id: string }) {
   const chats = history.filter((s) => s.projectId === id);
   const memories = memItems.filter((m) => m.projectId === id);
   const docs = docItems.filter((d) => d.projectId === id);
-  // How many chat defaults deviate from the global setting — shown on the
+  // How many chat defaults deviate from the global setting - shown on the
   // (collapsed) disclosure so an active override is never silently hidden.
   const overrideCount =
     (defDisabledTypes !== null ? 1 : 0) +
     [defModel, defProtection, defEffort].filter((v) => v !== GLOBAL_DEFAULT).length;
 
   // Delete-dialog description: three shared-owner variants (member count unknown,
-  // zero, or a known N — each has different trailing copy) plus the plain
+  // zero, or a known N - each has different trailing copy) plus the plain
   // non-shared case. Kept as one helper so the JSX below stays a single ternary.
   function deleteDialogDescription(): string {
     if (shareRole !== "owner") return t("projects.deleteDialogDescSimple");
@@ -487,7 +487,7 @@ function ProjectDetail({ id }: { id: string }) {
 
         {/* ---------------------------------------------------------- Overview */}
         <TabsContent value="overview" className="mt-3">
-          {/* What this project knows — read client-side from the stores; the
+          {/* What this project knows - read client-side from the stores; the
               chips jump to where the items actually live. */}
           <div className="rounded-xl border border-quon-border bg-quon-surface p-4">
             <h2 className="text-xs font-semibold uppercase tracking-wide text-quon-muted">
@@ -531,15 +531,15 @@ function ProjectDetail({ id }: { id: string }) {
               </button>
             </div>
             {/* Auto-Memory v1: manually mine this project's chats and documents
-                for facts worth remembering. Fills the review queue in Content →
-                Project memory — nothing is saved without approval there. */}
+                for facts worth remembering. Fills the review queue in Content ->
+                Project memory - nothing is saved without approval there. */}
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <LearnFromChatsButton projectId={id} onShowReview={() => setTab("content")} />
               <LearnFromDocumentsButton projectId={id} onShowReview={() => setTab("content")} />
             </div>
           </div>
 
-          {/* Chats — the core action, visible without scrolling. */}
+          {/* Chats - the core action, visible without scrolling. */}
           <div className="mt-4 flex items-center justify-between">
             <h2 className="text-xs font-semibold uppercase tracking-wide text-quon-muted">
               {t("projects.chatsHeading")}

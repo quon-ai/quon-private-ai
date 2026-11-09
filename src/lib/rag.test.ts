@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-// The embedder is a browser Web Worker — replace it with a deterministic stub so
+// The embedder is a browser Web Worker - replace it with a deterministic stub so
 // retrieveContext's vector step is controllable in tests (see below).
 vi.mock("./embedding/embedder", () => ({
   EMBED_MODEL: "test-embed",
@@ -53,7 +53,7 @@ describe("inScope (RAG project scoping)", () => {
 });
 
 describe("hasScopedContext (presence gate, embed-agnostic)", () => {
-  it("sees an in-scope memory that is not embedded yet — unlike hasRetrievableContext", () => {
+  it("sees an in-scope memory that is not embedded yet: unlike hasRetrievableContext", () => {
     resetMemory();
     upsertMemoryItem({
       id: "m1",
@@ -62,7 +62,7 @@ describe("hasScopedContext (presence gate, embed-agnostic)", () => {
       tags: [],
       createdAt: 0,
       updatedAt: 0,
-    }); // no embedding → "not indexed yet"
+    }); // no embedding -> "not indexed yet"
     // The old gate would skip RAG entirely; the new presence gate runs it (retrieval
     // then embeds on-demand). This is the regression: a fresh memory must not be ignored.
     expect(hasRetrievableContext(undefined)).toBe(false);
@@ -113,7 +113,7 @@ describe("memoryChunksInScope (memory chunking for retrieval)", () => {
       updatedAt: 0,
     });
     upsertMemoryItem({
-      id: "c", // stale model → excluded
+      id: "c", // stale model -> excluded
       kind: "note",
       text: "stale C",
       tags: [],
@@ -125,7 +125,7 @@ describe("memoryChunksInScope (memory chunking for retrieval)", () => {
     const texts = memoryChunksInScope(undefined).map((r) => r.text);
     expect(texts).toEqual(expect.arrayContaining(["chunk a1", "chunk a2", "whole B"]));
     expect(texts).not.toContain("full A text"); // chunked item exposes chunks, not the whole text
-    expect(texts).not.toContain("stale C"); // wrong model → not comparable
+    expect(texts).not.toContain("stale C"); // wrong model -> not comparable
   });
 
   it("respects project scope", () => {
@@ -149,7 +149,7 @@ describe("memoryChunksInScope (memory chunking for retrieval)", () => {
 describe("dedupeByItem (one slot per memory item)", () => {
   it("keeps only the best chunk per item, preserving shortlist order", () => {
     const h = (itemId: string, text: string, score: number) => ({ item: { itemId, text }, score });
-    // Sorted best-first, as topKMulti returns it. Item "big" has 3 chunks — the
+    // Sorted best-first, as topKMulti returns it. Item "big" has 3 chunks - the
     // observed failure was all MEMORY_K slots filled by one pasted document.
     const out = dedupeByItem([
       h("big", "chunk 1", 0.41),
@@ -164,7 +164,7 @@ describe("dedupeByItem (one slot per memory item)", () => {
 describe("retrieveContext (anchor rule + strict tier for long content)", () => {
   const vecAt = (cos: number) => [cos, Math.sqrt(1 - cos * cos), 0];
 
-  it("a chunk at mid cosine with no keyword overlap is NOT injected; a fact with overlap is", async () => {
+  it("a chunk at mid cosine with no keyword overlap is not injected; a fact with overlap is", async () => {
     resetMemory();
     // The Talbach regression: cosine 0.41 vs the query, zero shared tokens.
     upsertMemoryItem({
@@ -178,7 +178,7 @@ describe("retrieveContext (anchor rule + strict tier for long content)", () => {
       createdAt: 0,
       updatedAt: 0,
     });
-    // Fact with a real keyword anchor at the same cosine — must still surface.
+    // Fact with a real keyword anchor at the same cosine - must still surface.
     upsertMemoryItem({
       id: "kidfact",
       kind: "fact",
@@ -202,12 +202,12 @@ describe("retrieveContext (anchor rule + strict tier for long content)", () => {
     expect(res.text).not.toContain("Ferritin");
   });
 
-  it("a LONG item needs high cosine even WITH a keyword anchor (strict tier)", async () => {
+  it("a long item needs high cosine even with a keyword anchor (strict tier)", async () => {
     resetMemory();
-    // Item text > FACT_MAX_CHARS → strict tier. Its chunk shares a keyword with
-    // the query ("ferritin") and sits at cosine 0.35 — enough for the
+    // Item text > FACT_MAX_CHARS -> strict tier. Its chunk shares a keyword with
+    // the query ("ferritin") and sits at cosine 0.35 - enough for the
     // normal gate (blended clears ABS_FLOOR with the lexical boost), but below
-    // STRICT_SIM_FLOOR (0.4) → must NOT be injected.
+    // STRICT_SIM_FLOOR (0.4) -> must not be injected.
     const longText = "Ferritin 27 µg/l (Referenz 0,5–5) — Strategie ist Aufbau. ".repeat(6);
     upsertMemoryItem({
       id: "longreport",
@@ -224,7 +224,7 @@ describe("retrieveContext (anchor rule + strict tier for long content)", () => {
     const below = await retrieveContext("was sagt mein befund zu ferritin", undefined);
     expect(below.sources).toEqual([]);
 
-    // Same item at cosine above the strict floor → injected.
+    // Same item at cosine above the strict floor -> injected.
     upsertMemoryItem({
       id: "longreport",
       kind: "note",
@@ -242,9 +242,9 @@ describe("retrieveContext (anchor rule + strict tier for long content)", () => {
 
   it("surfaces an item via its anchor-bearing chunk even when another chunk has higher cosine", async () => {
     resetMemory();
-    // Found live: the item's best-cosine chunk had NO keyword overlap (dropped
+    // Found live: the item's best-cosine chunk had no keyword overlap (dropped
     // by the gate), while its second-best chunk carried the anchor. Deduping
-    // before the gate picked the anchor-less chunk and lost the whole item —
+    // before the gate picked the anchor-less chunk and lost the whole item -
     // the dedupe must run on the gated list instead.
     const longText = "x".repeat(400); // strict tier
     upsertMemoryItem({
@@ -287,26 +287,26 @@ describe("retrieveContext (anchor rule + strict tier for long content)", () => {
     });
     vi.mocked(embedBatch).mockResolvedValue([[1, 0, 0]]);
     const res = await retrieveContext("was kann man in talbach machen", undefined);
-    // Only the best chunk of the item — not three copies of it.
+    // Only the best chunk of the item - not three copies of it.
     expect(res.sources).toHaveLength(1);
     expect(res.sources[0].snippet).toContain("Teil 1");
   });
 });
 
-describe("retrieveContext (German compound anchoring + hybrid retrieval — the Einkommen bug)", () => {
+describe("retrieveContext (German compound anchoring + hybrid retrieval: the Einkommen bug)", () => {
   const vecAt = (cos: number) => [cos, Math.sqrt(1 - cos * cos), 0];
 
-  it("a long note saying only 'Nettoeinkommen' IS retrieved for a query about 'Einkommen'", async () => {
+  it("a long note saying only 'Nettoeinkommen' is retrieved for a query about 'Einkommen'", async () => {
     resetMemory();
-    // Padded well past FACT_MAX_CHARS (300) so this hits the STRICT tier —
+    // Padded well past FACT_MAX_CHARS (300) so this hits the STRICT tier -
     // the actual production shape (a long saved note), not the short-fact
     // tier which would trivially pass via the plain floor. contentTerms only
     // splits on non-letters, so without the subword-anchor fix "einkommen"
-    // and "nettoeinkommen" are different tokens and this item has ZERO
-    // lexical anchor — gated out regardless of cosine (strict tier requires
+    // and "nettoeinkommen" are different tokens and this item has zero
+    // lexical anchor - gated out regardless of cosine (strict tier requires
     // an anchor, no cosine-only escape hatch). Cosine 0.45 is realistic for
     // this pairing per the browser-embedder calibration in rerank.ts
-    // (related same-language ~0.31–0.58) — above STRICT_SIM_FLOOR (0.4) but
+    // (related same-language ~0.31–0.58) - above STRICT_SIM_FLOOR (0.4) but
     // below NO_ANCHOR_SIM_FLOOR (0.55), so only the anchor rescues it.
     const longText =
       "Nettoeinkommen (beide berufstätig): Timo 95k € Brutto/32h, Nadine 70k € Brutto/32h. " +
@@ -335,7 +335,7 @@ describe("retrieveContext (German compound anchoring + hybrid retrieval — the 
   it("guard: an UNRELATED long German note is still gated out for the Einkommen query (no false-positive hole)", async () => {
     resetMemory();
     // Same microbiome fixture used by the Talbach regression elsewhere in
-    // this file — long, German, but shares no word/subword with
+    // this file - long, German, but shares no word/subword with
     // "einkommen"/"prüfe", so the subword-anchor rule must not touch it.
     const longText = "Ferritin 27 µg/l (Referenz 0,5–5) — Strategie ist Aufbau. ".repeat(6);
     upsertMemoryItem({
@@ -355,7 +355,7 @@ describe("retrieveContext (German compound anchoring + hybrid retrieval — the 
     expect(res.sources).toEqual([]);
   });
 
-  it("hybrid retrieval: a strong lexical/subword match surfaces even when the item is NOT in a tight vector shortlist", async () => {
+  it("hybrid retrieval: a strong lexical/subword match surfaces even when the item is not in a tight vector shortlist", async () => {
     resetMemory();
     // 20 unrelated items with better cosine than the real match, so a
     // vector-only shortlist (the pre-fix SHORTLIST_K=15 cap) would push the
@@ -394,7 +394,7 @@ describe("retrieveContext (German compound anchoring + hybrid retrieval — the 
   });
 });
 
-describe("retrieveContext (curated synonym expansion — Phase 4a)", () => {
+describe("retrieveContext (curated synonym expansion: Phase 4a)", () => {
   const vecAt = (cos: number) => [cos, Math.sqrt(1 - cos * cos), 0];
   const incomeNoteText =
     "Nettoeinkommen (beide berufstätig): Timo 95k € Brutto/32h, Nadine 70k € Brutto/32h. " +
@@ -405,7 +405,7 @@ describe("retrieveContext (curated synonym expansion — Phase 4a)", () => {
   it("a PURE-SYNONYM query ('Gehalt', zero shared token with 'Nettoeinkommen') still retrieves the note", async () => {
     resetMemory();
     expect(incomeNoteText.toLowerCase()).not.toContain("gehalt"); // confirms zero literal overlap
-    expect(incomeNoteText.length).toBeGreaterThan(300); // strict tier — the real production shape
+    expect(incomeNoteText.length).toBeGreaterThan(300); // strict tier - the real production shape
     upsertMemoryItem({
       id: "income",
       kind: "note",
@@ -423,7 +423,7 @@ describe("retrieveContext (curated synonym expansion — Phase 4a)", () => {
     expect(res.sources.map((s) => s.title)).toEqual(["Finanzen"]);
   });
 
-  it("guard: 'Wohnung' (apartment) is NOT pulled in by an 'Adresse' query (rejected cluster stays rejected)", async () => {
+  it("guard: 'Wohnung' (apartment) is not pulled in by an 'Adresse' query (rejected cluster stays rejected)", async () => {
     resetMemory();
     upsertMemoryItem({
       id: "apartment",
@@ -435,7 +435,7 @@ describe("retrieveContext (curated synonym expansion — Phase 4a)", () => {
       chunks: [
         {
           text: "Unsere Wohnung ist gerade ziemlich chaotisch, wir müssen dringend aufräumen.",
-          embedding: vecAt(0.3), // below every floor on its own — only a false anchor could rescue it
+          embedding: vecAt(0.3), // below every floor on its own - only a false anchor could rescue it
         },
       ],
       createdAt: 0,
@@ -447,7 +447,7 @@ describe("retrieveContext (curated synonym expansion — Phase 4a)", () => {
     expect(res.sources).toEqual([]);
   });
 
-  it("guard: 'Hausnummer' (address) is NOT pulled in by a 'Rufnummer' query (rejected bare-Nummer cluster)", async () => {
+  it("guard: 'Hausnummer' (address) is not pulled in by a 'Rufnummer' query (rejected bare-Nummer cluster)", async () => {
     resetMemory();
     upsertMemoryItem({
       id: "housenumber",
@@ -467,7 +467,7 @@ describe("retrieveContext (curated synonym expansion — Phase 4a)", () => {
   });
 });
 
-describe("retrieveContext (pinned facts — always a candidate)", () => {
+describe("retrieveContext (pinned facts: always a candidate)", () => {
   it("a pinned short fact is injected even for a completely unrelated query", async () => {
     resetMemory();
     upsertMemoryItem({
@@ -488,7 +488,7 @@ describe("retrieveContext (pinned facts — always a candidate)", () => {
     expect(res.sources.map((s) => s.title)).toEqual(["Notfallkontakt"]);
   });
 
-  it("pinning a LONG note does not bypass the strict tier (pinning can't force-inject arbitrary pastes)", async () => {
+  it("pinning a long note does not bypass the strict tier (pinning can't force-inject arbitrary pastes)", async () => {
     resetMemory();
     const longText = "Belangloser langer Text ohne jeden Bezug zur Frage. ".repeat(10);
     expect(longText.length).toBeGreaterThan(300);
@@ -514,8 +514,8 @@ describe("retrieveContext (pinned facts — always a candidate)", () => {
 describe("retrieveContext (tags feed the lexical boost)", () => {
   it("a query matching only a tag surfaces an item cosine alone would miss", async () => {
     resetMemory();
-    // Both items get the SAME mediocre cosine (0.15, mocked below) against the
-    // query — below ABS_FLOOR (0.30) even with a perfect lexical match on
+    // Both items get the same mediocre cosine (0.15, mocked below) against the
+    // query - below ABS_FLOOR (0.30) even with a perfect lexical match on
     // ordinary text. Only "tagged" carries the query word as a tag; "untagged"
     // has no lexical signal at all, so it must stay below the gate.
     upsertMemoryItem({
@@ -550,7 +550,7 @@ describe("retrieveContext (tags feed the lexical boost)", () => {
   });
 });
 
-describe("P5: lifecycle — superseded/archived items are excluded from retrieval", () => {
+describe("P5: lifecycle: superseded/archived items are excluded from retrieval", () => {
   it("memoryChunksInScope skips non-active items", () => {
     resetMemory();
     upsertMemoryItem({
@@ -703,7 +703,7 @@ describe("P5: staleness date suffix ('Stand MM/YYYY')", () => {
     expect(res.text).not.toMatch(/Stand \d{2}\/\d{4}/);
   });
 
-  it("lastConfirmedAt (not just updatedAt) counts as 'touched' — suppresses the suffix", async () => {
+  it("lastConfirmedAt (not just updatedAt) counts as 'touched': suppresses the suffix", async () => {
     resetMemory();
     const oldTs = Date.now() - SIX_MONTHS_MS;
     upsertMemoryItem({
@@ -728,8 +728,8 @@ describe("P5: CHAR_BUDGET truncation drops the matching source (grounding-chip h
   it("a truncated-away line's source is not listed as used", async () => {
     resetMemory();
     // One item whose text alone comfortably exceeds the 1600 CHAR_BUDGET when
-    // combined with a second short item — one of the two lines cannot fit and
-    // must be truncated away ALONG WITH its source entry.
+    // combined with a second short item - one of the two lines cannot fit and
+    // must be truncated away ALONG with its source entry.
     const big = "Großer Eintrag mit vielen Details zur Wohnsituation. ".repeat(35);
     expect(big.length).toBeGreaterThan(1600);
     upsertMemoryItem({
@@ -759,15 +759,15 @@ describe("P5: CHAR_BUDGET truncation drops the matching source (grounding-chip h
     vi.mocked(embedBatch).mockResolvedValue([[1, 0, 0]]);
 
     const res = await retrieveContext("wohnsituation", undefined);
-    // Only ONE of the two pinned items' text can fit under CHAR_BUDGET.
+    // Only one of the two pinned items' text can fit under CHAR_BUDGET.
     expect(res.sources).toHaveLength(1);
-    // The kept source is actually present verbatim in `text` — no source
+    // The kept source is actually present verbatim in `text` - no source
     // lists content that got cut.
     for (const s of res.sources) expect(res.text).toContain(s.snippet.slice(0, 50));
   });
 });
 
-describe("P5: usage tracking — retrieveContext touches lastUsedAt/useCount", () => {
+describe("P5: usage tracking: retrieveContext touches lastUsedAt/useCount", () => {
   it("bumps lastUsedAt/useCount on an item that made it into the injected context", async () => {
     resetMemory();
     upsertMemoryItem({
@@ -780,7 +780,7 @@ describe("P5: usage tracking — retrieveContext touches lastUsedAt/useCount", (
       embModel: EMBED_MODEL,
       chunks: [{ text: "Notfallkontakt: Nadine.", embedding: [-1, 0, 0] }],
       createdAt: 1,
-      updatedAt: 1, // a real (non-falsy) timestamp — upsertMemoryItem treats 0 as "unset"
+      updatedAt: 1, // a real (non-falsy) timestamp - upsertMemoryItem treats 0 as "unset"
     });
     vi.mocked(embedBatch).mockResolvedValue([[1, 0, 0]]);
 

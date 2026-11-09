@@ -6,7 +6,7 @@ import { extractTable } from "./markdownTable";
 /**
  * The mobile card layout is built from what this pulls out of react-markdown's
  * rendered table, so a wrong extraction would silently mangle a user's answer.
- * It must therefore fail CLOSED — anything it doesn't recognise returns null and
+ * It must therefore fail closed - anything it doesn't recognise returns null and
  * the caller keeps the plain table.
  */
 function table(head: string[], body: string[][]) {
@@ -50,7 +50,7 @@ describe("extractTable", () => {
   });
 
   it("keeps a cell's inline content as-is, not as text", () => {
-    // Bold runs, links and proxied images must survive into the card layout —
+    // Bold runs, links and proxied images must survive into the card layout -
     // that is the whole reason this works on rendered children, not on source.
     const rich = <strong>elegant</strong>;
     const out = extractTable([
@@ -72,7 +72,7 @@ describe("extractTable", () => {
 
   it("finds cells built from OVERRIDE components, not just literal <td> tags", () => {
     // The shape production actually has, and the one this originally got wrong:
-    // react-markdown does `createElement(components.td, …)`, so with td/th
+    // react-markdown does `createElement(components.td, ...)`, so with td/th
     // overridden the element type is the override FUNCTION and the string "td"
     // never appears. Matching on the tag name looked correct and silently
     // extracted nothing, so every table fell back to the desktop layout.

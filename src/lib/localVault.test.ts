@@ -1,6 +1,6 @@
 /**
- * Local vault (at-rest cache encryption) — the invariants the stores rely on:
- * no key → no plaintext write (sealLocal null), sealed values only open under
+ * Local vault (at-rest cache encryption) - the invariants the stores rely on:
+ * no key -> no plaintext write (sealLocal null), sealed values only open under
  * the same key, and deferred loads wake up exactly when the key arrives.
  */
 import { beforeEach, describe, expect, it } from "vitest";
@@ -76,7 +76,7 @@ describe("sealLocal / openLocal", () => {
 });
 
 describe("sealLocalBytes / openLocalBytes", () => {
-  // %PDF magic + arbitrary binary — the shape the originals cache stores.
+  // %PDF magic + arbitrary binary - the shape the originals cache stores.
   const bytes = new Uint8Array([0x25, 0x50, 0x44, 0x46, 0, 1, 2, 253, 254, 255]);
 
   it("refuses to seal without a key (never plaintext to disk)", () => {

@@ -54,7 +54,7 @@ describe("interpolateScrubFraction", () => {
   });
 
   it("keeps inching forward during a long gap instead of freezing", () => {
-    // The counterpart to the cap: bounded, but never actually still — a frozen
+    // The counterpart to the cap: bounded, but never actually still - a frozen
     // bar is the "is it stuck?" feeling this module exists to remove.
     const sample = { done: 6, total: 26, updatedAt: 12000 };
     const a = interpolateScrubFraction(0, sample, 20000);
@@ -66,13 +66,13 @@ describe("interpolateScrubFraction", () => {
   });
 
   it("never moves backward across a realistic burst-y scrub", () => {
-    // THE bug this module nearly shipped with. Every other monotonicity check
-    // here holds `sample` fixed and only advances `now` — which is precisely
-    // the case that CAN'T catch it. The reversal only appears when the sample
+    // The bug this module nearly shipped with. Every other monotonicity check
+    // here holds `sample` fixed and only advances `now` - which is precisely
+    // the case that can'T catch it. The reversal only appears when the sample
     // also advances: the wave's fast units (message/rag/instruction) set an
     // optimistic average rate, then the attachment pieces land in bursts many
     // seconds apart. Measured before the fix: 90.4% at t=12s, falling back to
-    // 26.9% — four reversals in a single 54s send.
+    // 26.9% - four reversals in a single 54s send.
     const total = 26;
     const events: Array<[number, number]> = [
       [500, 1], // typed message
@@ -88,7 +88,7 @@ describe("interpolateScrubFraction", () => {
       for (const [at, done] of events) if (now >= at) sample = { done, total, updatedAt: at };
       const f = interpolateScrubFraction(0, sample, now);
       expect(f).toBeGreaterThanOrEqual(prev - 1e-9);
-      // …and it must never claim near-completion while pieces are outstanding.
+      // ...and it must never claim near-completion while pieces are outstanding.
       if (sample.done < total) expect(f).toBeLessThan(1);
       prev = f;
     }
@@ -107,7 +107,7 @@ describe("interpolateScrubFraction", () => {
 });
 
 describe("formatElapsed", () => {
-  // A clock, not a prediction — so the only properties worth asserting are that
+  // A clock, not a prediction - so the only properties worth asserting are that
   // it reads correctly and only ever counts up. It replaced a remaining-time
   // estimate that wandered in both directions on every tuning attempted; see the
   // note on formatElapsed for the measurements.
@@ -179,7 +179,7 @@ describe("scrubWaveTotal", () => {
 describe("isStalled", () => {
   // The earlier of the two "something is wrong" signals. A retry is only reported
   // after the 180s per-request timeout expires, so waiting for one means three
-  // silent minutes — which is what made a stalled send read as a dead UI.
+  // silent minutes - which is what made a stalled send read as a dead UI.
   it("is false while units are still landing", () => {
     expect(isStalled(0, 1_000)).toBe(false);
     expect(isStalled(0, STALL_AFTER_MS - 1)).toBe(false);
@@ -190,13 +190,13 @@ describe("isStalled", () => {
     expect(isStalled(0, 200_000)).toBe(true);
   });
 
-  it("resets when a unit lands — it measures the GAP, not total elapsed", () => {
+  it("resets when a unit lands: it measures the GAP, not total elapsed", () => {
     // A long send that is making steady progress must not be called stalled.
     expect(isStalled(300_000, 310_000)).toBe(false);
   });
 
   it("fires well before the first retry could possibly be reported", () => {
-    // 180s timeout × attempt 1 — the user must hear about it long before that.
+    // 180s timeout x attempt 1 - the user must hear about it long before that.
     expect(STALL_AFTER_MS).toBeLessThan(180_000);
   });
 });
@@ -219,7 +219,7 @@ describe("estimateSmallScrubFraction", () => {
 
   it("a real piece completion is a floor the estimate cannot dip under", () => {
     // 1 of 2 pieces landed at t=1s of an expected 20s: time alone says ~13%,
-    // the tick says 50% — the tick wins.
+    // the tick says 50% - the tick wins.
     expect(estimateSmallScrubFraction(0, 1000, 20_000, 1, 2)).toBeGreaterThanOrEqual(0.5);
   });
 

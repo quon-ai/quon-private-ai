@@ -7,13 +7,9 @@ package-lock.json
 bun.lock
 routeTree.gen.ts
 
-# Hand-maintained maintainer docs. Prettier's markdown emphasis rewrite
-# (*x* -> _x_) touches ~800 lines of HANDOFF.md alone, burying every real change
-# in churn — and these files are read as prose, not shipped as code. eslint
-# already ignores .claude/** for the same "not source" reason.
-.claude/**
 # Golden reference fixture for the Rust embedding-parity test: pretty-printing
-# it adds 500 lines of noise to a file whose whole value is being a STABLE
+# it adds 500 lines of noise to a file whose whole value is being a stable
 # reference (the values are what matter, and they never change by hand).
 src-tauri/tests/golden_embeddings.json
+
 

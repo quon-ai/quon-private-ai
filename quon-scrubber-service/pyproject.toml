@@ -1,11 +1,11 @@
 # Package metadata for the QUON scrubber service. The service is deployed from
-# source (Docker / uvicorn), not published to PyPI — this file exists so the
+# source (Docker / uvicorn), not published to PyPI - this file exists so the
 # project carries proper name/version/license metadata for tooling and SBOMs.
 # Dependencies live in requirements.txt / requirements-dev.txt; pytest config
 # lives in pytest.ini (which takes precedence and is left untouched).
 [project]
 name = "quon-scrubber-service"
-version = "0.10.0"
+version = "1.0.0"
 description = "QUON backend: PII scrubbing (spaCy NER + GLiNER + regex safety net), zero-knowledge sync relay, auth."
 license = "AGPL-3.0-only"
 requires-python = ">=3.11"

@@ -2,11 +2,11 @@
  * Tab shell for the Settings screen.
  *
  * Tabs (in order):
- *   Detection  — ProtectionLevelCard · DetectionTypesCard · RedactionListsCard
- *   Providers  — UsageCard (hosted only) · OpenRouterKeyCard · <ProvidersSettings/>
- *   Account    — read-only email + management placeholder
- *   Subscription — coming soon
- *   Connectors — coming soon
+ *   Detection  - ProtectionLevelCard · DetectionTypesCard · RedactionListsCard
+ *   Providers  - UsageCard (hosted only) · OpenRouterKeyCard · <ProvidersSettings/>
+ *   Account    - read-only email + management placeholder
+ *   Subscription - coming soon
+ *   Connectors - coming soon
  *
  * The tab bar scrolls horizontally at narrow viewports (375 px mobile).
  */
@@ -42,7 +42,7 @@ export function SettingsTabs() {
 
   return (
     <Tabs defaultValue="detection" className="flex min-h-0 flex-1 flex-col">
-      {/* Tab bar — scrolls horizontally at 375 px */}
+      {/* Tab bar - scrolls horizontally at 375 px */}
       <TabsList
         className="flex w-full shrink-0 overflow-x-auto rounded-none border-b border-quon-border bg-transparent px-0 pb-0"
         style={{ height: "auto" }}

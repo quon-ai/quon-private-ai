@@ -1,11 +1,11 @@
 /**
  * Pure chunking helpers for synced original-document bytes.
  *
- * The original file is encrypted WHOLE (one nonce‖secretbox ciphertext) and the
+ * The original file is encrypted whole (one nonce‖secretbox ciphertext) and the
  * ciphertext is split into fixed-size chunks so each sync blob stays under the
  * server's 4 MiB per-blob cap. Chunks are addressed `orig:<docId>:<index>` in
  * the `originals` collection; reassembly is strict byte concatenation in index
- * order — decryption then authenticates the whole file, so a missing/corrupt
+ * order - decryption then authenticates the whole file, so a missing/corrupt
  * chunk fails closed (viewer falls back to the extracted-text view).
  *
  * Dependency-free on purpose: unit-testable without libsodium or a DOM.
@@ -23,12 +23,12 @@ export function originalChunkId(docId: string, index: number): string {
   return `orig:${docId}:${index}`;
 }
 
-/** How many chunks a ciphertext of `byteLength` splits into (≥ 1). */
+/** How many chunks a ciphertext of `byteLength` splits into (>= 1). */
 export function chunkCountFor(byteLength: number, chunkBytes = ORIG_CHUNK_BYTES): number {
   return Math.max(1, Math.ceil(byteLength / chunkBytes));
 }
 
-/** Split bytes into ≤`chunkBytes` slices (subarray views — no copies). */
+/** Split bytes into <=`chunkBytes` slices (subarray views - no copies). */
 export function chunkBytes(bytes: Uint8Array, chunkBytes = ORIG_CHUNK_BYTES): Uint8Array[] {
   const out: Uint8Array[] = [];
   for (let off = 0; off < bytes.length; off += chunkBytes) {

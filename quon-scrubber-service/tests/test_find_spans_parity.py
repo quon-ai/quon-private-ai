@@ -1,13 +1,13 @@
 """Cross-language parity for the redaction span matcher.
 
 The client mirrors ``scrubber.find_spans`` in ``src/lib/redactSpans.ts`` so it can
-tell the user, before sending, whether a hand-redaction will actually match — and
+tell the user, before sending, whether a hand-redaction will actually match - and
 so it can verify afterwards that the backend honoured it. If the two drift, the
 product either promises a redaction that never happens (fail-open, the whole point
 of the feature lost) or blocks a send that would have been fine.
 
 This asserts the Python side of the shared fixture; ``src/lib/redactSpans.test.ts``
-asserts the JavaScript side of the SAME file. The fixture was generated from this
+asserts the JavaScript side of the same file. The fixture was generated from this
 function, so a change here that is not mirrored in the client fails there, and a
 change to the fixture that does not match this function fails here.
 

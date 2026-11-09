@@ -4,7 +4,7 @@
  * QUON's chat history syncs by encrypting each item client-side into an opaque
  * blob and pushing/pulling it through the collection-agnostic `/sync` relay
  * (last-write-wins by `updated_at`). Memory and Documents reuse the *exact same*
- * machinery — only the collection name, the encryption key, and the local store
+ * machinery - only the collection name, the encryption key, and the local store
  * differ. This factory captures that shared logic once.
  *
  * The server only ever sees ciphertext: text is encrypted with a key derived
@@ -25,7 +25,7 @@ import {
   reportSyncStart,
 } from "./syncStatus";
 
-/** The relay's per-blob cap, on DECODED bytes — it base64-decodes before
+/** The relay's per-blob cap, on DECODED bytes - it base64-decodes before
  *  measuring (`quon-scrubber-service/sync.py:264`). Mirrored here so an
  *  impossible push is caught before it costs a round trip. */
 export const MAX_BLOB_BYTES = 4 * 1024 * 1024;
@@ -42,7 +42,7 @@ export const MAX_BLOB_BYTES = 4 * 1024 * 1024;
  *  an extra round trip. */
 export const PUSH_BATCH_SIZE = 100;
 
-/** Decoded byte length of a padded standard-base64 string (`base64_variants.ORIGINAL`),
+/** Decoded byte length of a padded standard-base64 string (`base64_variants.Original`),
  *  without allocating the decoded copy. */
 export function b64Bytes(s: string): number {
   const n = s.length;
@@ -83,7 +83,7 @@ export function planPush(
   return { batches, oversized };
 }
 
-/** 413/422 mean the payload itself is unacceptable — re-sending it unchanged can
+/** 413/422 mean the payload itself is unacceptable - re-sending it unchanged can
  *  only fail identically, so it must not be re-queued. Everything else (offline,
  *  5xx, an expired token) is worth another attempt. */
 function isPermanent(e: unknown): boolean {
@@ -96,9 +96,9 @@ export interface SyncStore<T> {
   getAll: () => T[];
   idOf: (item: T) => string;
   updatedAtOf: (item: T) => number;
-  /** Merge a decrypted remote item (LWW). Must NOT fire local change listeners. */
+  /** Merge a decrypted remote item (LWW). Must not fire local change listeners. */
   applyRemote: (item: T) => void;
-  /** Apply a remote tombstone. Must NOT fire local change listeners. */
+  /** Apply a remote tombstone. Must not fire local change listeners. */
   applyRemoteDeletion: (id: string) => void;
   /** Subscribe to local upserts (each fires a debounced push). */
   onChange: (cb: (item: T) => void) => () => void;
@@ -121,27 +121,27 @@ export function createCollectionSync<T>(opts: {
   /** Shared-project instance: sync `collection` under this project's shared
    *  store instead of the personal one. Requires `getKey`. */
   projectId?: string;
-  /** Key override for shared instances — the project key from sharedKeyStore
-   *  (a random 32-byte key exchanged via sealed grants), NOT MK-derived. */
+  /** Key override for shared instances - the project key from sharedKeyStore
+   *  (a random 32-byte key exchanged via sealed grants), not MK-derived. */
   getKey?: () => Uint8Array | null;
   /** Restrict which local items this instance owns. Used to ROUTE items: the
    *  personal instance excludes items living in shared projects; a shared
-   *  instance includes only its own project's items. Applies to pushes only —
+   *  instance includes only its own project's items. Applies to pushes only -
    *  pulls are already partitioned server-side. */
   filter?: (item: T) => boolean;
   /** Poll interval (ms) for a periodic remote pull. Default: no polling (a
    *  collection only pulls on start + after each local push). The `jobs`
    *  collection sets this so a runner device SEES jobs/progress written on
-   *  another device without a local write to trigger a pull — the cross-device
+   *  another device without a local write to trigger a pull - the cross-device
    *  agent runner and Phase-3 progress-watching both need it. All other
-   *  collections stay event-driven (omit → unchanged). */
+   *  collections stay event-driven (omit -> unchanged). */
   pollMs?: number;
 }): CollectionSync {
   const { collection, deriveKey, store, projectId, filter, pollMs } = opts;
   const debounceMs = opts.debounceMs ?? 1500;
-  // ⚠️ _v2, deliberately: every device that ran the pre-fix code has a cursor
+  // _v2, deliberately: every device that ran the pre-fix code has a cursor
   // that already SKIPPED blobs (see pushItems). Fixing the rule going forward
-  // does not bring those back — the cursor only moves forward, so the skipped
+  // does not bring those back - the cursor only moves forward, so the skipped
   // range is never requested again. Bumping the key resets each device to 0
   // once, which re-pulls everything and heals the gaps. Costs one full sync per
   // device; applyRemote is LWW, so nothing local is overwritten by older data.
@@ -172,7 +172,7 @@ export function createCollectionSync<T>(opts: {
     try {
       res = await syncApi.changes(collection, lastSeq(), projectId);
     } catch {
-      return; // offline / transient — retry next cycle
+      return; // offline / transient - retry next cycle
     }
     for (const b of res.changes) {
       if (b.deleted) {
@@ -182,7 +182,7 @@ export function createCollectionSync<T>(opts: {
       try {
         store.applyRemote(decryptJSON<T>(b.ciphertext, k));
       } catch {
-        /* undecryptable (wrong key / corruption) — skip */
+        /* undecryptable (wrong key / corruption) - skip */
       }
     }
     setSeq(res.latest_seq);
@@ -221,10 +221,10 @@ export function createCollectionSync<T>(opts: {
 
     const { batches, oversized } = planPush(changes);
 
-    // ⚠️ Quarantine, do NOT re-queue. A blob over the relay's cap fails with a
+    // Quarantine, do not re-queue. A blob over the relay's cap fails with a
     // whole-batch 413 every single time; the old bare `catch` put it straight
     // back in the queue, so one oversized chat wedged its entire collection
-    // forever — silently, since nothing observed the failure. Surfacing it and
+    // forever - silently, since nothing observed the failure. Surfacing it and
     // dropping it lets every other item in the collection keep syncing.
     for (const o of oversized) {
       reportSyncBlocked({
@@ -247,21 +247,21 @@ export function createCollectionSync<T>(opts: {
     for (const batch of batches) {
       try {
         const res = await syncApi.push(batch);
-        // ⚠️ The cursor is NOT advanced here, and that is the whole point.
+        // The cursor is not advanced here, and that is the whole point.
         //
-        // A push response reports the user's LATEST server seq — which includes
-        // everything OTHER devices wrote since our last pull. Adopting it as our
+        // A push response reports the user's LATEST server seq - which includes
+        // everything other devices wrote since our last pull. Adopting it as our
         // cursor jumped straight over those blobs, and since the cursor only ever
         // moves forward they were never fetched again: chats written on the phone
         // silently never reached the laptop and vice versa. The `pull()` that
         // follows a flush is supposed to reconcile concurrent edits, but it ran
-        // AFTER the cursor had already skipped past them.
+        // After the cursor had already skipped past them.
         //
         // Only a pull that actually applied the changes may move the cursor. The
         // cost is re-downloading our own just-pushed blobs once; `applyRemote`
         // ignores them (same `updatedAt`), so it is a no-op locally.
 
-        // A reader's shared-scope edit comes back "forbidden" — the server is the
+        // A reader's shared-scope edit comes back "forbidden" - the server is the
         // authority (owner-only writes in v1). Dropping it here (no re-queue)
         // keeps the queue from wedging; the next pull restores the server state.
         const refused = new Set(
@@ -285,7 +285,7 @@ export function createCollectionSync<T>(opts: {
             });
           }
         } else {
-          requeue(batch); // offline / 5xx / expired token — worth retrying
+          requeue(batch); // offline / 5xx / expired token - worth retrying
         }
       }
       pushed += batch.length;
@@ -364,15 +364,15 @@ export function createCollectionSync<T>(opts: {
         unsubs.push(() => window.removeEventListener("pagehide", onHide));
         unsubs.push(() => window.removeEventListener("online", onOnline));
       }
-      // The local database turned out to be new (evicted — #88) after this
-      // engine had already pulled with the old cursor: pull again from 0.
+      // The local database turned out to be new (evicted by the browser) after
+      // this engine had already pulled with the old cursor: pull again from 0.
       unsubs.push(onSyncCursorsReset(() => void pull()));
       void (async () => {
         await pull();
         const k = key();
         if (k) await pushItems(store.getAll().filter(mine), [], k);
       })();
-      // Optional periodic pull — the ONLY way a runner device receives jobs
+      // Optional periodic pull - the only way a runner device receives jobs
       // written elsewhere (no local write there to trigger a pull). Ciphertext
       // in, ciphertext out; the server still reads nothing.
       if (pollMs && pollMs > 0) poll = setInterval(() => void pull(), pollMs);

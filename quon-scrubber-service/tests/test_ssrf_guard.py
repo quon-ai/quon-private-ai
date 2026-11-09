@@ -37,13 +37,13 @@ def test_blocks_non_https_and_empty():
 
 
 def test_allows_public_https():
-    # public IP literal → no DNS, no raise
+    # public IP literal -> no DNS, no raise
     validate_public_url("https://93.184.216.34/v1")
 
 
 def test_opt_out_disables_guard(monkeypatch):
     monkeypatch.setattr(settings, "allow_private_provider_urls", True)
-    validate_public_url("http://127.0.0.1:11434/v1")  # self-host opt-out → allowed
+    validate_public_url("http://127.0.0.1:11434/v1")  # self-host opt-out -> allowed
 
 
 def test_connection_store_rejects_internal_url():
@@ -80,7 +80,7 @@ def test_relay_revalidates_byok_url_at_request_time(monkeypatch):
 # --- operator allow-list (PROVIDER_PRIVATE_HOST_ALLOWLIST) -----------------
 # The narrow alternative to switching the guard off wholesale: one self-hosted
 # PII endpoint inside the VPC is reachable, every other private target stays
-# blocked. The negative cases below are the point — an allow-list that leaks
+# blocked. The negative cases below are the point - an allow-list that leaks
 # past its own entries is worse than none, because it reads as protection.
 def _allow(monkeypatch, value):
     monkeypatch.setattr(settings, "provider_private_host_allowlist", value)
@@ -96,7 +96,7 @@ def test_allowlisted_host_may_resolve_private(monkeypatch):
 
 
 def test_allowlist_does_not_leak_to_other_private_hosts(monkeypatch):
-    """The entry exempts THAT hostname, not private addressing in general."""
+    """The entry exempts that hostname, not private addressing in general."""
     _allow(monkeypatch, "pii.internal.example")
     with pytest.raises(UnsafeUrlError):
         validate_public_url("https://169.254.169.254/latest/meta-data")
@@ -106,7 +106,7 @@ def test_allowlist_does_not_leak_to_other_private_hosts(monkeypatch):
 
 def test_allowlist_is_exact_not_suffix(monkeypatch):
     """No wildcards: an attacker-registered `evil-pii.internal.example` or a
-    subdomain of an entry must NOT inherit the exemption."""
+    subdomain of an entry must not inherit the exemption."""
     _allow(monkeypatch, "pii.internal.example")
     monkeypatch.setattr(
         "net_guard.socket.getaddrinfo",

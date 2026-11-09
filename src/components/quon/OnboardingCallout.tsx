@@ -8,15 +8,15 @@ import { skipOnboarding } from "@/lib/onboardingStore";
 /**
  * Onboarding step 1: a callout pointing at the "Redacted N" badge right after
  * the user's first real scrubbed send. Desktop/tablet: an anchored bubble
- * above the badge. Mobile (375px): a bottom-docked sheet instead — a tooltip
+ * above the badge. Mobile (375px): a bottom-docked sheet instead - a tooltip
  * anchored to a scroll-position-dependent badge is unreliable at that width,
  * and a sheet reads as deliberate rather than clipped/misplaced.
  *
  * Two distinct exits, per the "3 steps, always skippable" rule: "Got it"
  * completes step 1 normally (advances to the optional step-2 teaser and marks
- * the whole guided flow seen — `onDismiss` is `advanceOnboardingFromCallout`);
+ * the whole guided flow seen - `onDismiss` is `advanceOnboardingFromCallout`);
  * the corner X / "Skip the tour" end the flow immediately without the teaser
- * (`skipOnboarding`, also marks seen — either way it never re-triggers).
+ * (`skipOnboarding`, also marks seen - either way it never re-triggers).
  */
 export function OnboardingCallout({
   count,
@@ -25,12 +25,11 @@ export function OnboardingCallout({
 }: {
   count: number;
   /** True when this first send ran with AI enrichment skipped (local NER/regex
-   *  only) — some items may have been missed. The default "celebrate the count"
-   *  copy would be dishonest here (report #1, 2026-07-15 UX walkthrough): the
-   *  very first thing a new user sees must not imply more protection than the
-   *  send actually got. */
+   *  only) - some items may have been missed. The default "celebrate the count"
+   *  copy would be dishonest here: the very first thing a new user sees must
+   *  not imply more protection than the send actually got. */
   fallbackMode?: boolean;
-  /** Called for the primary "Got it" action — normal step-1 completion. */
+  /** Called for the primary "Got it" action - normal step-1 completion. */
   onDismiss: () => void;
 }) {
   const isMobile = useIsMobile();

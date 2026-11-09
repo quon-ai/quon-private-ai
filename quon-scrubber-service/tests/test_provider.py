@@ -26,7 +26,7 @@ def test_reasoning_added_for_valid_effort():
 
 @pytest.mark.parametrize("effort", [None, "", "off", "ultra", "HIGH", "max"])
 def test_reasoning_omitted_when_absent_or_invalid(effort):
-    # None/off/omitted → no reasoning param; a bad value must never reach the provider.
+    # None/off/omitted -> no reasoning param; a bad value must never reach the provider.
     assert "reasoning" not in _payload(effort)
 
 
@@ -38,7 +38,7 @@ def test_reasoning_effort_defaults_to_omitted():
 
 
 # ---------------------------------------------------------------------------
-# friendly_provider_error — upstream failures become actionable user messages
+# friendly_provider_error - upstream failures become actionable user messages
 # ---------------------------------------------------------------------------
 
 
@@ -47,7 +47,7 @@ def test_friendly_error_402_credits_exhausted():
     msg = provider.friendly_provider_error(402, body)
     assert "budget is used up" in msg
     assert "Settings" in msg
-    # The upstream top-up URL is misleading for provisioned sub-keys — must not leak.
+    # The upstream top-up URL is misleading for provisioned sub-keys - must not leak.
     assert "openrouter.ai" not in msg
 
 
@@ -130,7 +130,7 @@ def _patch_stream(monkeypatch, lines):
 
 def test_stream_surfaces_mid_stream_error_after_a_preamble(monkeypatch):
     # A router/meta model (fusion) streams a preamble delta, then fails with an
-    # error chunk (no `choices`). That error must be raised — not silently dropped
+    # error chunk (no `choices`). That error must be raised - not silently dropped
     # leaving the client hanging on the half-answer.
     _patch_stream(
         monkeypatch,
@@ -148,7 +148,7 @@ def test_stream_yields_deltas_and_stops_on_done(monkeypatch):
     _patch_stream(
         monkeypatch,
         [
-            ": OPENROUTER PROCESSING",  # keep-alive comment — skipped, not an error
+            ": OPENROUTER PROCESSING",  # keep-alive comment - skipped, not an error
             'data: {"choices": [{"delta": {"content": "Hello "}}]}',
             'data: {"choices": [{"delta": {"content": "world"}}]}',
             "data: [DONE]",
@@ -160,7 +160,7 @@ def test_stream_yields_deltas_and_stops_on_done(monkeypatch):
 
 def test_stream_forwards_reasoning_as_a_distinct_event(monkeypatch):
     # Reasoning ("thinking") deltas come on a separate `reasoning` field for
-    # reasoning models; they must be yielded as their own {reasoning: …} event,
+    # reasoning models; they must be yielded as their own {reasoning: ...} event,
     # never mixed into the answer text.
     _patch_stream(
         monkeypatch,
@@ -230,7 +230,7 @@ def test_build_request_passes_tools_and_tool_turns():
 
 
 def test_web_search_plugin_only_on_openrouter_endpoint(monkeypatch):
-    """web_search adds OpenRouter's plugins field — but never for a custom
+    """web_search adds OpenRouter's plugins field - but never for a custom
     OpenAI-compatible endpoint (it would reject the unknown field)."""
     from config import settings
 
@@ -241,13 +241,13 @@ def test_web_search_plugin_only_on_openrouter_endpoint(monkeypatch):
         "~anthropic/claude-sonnet-latest", msgs, stream=True, api_key="k", web_search=True
     )
     assert {"type": "openrouter:web_search"} in payload["tools"]
-    # ONLY web_search. Attaching `web_fetch` or `datetime` was measured against
+    # Only web_search. Attaching `web_fetch` or `datetime` was measured against
     # the live instance to delay the first token to ~10 s and suppress streaming
-    # on EVERY message — even ones the model never searched for. Re-adding
+    # on every message - even ones the model never searched for. Re-adding
     # either must fail this test, not quietly cost every user 9 seconds.
     assert payload["tools"] == [{"type": "openrouter:web_search"}]
 
-    # Custom BYOK endpoint: plugins must NOT be attached.
+    # Custom BYOK endpoint: plugins must not be attached.
     _url, payload, _h = provider._build_request(
         "some/model", msgs, stream=True, api_key="k",
         base_url="https://my-own-endpoint.example.com/v1", web_search=True,
@@ -270,8 +270,8 @@ def test_web_search_plugin_only_on_openrouter_endpoint(monkeypatch):
 
 
 def test_system_prompt_states_todays_date():
-    """The date the removed `openrouter:datetime` tool used to supply is simply
-    stated in the system prompt — free, instead of a ~10 s stall per message."""
+    """Today's date is stated in the system prompt rather than fetched through
+    the `openrouter:datetime` tool - free, instead of a ~10 s stall per message."""
     from models import ChatTurn
 
     _url, payload, _h = provider._build_request(
@@ -289,7 +289,7 @@ def test_system_prompt_states_todays_date():
 def test_stream_forwards_web_search_citations(monkeypatch):
     # With the agentic web_search tool the model's sources arrive as
     # `annotations` on a delta. They must surface as their own event so the UI
-    # can render a "Sources" strip — only url+title, never the page excerpt.
+    # can render a "Sources" strip - only url+title, never the page excerpt.
     _patch_stream(
         monkeypatch,
         [
@@ -308,7 +308,7 @@ def test_stream_forwards_web_search_citations(monkeypatch):
 
 def test_stream_citations_dedupe_and_accept_message_shape(monkeypatch):
     # Providers repeat the full annotation list on later chunks, and may put it
-    # on the finished `message` instead of a delta — each URL is forwarded once.
+    # on the finished `message` instead of a delta - each URL is forwarded once.
     _patch_stream(
         monkeypatch,
         [
@@ -341,7 +341,7 @@ def test_stream_ignores_malformed_annotations(monkeypatch):
     assert asyncio.run(_collect(None)) == ["Still fine."]
 
 
-# --- Image generation (#79) ------------------------------------------------
+# --- Image generation ------------------------------------------------------
 
 
 def test_build_request_asks_for_images_only_when_told():
@@ -350,7 +350,7 @@ def test_build_request_asks_for_images_only_when_told():
         api_key="k", image_output=True,
     )
     assert payload["modalities"] == ["image", "text"]
-    # Text sends carry nothing extra — the send-path latency rule.
+    # Text sends carry nothing extra - the send-path latency rule.
     _, payload, _ = provider._build_request(
         "openrouter/fusion", [ChatTurn(role="user", content="hi")], stream=True, api_key="k"
     )
@@ -370,7 +370,7 @@ def test_stream_forwards_generated_images_as_events(monkeypatch):
             'data: {"choices":[{"delta":{},"message":{"images":[{"type":"image_url","image_url":{"url":"'
             + png
             + '"}}]}}]}',
-            # Not a data URL → ignored, never forwarded.
+            # Not a data URL -> ignored, never forwarded.
             'data: {"choices":[{"delta":{"images":[{"type":"image_url","image_url":{"url":"https://x/y.png"}}]}}]}',
             "data: [DONE]",
         ],
@@ -391,9 +391,9 @@ class _RefusedResp(_FakeResp):
 
 
 def test_stream_refusal_logs_the_upstream_reason_for_the_operator(monkeypatch, caplog):
-    # Feedback #84: the user saw a friendly "key rejected" (then "connection
-    # lost"); the operator saw only httpx's bare "401 Unauthorized" and could
-    # not tell a disabled sub-key from a wrong one. The reason must be logged —
+    # The user sees a friendly "key rejected" (then "connection
+    # lost"); the operator sees only httpx's bare "401 Unauthorized" and could
+    # not tell a disabled sub-key from a wrong one. The reason must be logged - 
     # the key itself never is.
     resp = _RefusedResp(401, b'{"error": {"message": "Key has been disabled", "code": 401}}')
     monkeypatch.setattr(provider.httpx, "AsyncClient", lambda *a, **k: _FakeClient(resp))

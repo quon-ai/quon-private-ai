@@ -7,11 +7,11 @@ export interface MeResponse {
   id: string;
   email: string;
   status: string;
-  /** 'user' | 'admin' — gates the /admin UI (the server re-checks every admin
+  /** 'user' | 'admin' - gates the /admin UI (the server re-checks every admin
    *  endpoint; this only controls visibility). Optional for cached/legacy
    *  responses, absent = 'user'. */
   role?: "user" | "admin";
-  /** True exactly once, on the /auth/verify response for a brand-new signup —
+  /** True exactly once, on the /auth/verify response for a brand-new signup -
    *  the one unambiguous server-observable "this account just came alive"
    *  event (verify and the later unlock() may happen on different devices, so
    *  nothing client-only can substitute). Always false elsewhere (login/me/
@@ -20,7 +20,7 @@ export interface MeResponse {
   /** X25519 identity public key for Shared Projects (base64), null until the
    *  account registers one via POST /auth/identity. */
   identity_pub?: string | null;
-  /** The matching private key wrapped under the Master Key (base64) — opaque to
+  /** The matching private key wrapped under the Master Key (base64) - opaque to
    *  the server, unwrapped client-side on login/unlock (CTX "quonidk0"). */
   identity_priv_wrapped?: string | null;
   /** Account-bound UI language ("de"|"en"), or null when the account has no
@@ -29,7 +29,7 @@ export interface MeResponse {
 }
 
 /** Set-once identity registration (POST /auth/identity). The server answers 409
- *  when an identity already exists — another tab/device won the race; re-fetch
+ *  when an identity already exists - another tab/device won the race; re-fetch
  *  /auth/me and adopt theirs (see authStore.ensureIdentity). */
 export interface IdentityBody {
   identity_pub: string;
@@ -58,7 +58,7 @@ export interface RegisterBody {
   invite_code?: string;
   /** Accepted Nutzungsvereinbarung version (src/lib/legal.ts TERMS_VERSION). */
   terms_version?: string;
-  /** Chosen UI language ("de"|"en") — stored on the account + used for the
+  /** Chosen UI language ("de"|"en") - stored on the account + used for the
    *  verification email. */
   language?: string;
   auth_token: string;
@@ -86,7 +86,7 @@ export interface ResetPasswordBody {
 export interface ChangePasswordBody {
   /** Proves the current password (authToken derived from it). */
   current_auth_token: string;
-  /** New password material — the Master Key re-wrapped under the new password. */
+  /** New password material - the Master Key re-wrapped under the new password. */
   auth_token: string;
   kdf_salt: string;
   kdf_params: KdfParams;

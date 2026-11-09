@@ -1,11 +1,11 @@
 /**
- * Project store — optional containers that group chats and scope Memory/Documents
+ * Project store - optional containers that group chats and scope Memory/Documents
  * to a topic, plus a per-project instruction (system prompt). End-to-end encrypted
  * and synced as opaque blobs (collection `projects`), exactly like chat/memory/docs.
  *
  * Same shape as the Memory store: a `useSyncExternalStore` hook + an **IndexedDB**
  * cache + local-change/delete listeners the sync engine subscribes to. Projects are
- * opt-in — with none created the app behaves exactly as before. A chat/memory/doc
+ * opt-in - with none created the app behaves exactly as before. A chat/memory/doc
  * "belongs to" a project purely via its own optional `projectId` field; the project
  * record here only holds the name, instruction and a cosmetic colour.
  */
@@ -49,9 +49,9 @@ export const PROJECT_COLOR_HEX: Record<ProjectColor, string> = {
   orange: "#fb923c",
 };
 
-/** Pick the accent for a NEW project: the LEAST-used colour among existing
+/** Pick the accent for a new project: the LEAST-used colour among existing
  *  projects (ties broken by palette order). Round-robin by count collides after
- *  a delete-then-create (two projects land on the same colour — the reported
+ *  a delete-then-create (two projects land on the same colour - the reported
  *  "overlapping bubble colours" bug); least-used spreads evenly and only repeats
  *  once every colour is already in use. */
 export function nextProjectColor(existing: Pick<ProjectItem, "color">[]): ProjectColor {
@@ -80,7 +80,7 @@ export interface ProjectItem {
   /** Cosmetic accent (one of PROJECT_COLORS); falls back to "indigo" in the UI. */
   color?: ProjectColor;
   /**
-   * Per-project chat defaults — all optional (unset = use the global setting), so
+   * Per-project chat defaults - all optional (unset = use the global setting), so
    * items encrypted before these fields existed keep decoding unchanged. They only
    * SEED a chat's initial state when it is opened/created in this project
    * (see `resolveProjectChatSeed`); later per-chat changes always win.

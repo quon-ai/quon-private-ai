@@ -61,7 +61,7 @@ def test_implicit_tls_on_port_465(monkeypatch):
     email_service.send_verification("x@y.de", "tok")
 
     assert FakeSSL.last is not None and FakePlain.last is None
-    assert FakeSSL.last.starttls_called is False  # implicit TLS — no STARTTLS
+    assert FakeSSL.last.starttls_called is False  # implicit TLS - no STARTTLS
     assert FakeSSL.last.logged_in and FakeSSL.last.sent
 
 

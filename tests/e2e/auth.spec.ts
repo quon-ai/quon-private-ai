@@ -2,7 +2,7 @@ import { test, expect } from "@playwright/test";
 
 import { freshEmail, login, registerAndVerify } from "./helpers/account";
 
-test("register → verify → login, and the ZK session survives a reload", async ({ page }) => {
+test("register -> verify -> login, and the ZK session survives a reload", async ({ page }) => {
   const creds = { email: freshEmail("reg"), password: "Reg-Test-12345!" };
 
   await registerAndVerify(page, creds);

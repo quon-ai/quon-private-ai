@@ -3,13 +3,13 @@ import { test, expect } from "@playwright/test";
 import { login, sharedCreds } from "./helpers/account";
 
 /**
- * Detection preview in the document viewer (feedback #55): "Ich habe nicht das
- * ganze Dok im Kopf und kann [nicht] sagen, ob er alles erwischt hat" — the
- * hits must be painted INTO the document, not listed beside it.
+ * Detection preview in the document viewer: "Ich habe nicht das ganze Dok im
+ * Kopf und kann [nicht] sagen, ob er alles erwischt hat" - the
+ * hits must be painted into the document, not listed beside it.
  *
  * The harness backend runs with LLM enrichment off, so the assertions target
- * the deterministic regex tier (EMAIL) — the flow (button → scrub → marks in
- * place → toggle off removes them) is identical for every entity type.
+ * the deterministic regex tier (EMAIL) - the flow (button -> scrub -> marks in
+ * place -> toggle off removes them) is identical for every entity type.
  */
 test("the viewer marks detected values in place, and the toggle removes them", async ({
   page,
@@ -42,25 +42,25 @@ test("the viewer marks detected values in place, and the toggle removes them", a
   // The count line tells the user what "marked" means.
   await expect(viewer.getByText(/values? marked|Werte? markiert/)).toBeVisible();
 
-  // …and, since #70/#71, WHAT THEY CAN DO with the marks. The feature was
-  // "found more by accident": the toggle was a bare icon whose only
-  // explanation was a `title` (invisible on touch), and nothing said the marks
+  // ...and what they can do with the marks. Without that the feature is
+  // "found more by accident": a toggle that is a bare icon whose only
+  // explanation is a `title` (invisible on touch), and nothing saying the marks
   // are interactive. Both are asserted here so they cannot quietly regress.
   await expect(viewer.getByTestId("detect-toggle")).toContainText(/Detection|Erkennung/);
   await expect(viewer.getByTestId("detect-result")).toContainText(
     /Select any text|Markier eine Stelle/,
   );
 
-  // Toggle off → the document renders clean again, text unchanged.
+  // Toggle off -> the document renders clean again, text unchanged.
   await viewer.getByRole("button", { name: /Show detection/ }).click();
   await expect(viewer.locator("mark[data-quon-hit]")).toHaveCount(0);
   await expect(viewer.getByText(/billing-preview@example\.org/)).toBeVisible();
 });
 
-// A false positive must cost ONE click to undo, and the undo is value-keyed
+// A false positive must cost one click to undo, and the undo is value-keyed
 // like the detection: clicking one occurrence clears every occurrence. The
 // value lands on the device's never-redact list, which Settings renders as an
-// editable textarea — an invisible allow-list would be a leak with a nice UI.
+// editable textarea - an invisible allow-list would be a leak with a nice UI.
 test("a detected value can be dismissed in one click and stays dismissed", async ({
   page,
 }, testInfo) => {
@@ -75,7 +75,7 @@ test("a detected value can be dismissed in one click and stays dismissed", async
     name: fname,
     mimeType: "text/plain",
     buffer: Buffer.from(
-      // The value appears TWICE on purpose: one dismissal must clear both.
+      // The value appears twice on purpose: one dismissal must clear both.
       `Bitte an ${email} senden. Rueckfragen ebenfalls an ${email} richten.`,
     ),
   });
@@ -90,7 +90,7 @@ test("a detected value can be dismissed in one click and stays dismissed", async
   await expect(marks.first()).toHaveText(email, { timeout: 60_000 });
   expect(await marks.count()).toBe(2); // both occurrences painted
 
-  // One click on either occurrence clears them all — no re-scrub, no reload.
+  // One click on either occurrence clears them all - no re-scrub, no reload.
   await marks.first().click();
   await expect(viewer.locator('mark[data-quon-hit="EMAIL"]')).toHaveCount(0);
   // The text itself is untouched; only the marking went away.

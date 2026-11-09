@@ -1,13 +1,13 @@
-"""Per-user entitlement resolution — the seam plans/subscriptions plug into.
+"""Per-user entitlement resolution - the seam plans/subscriptions plug into.
 
 Every limit the server enforces per user (inference budget, originals storage)
 resolves through :func:`resolve`: user override (``user_entitlements`` row,
-admin-set) → instance default (config). A future subscription feature only has
-to write rows here (or add a plan → entitlements mapping in this module);
+admin-set) -> instance default (config). A future subscription feature only has
+to write rows here (or add a plan -> entitlements mapping in this module);
 provisioning, quota and catalog code never change again.
 
-Deliberately metadata-only: entitlements say how MUCH a user may use, never
-WHAT they store — the zero-knowledge model is untouched.
+Deliberately metadata-only: entitlements say how much a user may use, never
+what they store - the zero-knowledge model is untouched.
 """
 
 from __future__ import annotations
@@ -23,7 +23,7 @@ class Entitlements:
     budget_usd: float
     storage_bytes: int
     # True when any field deviates from the instance default (admin override /
-    # future plan) — surfaced in the admin UI so overrides are never invisible.
+    # future plan) - surfaced in the admin UI so overrides are never invisible.
     overridden: bool
 
 
@@ -51,7 +51,7 @@ def set_overrides(
     user_id: str, *, budget_usd: float | None, storage_bytes: int | None
 ) -> None:
     """Write the override row (NULL field = fall back to default). Both None
-    deletes the row entirely — the user is fully back on instance defaults."""
+    deletes the row entirely - the user is fully back on instance defaults."""
     with db.get_conn() as c:
         if budget_usd is None and storage_bytes is None:
             c.execute("DELETE FROM user_entitlements WHERE user_id=?", (user_id,))

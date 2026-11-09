@@ -13,7 +13,7 @@ const POLL_MS = 15 * 60 * 1000;
  * A slim bar offering a reload once a newer build is deployed.
  *
  * The problem it solves: a running instance keeps the JavaScript it loaded, and
- * an installed PWA is never reloaded just because we deployed — so the user
+ * an installed PWA is never reloaded just because we deployed - so the user
  * keeps testing the old code and reports bugs in features that already shipped.
  *
  * It never reloads on its own. A surprise reload would discard a half-typed
@@ -25,7 +25,7 @@ export function UpdateBanner() {
   const { t } = useT();
   const [outdated, setOutdated] = useState(false);
 
-  // A failed lazy import is PROOF that this instance outlived its build — the
+  // A failed lazy import is PROOF that this instance outlived its build - the
   // chunk it asked for is gone from the server. Surface the reload offer at
   // once instead of waiting for the next poll; this is the moment the user is
   // actually blocked. Registered even for unstamped builds: the error is

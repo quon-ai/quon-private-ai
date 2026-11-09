@@ -1,6 +1,6 @@
 /**
  * "projects" namespace UI strings. Keys are prefixed `projects.*`. Keep `en` and `de`
- * in sync — a missing German key is a compile error via catalog.ts's typing.
+ * in sync - a missing German key is a compile error via catalog.ts's typing.
  * Covers ScreenProjects.tsx (list + Overview/Content/Settings tabs, delete dialog),
  * ProjectSharingCard.tsx (share/invite/members) and ProjectPickerBadge.tsx.
  */
@@ -21,7 +21,7 @@ export const projects = {
     "projects.docCountOne": "{count} doc",
     "projects.docCountOther": "{count} docs",
 
-    // Detail screen — shared chrome
+    // Detail screen - shared chrome
     "projects.backToProjects": "Back to projects",
     "projects.notFound": "This project doesn’t exist (or hasn’t synced yet).",
     "projects.accessRevokedBanner":
@@ -43,7 +43,7 @@ export const projects = {
     "projects.projectDocuments": "Project documents",
     "projects.projectAgents": "Project agents",
 
-    // Settings tab — editor
+    // Settings tab - editor
     "projects.nameFieldPlaceholder": "Project name",
     "projects.colourLabel": "Colour {color}",
     "projects.colourIndigo": "Indigo",
@@ -60,7 +60,7 @@ export const projects = {
     "projects.instructionsHelp":
       "Sent with every chat in this project — and scrubbed for personal data first, just like your messages.",
 
-    // Settings tab — chat defaults disclosure
+    // Settings tab - chat defaults disclosure
     "projects.chatDefaults": "Chat defaults",
     "projects.customOverridesCount": "{count} custom",
     "projects.usingGlobalDefaults": "Using global defaults",
@@ -81,7 +81,7 @@ export const projects = {
     "projects.saveChanges": "Save changes",
     "projects.saved": "Saved",
 
-    // Settings tab — danger zone / delete dialog
+    // Settings tab - danger zone / delete dialog
     "projects.deleteThisProject": "Delete this project",
     "projects.deleteDescOwner":
       "Its chats, memory and documents are kept and moved to your global space. This also stops sharing it.",
@@ -147,7 +147,7 @@ export const projects = {
     "projects.docCountOne": "{count} Dokument",
     "projects.docCountOther": "{count} Dokumente",
 
-    // Detail screen — shared chrome
+    // Detail screen - shared chrome
     "projects.backToProjects": "Zurück zu Projekten",
     "projects.notFound": "Dieses Projekt gibt es nicht (oder es ist noch nicht synchronisiert).",
     "projects.accessRevokedBanner":
@@ -169,7 +169,7 @@ export const projects = {
     "projects.projectDocuments": "Projektdokumente",
     "projects.projectAgents": "Projekt-Agenten",
 
-    // Settings tab — editor
+    // Settings tab - editor
     "projects.nameFieldPlaceholder": "Projektname",
     "projects.colourLabel": "Farbe {color}",
     "projects.colourIndigo": "Indigo",
@@ -186,7 +186,7 @@ export const projects = {
     "projects.instructionsHelp":
       "Geht bei jedem Chat in diesem Projekt mit — und wird vorher von persönlichen Daten bereinigt, genau wie deine Nachrichten.",
 
-    // Settings tab — chat defaults disclosure
+    // Settings tab - chat defaults disclosure
     "projects.chatDefaults": "Chat-Voreinstellungen",
     "projects.customOverridesCount": "{count} angepasst",
     "projects.usingGlobalDefaults": "Nutzt globale Voreinstellungen",
@@ -207,7 +207,7 @@ export const projects = {
     "projects.saveChanges": "Änderungen speichern",
     "projects.saved": "Gespeichert",
 
-    // Settings tab — danger zone / delete dialog
+    // Settings tab - danger zone / delete dialog
     "projects.deleteThisProject": "Dieses Projekt löschen",
     "projects.deleteDescOwner":
       "Chats, Gedächtnis und Dokumente bleiben erhalten und wandern in deinen globalen Bereich. Das beendet auch das Teilen.",

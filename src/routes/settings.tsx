@@ -16,9 +16,9 @@ export const Route = createFileRoute("/settings")({
 function SettingsPage() {
   const navigate = useNavigate();
   // Real sign-out: terminate the server session + drop the in-memory Master Key
-  // (status → anonymous, which flips the shell to the sign-in screen). The old
+  // (status -> anonymous, which flips the shell to the sign-in screen). The old
   // implementation only cleared a stale localStorage key and reloaded, leaving the
-  // httpOnly session cookie intact — so the reload landed back in the app.
+  // httpOnly session cookie intact - so the reload landed back in the app.
   async function handleLogout() {
     await logout();
     navigate({ to: "/" });

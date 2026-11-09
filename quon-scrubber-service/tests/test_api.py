@@ -48,7 +48,7 @@ client = TestClient(app)
 @pytest.fixture(autouse=True)
 def _bypass_auth():
     """/scrub and /chat now require an active session. This suite tests detection
-    quality, not auth — override the dependency to a fixed active user, scoped to
+    quality, not auth - override the dependency to a fixed active user, scoped to
     each test so it never leaks into the real auth/sync tests."""
     app.dependency_overrides[_auth.current_active_user] = lambda: _auth.User(
         id="test-user", email="test@quon.local", status="active", session_id="test"
@@ -58,7 +58,7 @@ def _bypass_auth():
 
 from tests.report_paths import WRITE_BASELINE, report_path_for
 
-# Tracked baselines only under QUON_WRITE_BASELINE=1 — see report_paths.py.
+# Tracked baselines only under QUON_WRITE_BASELINE=1 - see report_paths.py.
 REPORT_PATH = report_path_for("REPORT.md")
 # Past runs are preserved here (never overwritten) so setup changes can be
 # compared over time; REPORT.md only mirrors the most recent run.
@@ -115,15 +115,15 @@ def _run_metadata(fallback_count: int, n_cases: int) -> dict:
 # --------------------------------------------------------------------------- #
 # Grading
 # --------------------------------------------------------------------------- #
-# Name particles too generic to count as a leak on their own ("von der Leyen" →
+# Name particles too generic to count as a leak on their own ("von der Leyen" ->
 # only "leyen" is distinctive).
 # Non-distinctive components of a gold name. A surviving particle is not a leak:
 # "von" alone identifies nobody, so counting it as one would score a correct
 # redaction as a failure.
 #
-# HONORIFICS belong in the same class, added 2026-08-19. The pipeline
-# deliberately KEEPS them — test_titled_name_redacted_end_to_end_without_llm
-# asserts `"Herr" in result.scrubbed  # the honorific stays (not PII)` — while
+# Honorifics belong in the same class. The pipeline
+# deliberately keeps them - test_titled_name_redacted_end_to_end_without_llm
+# asserts `"Herr" in result.scrubbed  # the honorific stays (not PII)` - while
 # the corpus lists the full "Dr. Stefan Weber" as must_anonymize. Those two are
 # consistent only if "Dr" is non-distinctive; otherwise the grader marks
 # intended behaviour as a leak. It did, and it did so UNEVENLY across models
@@ -131,19 +131,19 @@ def _run_metadata(fallback_count: int, n_cases: int) -> dict:
 # silently biased a model comparison. Academic qualifiers ("med", "rer", "nat")
 # are the same class for the same reason.
 #
-# ⚠️ This shifts historical figures in HISTORY.md slightly UPWARD: runs before
+# This shifts historical figures in HISTORY.md slightly upward: runs before
 # this date counted such cases as leaks. Compare across the boundary with care.
 _NAME_PARTICLES = frozenset(
     {
         "von", "van", "de", "der", "den", "da", "di", "du", "del", "della", "le",
         "la", "of", "the", "bin", "al", "ibn", "zu", "zur", "und", "mc", "mac",
         "dos", "das", "el", "ben",
-        # honorifics + academic qualifiers — kept in the output by design
+        # honorifics + academic qualifiers - kept in the output by design
         "dr", "prof", "herr", "frau", "mr", "mrs", "ms", "mx", "mister", "madam",
         "med", "rer", "nat", "phil", "jur", "oec", "habil", "ing",
     }
 )
-# Atomic types: a leak only if the WHOLE value survives (substring). Multi-part
+# Atomic types: a leak only if the whole value survives (substring). Multi-part
 # types (names, addresses) are checked component-by-component, so a partially
 # redacted "Anna Müller" (only "Müller" removed) counts as a leak, not a pass.
 _ATOMIC_TYPES = frozenset(
@@ -157,7 +157,7 @@ _ATOMIC_TYPES = frozenset(
 
 def _value_components(token: dict) -> list[str]:
     """The pieces of a value that each, if left in clear, constitute a leak.
-    Atomic types → the whole value; names/addresses → their distinctive words."""
+    Atomic types -> the whole value; names/addresses -> their distinctive words."""
     value = token["value"]
     if token.get("type") in _ATOMIC_TYPES:
         return [value]
@@ -179,7 +179,7 @@ def _value_leaked(token: dict, haystack: str) -> bool:
 
 
 def _wilson(found: int, total: int) -> tuple[float, float]:
-    """95% Wilson score interval for a proportion — report a range, never a bare
+    """95% Wilson score interval for a proportion - report a range, never a bare
     point estimate on a small sample."""
     if total == 0:
         return (1.0, 1.0)
@@ -278,7 +278,7 @@ def _metrics_from_rows(rows: list[dict]) -> dict:
         "grades": grade_counts,
         "recall_pct": round((tot_found / tot_must) * 100) if tot_must else 100,
         "precision_pct": round((tot_must_not_kept / tot_must_not) * 100) if tot_must_not else 100,
-        # The honest user-facing number: share of messages that leak ≥1 value.
+        # The honest user-facing number: share of messages that leak >=1 value.
         "sample_leak_rate": round(100 * sum(1 for r in rows if r["missed"] > 0) / len(rows))
         if rows
         else 0,
@@ -433,7 +433,7 @@ def _render_report(rows: list[dict], meta: dict) -> str:
 
 
 def _append_history(rows: list[dict], meta: dict) -> None:
-    """Append one row per run to a cumulative table — never overwrites prior runs."""
+    """Append one row per run to a cumulative table - never overwrites prior runs."""
     REPORTS_DIR.mkdir(exist_ok=True)
     m = _metrics_from_rows(rows)
     g = m["grades"]
@@ -470,14 +470,14 @@ def test_health_contract():
 
 
 def test_health_reports_the_detection_stack_not_the_retired_llm_tier():
-    """The LLM tier is REMOVED (2026-08-23). /health must carry no trace of it —
+    """There is no LLM tier. /health must carry no trace of one - 
     a field like ollama_available answering about a component that cannot even
     be configured is exactly the stale confidence this endpoint once had."""
     body = client.get("/health").json()
     assert body["status"] == "ok"
     for gone in ("ollama_available", "model_loaded", "pii_backend", "llm_enrichment"):
         assert gone not in body, gone
-    # Readiness IS the in-process stack (NER, and GLiNER when enabled).
+    # Readiness is the in-process stack (NER, and GLiNER when enabled).
     assert isinstance(body["pii_ready"], bool)
     assert isinstance(body["ner_ready"], bool)
 
@@ -513,7 +513,7 @@ def test_entities_contract():
 
 
 def test_models_contract(monkeypatch):
-    # Pin to the CODE default list — without this the test reads whatever
+    # Pin to the CODE default list - without this the test reads whatever
     # catalog happens to sit in the dev machine's runtime_settings.json.
     import settings_store
 
@@ -523,7 +523,7 @@ def test_models_contract(monkeypatch):
     # Each entry carries a composite id, the provider-local slug and its connection.
     slugs = {m["model"] for m in body}
     assert "~anthropic/claude-sonnet-latest" in slugs
-    # The intended default must be FIRST — the client's validity fallback picks
+    # The intended default must be first - the client's validity fallback picks
     # the first enabled entry.
     assert body[0]["model"] == "~anthropic/claude-sonnet-latest"
     sonnet = body[0]
@@ -570,7 +570,7 @@ def test_show_entities_false_hides_report():
 
 
 # --------------------------------------------------------------------------- #
-# Full 58-case quality suite (slow — needs cloud key or Ollama)
+# Full 58-case quality suite (slow - needs cloud key or Ollama)
 # --------------------------------------------------------------------------- #
 @pytest.mark.integration
 def test_quality_suite():
@@ -608,12 +608,12 @@ def test_quality_suite():
     assert len(rows) == 58
 
     # Both the LLM and the Presidio fallback redact emails reliably, so this
-    # holds regardless of the active backend — it guards the replacement pipe.
+    # holds regardless of the active backend - it guards the replacement pipe.
     email_rate = email_redacted / email_total if email_total else 1.0
     assert email_rate >= 0.9, f"email redaction rate too low: {email_rate:.0%}"
 
     # Skip the LLM-quality assertion only when no LLM extraction happened at all
-    # (every case fell back to NER+regex) — e.g. cloud key missing and Ollama down.
+    # (every case fell back to NER+regex) - e.g. cloud key missing and Ollama down.
 
     t = _totals(rows)
     min_score = float(os.environ.get("QUON_TEST_MIN_SCORE", "0"))

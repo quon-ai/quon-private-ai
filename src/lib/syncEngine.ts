@@ -3,11 +3,11 @@
  * relay, one encrypted blob per item. Three collections share the same
  * machinery (`createCollectionSync`), each with its own Master-Key-derived key:
  *
- *   - `chat`       — chat sessions        (deriveChatKey)
- *   - `memory`     — facts/notes          (deriveMemoryKey)
- *   - `documents`  — uploaded documents   (deriveDocsKey)
- *   - `projects`   — project containers   (deriveProjectsKey)
- *   - `prefs`      — UI prefs + redact lists, one singleton blob (derivePrefsKey)
+ *   - `chat`       - chat sessions        (deriveChatKey)
+ *   - `memory`     - facts/notes          (deriveMemoryKey)
+ *   - `documents`  - uploaded documents   (deriveDocsKey)
+ *   - `projects`   - project containers   (deriveProjectsKey)
+ *   - `prefs`      - UI prefs + redact lists, one singleton blob (derivePrefsKey)
  *
  * The server only ever sees ciphertext. `startSync`/`stopSync` are called by the
  * AppShell on the ready/anonymous transitions.
@@ -45,7 +45,7 @@ import {
   type ChatSession,
 } from "./quonStore";
 
-/** Remove every collection's pull cursor so the next startSync does a FULL pull.
+/** Remove every collection's pull cursor so the next startSync does a full pull.
  *  Robust even when no engines are running (e.g. an account-switch wipe), where
  *  per-engine stop() wouldn't have cleared them. */
 function clearSyncCursors(): void {
@@ -72,8 +72,8 @@ const chatSyncStore: SyncStore<ChatSession> = {
 };
 
 // UI preferences (protection level, active model, reasoning) + the always/never
-// redact lists, as ONE E2E-encrypted singleton blob (id "prefs"). The redact
-// lists are the user's own PII, so — like chats — the server only ever sees
+// redact lists, as one E2E-encrypted singleton blob (id "prefs"). The redact
+// lists are the user's own PII, so - like chats - the server only ever sees
 // ciphertext. LWW by prefsUpdatedAt across devices; never deleted (no tombstones).
 const prefsSyncStore: SyncStore<PrefsItem> = {
   getAll: () => [getPrefsItem()],
@@ -96,7 +96,7 @@ export function startSync(): void {
       deriveKey: deriveChatKey,
       store: chatSyncStore,
     }),
-    // Items living in a SHARED project are excluded here — the shared channel
+    // Items living in a SHARED project are excluded here - the shared channel
     // (sharedSync.ts) owns them, encrypted under the project key instead of the
     // personal collection keys. Chats are never shared and keep no filter.
     createCollectionSync<MemoryItem>({
@@ -125,13 +125,13 @@ export function startSync(): void {
     // Collections of the optional features (none in a build that leaves them out).
     ...extraEngines(),
   ];
-  // Grants FIRST, personal engines after: the routing filters above consult the
+  // Grants first, personal engines after: the routing filters above consult the
   // shared registry, so it must be populated before the personal channel's
-  // initial reconcile push — otherwise shared items leak into personal blobs
-  // once. refreshSharedSync never rejects (offline → resolves empty), so the
+  // initial reconcile push - otherwise shared items leak into personal blobs
+  // once. refreshSharedSync never rejects (offline -> resolves empty), so the
   // personal channel starts promptly either way.
   const startPersonal = engines;
-  // The local database first: if it had to be re-created (evicted — #88),
+  // The local database first: if it had to be re-created (quota eviction),
   // the cursors are reset by the time the first pull reads them. Capped so a
   // storage problem can never hold the sync back.
   const dbReady = Promise.race([
@@ -166,6 +166,6 @@ export function stopSync(): void {
   resetProjects();
   resetExtras();
   // Progress counters and quarantined blobs belong to the account that just
-  // left — a stale "1 chat can't sync" would otherwise follow the next one in.
+  // left - a stale "1 chat can't sync" would otherwise follow the next one in.
   resetSyncStatus();
 }

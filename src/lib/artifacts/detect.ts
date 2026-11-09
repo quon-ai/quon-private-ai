@@ -1,11 +1,11 @@
 /**
- * Detect saveable "artifacts" in an assistant reply — a complete standalone
+ * Detect saveable "artifacts" in an assistant reply - a complete standalone
  * Markdown document or HTML page the model produced, which the user can file
  * into their (zero-knowledge) Documents. Pure + unit-tested; no DOM.
  *
  * Heuristic: a fenced code block tagged ```markdown|md or ```html|htm whose
  * body is substantial (a real document, not a two-line snippet). We stay
- * conservative — a false positive just shows an extra "save" card, never
+ * conservative - a false positive just shows an extra "save" card, never
  * loses or alters the chat text.
  */
 
@@ -24,17 +24,17 @@ export interface Artifact {
 export const ARTIFACT_MIN_CHARS = 200;
 
 /**
- * A fenced block, CommonMark-style: the closing run must be AT LEAST as long as
+ * A fenced block, CommonMark-style: the closing run must be AT least as long as
  * the opening one (`\1` + more backticks are allowed after it).
  *
  * The length capture is the whole point. With a fixed ``` opener the pattern is
- * non-greedy and therefore closes at the FIRST inner fence — so a generated
- * document that contains a code block (an ASCII diagram, a snippet) was cut off
- * exactly where that block began, and everything after it fell out of the
- * artifact and got rendered as prose. Reported 2026-08-04 as "cut off from 4.1"
- * plus a mangled diagram; one cause, both symptoms.
+ * non-greedy and therefore closes at the first inner fence - so a generated
+ * document that contains a code block (an ASCII diagram, a snippet) is cut off
+ * exactly where that block begins, and everything after it falls out of the
+ * artifact and gets rendered as prose: a truncated document and a mangled
+ * diagram, one cause, both symptoms.
  *
- * A model wrapping such a document must therefore open with FOUR backticks —
+ * A model wrapping such a document must therefore open with four backticks -
  * which the system prompt now asks for (provider.py). With three on both sides
  * the ambiguity is unresolvable in principle: "closing fence" and "inner
  * opening fence" are the same token.
@@ -64,7 +64,7 @@ function markdownTitle(md: string): string | null {
   for (const line of md.split(/\r?\n/)) {
     const h = /^#{1,6}\s+(.+?)\s*#*\s*$/.exec(line.trim());
     if (h) return h[1].trim();
-    if (line.trim()) break; // first non-empty line isn't a heading → give up on H1
+    if (line.trim()) break; // first non-empty line isn't a heading -> give up on H1
   }
   const first = md.split(/\r?\n/).find((l) => l.trim());
   return first ? first.trim().slice(0, 80) : null;
@@ -103,18 +103,18 @@ export function detectArtifacts(text: string): Artifact[] {
  *
  * The system prompt asks the model to wrap a standalone document in a single
  * ```markdown fence so we can offer to save it. Markdown then renders that
- * fence as a CODE BLOCK — technically correct, but it means a reply that is one
+ * fence as a CODE BLOCK - technically correct, but it means a reply that is one
  * long document reads as raw markup, and stays that way if the user dismisses
  * the save card. This unwraps exactly those fences before rendering.
  *
  * Conservative on purpose:
  * - only `markdown`/`md` fences, and only ones long enough to qualify as an
- *   artifact (`ARTIFACT_MIN_CHARS`) — a short ```markdown snippet demonstrating
+ *   artifact (`ARTIFACT_MIN_CHARS`) - a short ```markdown snippet demonstrating
  *   syntax stays a code block, as it should;
  * - `html` and every other language are untouched (their code block is honest,
  *   and the artifact card renders its own sanitized preview);
  * - while a reply is still streaming the closing fence hasn't arrived yet, so a
- *   trailing UNCLOSED opener is unwrapped too — otherwise the document would
+ *   trailing UNCLOSED opener is unwrapped too - otherwise the document would
  *   render as code for the whole answer and snap at the very end.
  */
 export function unwrapMarkdownArtifacts(text: string): string {
@@ -132,7 +132,7 @@ export function unwrapMarkdownArtifacts(text: string): string {
     const bodyStart = lastOpen.index + lastOpen[0].length;
     const rest = out.slice(bodyStart);
     // "Still open" means no fence at least as long as the opener. A SHORTER
-    // inner fence (the document's own code block) does not close it — that was
+    // inner fence (the document's own code block) does not close it - that was
     // the streaming-side half of the same bug.
     const closer = new RegExp(`^[ \t]*\`{${lastOpen[1].length},}`, "m");
     if (!closer.test(rest) && rest.trim().length >= ARTIFACT_MIN_CHARS) {

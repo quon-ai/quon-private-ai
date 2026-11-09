@@ -7,7 +7,7 @@ vi.mock("./quonApi", async (importOriginal) => {
   return { ...actual, scrubText: vi.fn(), chatComplete: vi.fn() };
 });
 
-// The embedder is a browser Web Worker — deterministic stub instead.
+// The embedder is a browser Web Worker - deterministic stub instead.
 vi.mock("./embedding/embedder", () => ({
   EMBED_MODEL: "test-embed",
   EMBED_DIM: 3,
@@ -84,7 +84,7 @@ function cand(p: Partial<ExtractedCandidate>): ExtractedCandidate {
 }
 
 /**
- * The post-filter is the GUARANTEE behind "only take what's really relevant" —
+ * The post-filter is the guarantee behind "only take what's really relevant" -
  * the prompt is only a request. These tests pin the shapes a document must not
  * be able to push into the review queue no matter what the model replies.
  */
@@ -98,8 +98,8 @@ describe("filterDocumentCandidates", () => {
     ]);
   });
 
-  it("drops unkeyed entries — a document must not produce free-form notes", () => {
-    // This is the summary shape ("the letter says …") the sweep exists to avoid.
+  it("drops unkeyed entries: a document must not produce free-form notes", () => {
+    // This is the summary shape ("the letter says ...") the sweep exists to avoid.
     const out = filterDocumentCandidates([
       cand({ kind: "note", key: undefined, text: "The letter confirms the contract." }),
     ]);
@@ -150,7 +150,7 @@ describe("buildDocumentExcerpt", () => {
   });
 
   it("cuts at a late paragraph boundary, not mid-sentence", () => {
-    // Boundary inside the last quarter of the budget → honoured.
+    // Boundary inside the last quarter of the budget -> honoured.
     const head = "x".repeat(MAX_DOC_CHARS - 100);
     const out = buildDocumentExcerpt(
       `${head}\n\ntail that must not be cut mid-word ${"y".repeat(5000)}`,
@@ -190,7 +190,7 @@ describe("runDocumentMemorySweep", () => {
     const res = await runDocumentMemorySweep(sweepOpts);
     expect(res).toEqual({ analyzed: 1, failed: 0, suggestions: 1, autoMerged: 0 });
 
-    // The relay only ever saw the SCRUBBED text…
+    // The relay only ever saw the SCRUBBED text...
     expect(chatMock).toHaveBeenCalledWith(
       [
         expect.objectContaining({ role: "system" }),
@@ -200,14 +200,14 @@ describe("runDocumentMemorySweep", () => {
       true,
       undefined,
     );
-    // …the queued suggestion is re-hydrated on-device and knows its document.
+    // ...the queued suggestion is re-hydrated on-device and knows its document.
     const sug = getAllMemorySuggestions()[0];
     expect(sug.text).toBe("Mietet von Anna Berger.");
     expect(sug.sourceDocId).toBe("d1");
     expect(sug.sourceSessionId).toBeUndefined();
     expect(getSweepCursor("d1")).toBe(7);
 
-    // Re-run: same version → no relay call at all.
+    // Re-run: same version -> no relay call at all.
     chatMock.mockClear();
     scrubMock.mockClear();
     expect(await runDocumentMemorySweep(sweepOpts)).toEqual({
@@ -247,7 +247,7 @@ describe("runDocumentMemorySweep", () => {
     expect(getSweepCursor("d1")).toBeUndefined();
   });
 
-  it("applies the quality gate to what the model returns — summaries never reach the queue", async () => {
+  it("applies the quality gate to what the model returns: summaries never reach the queue", async () => {
     upsertDocument(readyDoc("d1"));
     scrubMock.mockResolvedValue(scrubResult("scrubbed"));
     // A model ignoring the prompt: an unkeyed summary plus one real fact.
@@ -293,7 +293,7 @@ describe("DOCUMENT_EXTRACTION_SYSTEM_PROMPT", () => {
     expect(DOCUMENT_EXTRACTION_SYSTEM_PROMPT).toContain(String(MAX_FACT_CHARS));
   });
 
-  it("pins the placeholder rule — the scrubbed text is all the model ever sees", () => {
+  it("pins the placeholder rule: the scrubbed text is all the model ever sees", () => {
     expect(DOCUMENT_EXTRACTION_SYSTEM_PROMPT).toMatch(/EXACTLY as written/);
   });
 });

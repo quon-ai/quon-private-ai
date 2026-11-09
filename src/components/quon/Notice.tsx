@@ -33,11 +33,11 @@ const VARIANT_STYLES: Record<
 };
 
 /**
- * Shared banner/notice shell — one consistent padding/radius/typography treatment
+ * Shared banner/notice shell - one consistent padding/radius/typography treatment
  * for the ad-hoc status bars scattered across the app (quota warnings, sync
- * errors, fallback-mode hints, budget hints…). Variant sets color + default icon;
+ * errors, fallback-mode hints, budget hints...). Variant sets color + default icon;
  * pass `icon` to override (e.g. a privacy-specific glyph). Compact by default to
- * match the existing banners' density — this is a status line, not a card.
+ * match the existing banners' density - this is a status line, not a card.
  */
 export function Notice({
   variant = "info",

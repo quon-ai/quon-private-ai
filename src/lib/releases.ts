@@ -29,15 +29,15 @@ export interface ReleaseItem {
 }
 
 export interface Release {
-  id: string; // unique, stable — bump for each release
-  date: string; // human-friendly, e.g. "June 2026"
+  id: string; // unique, stable - bump for each release
+  date: string; // human-friendly month and year, not a timestamp
   title: string;
   subtitle?: string;
   items: ReleaseItem[];
 }
 
 // Newest first. Only the top entry is shown (once) by the popup.
-// Content is deliberately plain-string (not i18n'd — see nav.ts note); QUON is
+// Content is deliberately plain-string (not i18n'd - see nav.ts note); QUON is
 // German-default, so recent entries are written in German.
 export const RELEASES: Release[] = [
   {

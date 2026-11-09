@@ -19,7 +19,7 @@ export interface ModelDisplay {
   provider: string;
 }
 
-// Vendor slug (the part before the first "/") → display name.
+// Vendor slug (the part before the first "/") -> display name.
 const VENDORS: Record<string, string> = {
   anthropic: "Anthropic",
   openai: "OpenAI",
@@ -71,11 +71,11 @@ function isSizeToken(tok: string): boolean {
 
 function titleizeToken(tok: string): string {
   if (!tok) return tok;
-  if (/^\d/.test(tok)) return tok; // starts with a digit: "4o", "3.2" — keep exact
+  if (/^\d/.test(tok)) return tok; // starts with a digit: "4o", "3.2" - keep exact
   if (/^v\d/i.test(tok)) return tok.toLowerCase(); // version tag: "v3"
   const up = tok.toUpperCase();
   if (ACRONYMS.has(up)) return up;
-  return capitalize(tok); // "qwen3" → "Qwen3", "flash" → "Flash"
+  return capitalize(tok); // "qwen3" -> "Qwen3", "flash" -> "Flash"
 }
 
 function prettifyModelPart(part: string, vendorSlug: string): string {
@@ -83,11 +83,11 @@ function prettifyModelPart(part: string, vendorSlug: string): string {
   const kept = tokens.filter(
     (t) => !isDateish(t) && !isSizeToken(t) && !NOISE.has(t.toLowerCase()),
   );
-  // Never return empty — fall back to the raw tokens if the filters ate them all.
+  // Never return empty - fall back to the raw tokens if the filters ate them all.
   const source = kept.length ? kept : tokens;
   const words = source.map(titleizeToken);
   // If the name leads with the vendor, normalize its casing to the brand
-  // ("deepseek" → "DeepSeek") rather than leaving a lowercase title-case guess.
+  // ("deepseek" -> "DeepSeek") rather than leaving a lowercase title-case guess.
   if (words.length && VENDORS[vendorSlug] && source[0].toLowerCase() === vendorSlug.toLowerCase()) {
     words[0] = VENDORS[vendorSlug];
   }
@@ -97,8 +97,8 @@ function prettifyModelPart(part: string, vendorSlug: string): string {
 /** Turn a bare model slug into a friendly name + provider. */
 export function modelDisplay(slug: string): ModelDisplay {
   // OpenRouter "~vendor/model-latest" alias slugs: the ~ marks a floating
-  // "latest" pointer — strip it for display (the exact slug stays in the
-  // tooltip), so the vendor lookup still resolves ("~anthropic" → Anthropic).
+  // "latest" pointer - strip it for display (the exact slug stays in the
+  // tooltip), so the vendor lookup still resolves ("~anthropic" -> Anthropic).
   const s = (slug || "").trim().replace(/^~/, "");
   if (!s) return { name: "", provider: "" };
 
@@ -109,7 +109,7 @@ export function modelDisplay(slug: string): ModelDisplay {
 
   const override = NAME_OVERRIDES[s];
   if (override) return { name: override, provider };
-  // "openrouter/auto" is a router, not a vendor model — no provider tag.
+  // "openrouter/auto" is a router, not a vendor model - no provider tag.
   if (vendorSlug === "openrouter" && rest === "auto") return { name: "Auto", provider: "" };
 
   return { name: prettifyModelPart(rest, vendorSlug), provider };
@@ -139,7 +139,7 @@ export function chatModelDisplay(m: DisplayableModel): ModelDisplay {
 
 /**
  * Whether the provider tag adds information beyond the name. "Gemini 2.5 Flash"
- * + "Google" → yes; "Mistral Small 3.2" + "Mistral" → no (redundant).
+ * + "Google" -> yes; "Mistral Small 3.2" + "Mistral" -> no (redundant).
  */
 export function showProviderTag(d: ModelDisplay): boolean {
   return !!d.provider && !d.name.toLowerCase().startsWith(d.provider.toLowerCase());

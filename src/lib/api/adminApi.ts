@@ -1,9 +1,9 @@
 /** Typed client for the operator admin endpoints (/admin/*).
  *
- * All calls require a session whose account has role='admin' — the server
+ * All calls require a session whose account has role='admin' - the server
  * enforces this on every request (403 otherwise); the UI merely hides the
  * screen for non-admins. Everything here is account METADATA (emails, status,
- * byte counts, budgets) — content stays end-to-end encrypted and is never
+ * byte counts, budgets) - content stays end-to-end encrypted and is never
  * readable, for admins included. */
 
 import { apiFetch } from "./http";
@@ -32,7 +32,7 @@ export interface AdminInvite {
   created_at: number;
   expires_at: number;
   used_at: number | null;
-  /** Plaintext invite code — present ONLY on the create response. */
+  /** Plaintext invite code - present only on the create response. */
   code?: string | null;
 }
 

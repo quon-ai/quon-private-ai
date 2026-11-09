@@ -1,9 +1,9 @@
 /**
- * The 3-step protection-level slider (Basic → Filter → Review), shared by
+ * The 3-step protection-level slider (Basic -> Filter -> Review), shared by
  * Settings and the Dashboard's expandable "Change" panel so both render the
- * exact same control. Reads/writes quonStore — every surface that shows the
- * level stays in sync. ("Full Local" — on-device models — was dropped from
- * the UI 2026-07-06; it never shipped and only cluttered the slider.)
+ * exact same control. Reads/writes quonStore - every surface that shows the
+ * level stays in sync. (There is no "Full Local" step for on-device models:
+ * it never shipped and only cluttered the slider.)
  */
 import { motion } from "motion/react";
 
@@ -45,7 +45,7 @@ export const PROTECTION_LEVELS = [
   },
 ] as const;
 
-/** Meta (label/color/desc) for a level id — for pills and status lines.
+/** Meta (label/color/desc) for a level id - for pills and status lines.
  *  `t` is optional so existing English-only callers keep compiling untouched;
  *  pass `t` from useT() to get the localized short/desc instead of the raw
  *  English fallback baked into PROTECTION_LEVELS. */

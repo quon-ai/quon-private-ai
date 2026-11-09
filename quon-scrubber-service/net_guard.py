@@ -2,8 +2,8 @@
 
 A connection's ``base_url`` is attacker-influenced (per-user BYOK connections and
 global custom connections). Without validation the server could be coerced into
-requesting internal addresses — cloud metadata (169.254.169.254), loopback, or
-RFC1918 hosts — i.e. SSRF, and *non-blind* via the catalog endpoint which returns
+requesting internal addresses - cloud metadata (169.254.169.254), loopback, or
+RFC1918 hosts - i.e. SSRF, and *non-blind* via the catalog endpoint which returns
 the upstream response body. We require ``https`` and reject any host that resolves
 to a private / loopback / link-local / reserved / multicast address.
 
@@ -13,7 +13,7 @@ deployment that points at a local provider (e.g. ``http://localhost:11434``).
 Prefer ``PROVIDER_PRIVATE_HOST_ALLOWLIST`` over that switch when the goal is one
 known internal endpoint (a self-hosted PII model in our own VPC): it exempts only
 the hostnames the OPERATOR named, while every user-supplied BYOK url keeps the
-full guard. The blanket switch would also unblock those — and a BYOK url pointed
+full guard. The blanket switch would also unblock those - and a BYOK url pointed
 at 169.254.169.254 on EC2 reads instance credentials.
 """
 
@@ -70,7 +70,7 @@ def validate_public_url(url: str) -> None:
     ips = {info[4][0] for info in infos}
     if not ips:
         raise UnsafeUrlError(f"Provider host does not resolve ({host}).")
-    # Named by the operator → may point inside the VPC. Everything else about the
+    # Named by the operator -> may point inside the VPC. Everything else about the
     # check still applies, so a typo'd or dead host still fails loudly.
     if host.lower() in _allowlisted_hosts():
         return

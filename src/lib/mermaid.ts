@@ -2,17 +2,16 @@
  * Mermaid diagram detection + lazy rendering.
  *
  * Why lazy, always: mermaid is ~500KB gzipped. Loading it for every chat that
- * merely contains a code block would tax the exact thing that already got the
- * native webview killed once (issue #36/#37) — so the import happens on first
- * actual diagram and never before.
+ * merely contains a code block would tax the webview memory that gets the
+ * native WebContent process killed under pressure - so the import happens on
+ * first actual diagram and never before.
  *
  * Why a content sniff and not just the ``` fence: models very often emit a
- * diagram as a bare indented block with no language tag — that is precisely
- * what the user reported (an `erDiagram` rendering as plain text, 2026-08-10).
- * The sniff is therefore the load-bearing path, not a nicety, and it is
- * deliberately CONSERVATIVE: the first non-empty line must start with a known
- * mermaid diagram keyword, so ordinary prose or code never gets mistaken for a
- * diagram.
+ * diagram as a bare indented block with no language tag, and then an
+ * `erDiagram` renders as plain text. The sniff is therefore the load-bearing
+ * path, not a nicety, and it is deliberately conservative: the first non-empty
+ * line must start with a known mermaid diagram keyword, so ordinary prose or
+ * code never gets mistaken for a diagram.
  */
 
 /** Diagram types mermaid supports that we're willing to auto-detect. Kept as
@@ -44,14 +43,14 @@ const MERMAID_KEYWORDS = [
  * Does this code block look like a mermaid diagram?
  *
  * `language` wins when present (an explicit ```mermaid fence is unambiguous).
- * Otherwise the first non-empty line is matched against the keyword list —
+ * Otherwise the first non-empty line is matched against the keyword list -
  * `graph`/`flowchart` additionally require a direction token (`graph TD`,
  * `flowchart LR`), because a prose line starting with "graph" is otherwise a
  * plausible false positive.
  */
 export function looksLikeMermaid(code: string, language?: string): boolean {
   // An EXPLICIT language is authoritative in both directions: ```mermaid is a
-  // diagram, and ```python never is — sniffing a tagged block would let a
+  // diagram, and ```python never is - sniffing a tagged block would let a
   // python snippet starting with "graph TD" render as a diagram.
   if (language) return language.toLowerCase() === "mermaid";
   const first = code
@@ -62,7 +61,7 @@ export function looksLikeMermaid(code: string, language?: string): boolean {
   const lower = first.toLowerCase();
   const word = lower.split(/[\s:{(]/)[0];
   if (!MERMAID_KEYWORDS.includes(word as (typeof MERMAID_KEYWORDS)[number])) return false;
-  // "graph"/"flowchart" need a direction to count — mermaid requires one
+  // "graph"/"flowchart" need a direction to count - mermaid requires one
   // anyway, and it separates a real diagram from a sentence.
   if (word === "graph" || word === "flowchart") {
     return /^(graph|flowchart)\s+(tb|td|bt|rl|lr)\b/i.test(lower);
@@ -107,7 +106,7 @@ function getMermaid(): Promise<MermaidApi> {
 let idCounter = 0;
 
 /** Render diagram source to SVG markup. Rejects on a syntax error so the
- *  caller can fall back to showing the source — a broken diagram must never
+ *  caller can fall back to showing the source - a broken diagram must never
  *  swallow the content the model wrote. */
 export async function renderMermaid(code: string): Promise<string> {
   const api = await getMermaid();

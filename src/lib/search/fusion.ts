@@ -1,20 +1,20 @@
 /**
  * Reciprocal Rank Fusion (RRF): merge several rankings of the same candidate
- * pool into one combined order, so a candidate that ranks well in ANY signal
- * surfaces — not only the single strongest one.
+ * pool into one combined order, so a candidate that ranks well in any signal
+ * surfaces - not only the single strongest one.
  *
  * Why this exists: before this, the lexical signal in `../rag.ts` retrieval
  * was only a RE-SCORER over the vector-search shortlist (`rerankAndGate`
- * boosts/gates whatever `topKMulti` already returned) — an item the vector
+ * boosts/gates whatever `topKMulti` already returned) - an item the vector
  * stage ranked outside its cutoff could never be reached, however strong its
  * keyword/subword match. RRF promotes the lexical ranking to a parallel
  * CANDIDATE SOURCE: fuse the vector ranking and the full lexical ranking
  * (`./lexical`'s `rankByLexicalCoverage`), and an item high in either one
  * enters the shortlist.
  *
- * Fusion only decides shortlist membership/order. It does NOT replace the
+ * Fusion only decides shortlist membership/order. It does not replace the
  * relevance decision: callers must re-attach each fused candidate's real raw
- * score (e.g. cosine) before the actual floor/anchor gate runs downstream —
+ * score (e.g. cosine) before the actual floor/anchor gate runs downstream -
  * RRF scores are tiny (~1/60) and not comparable to the calibrated absolute
  * floors in `./rerank`.
  */

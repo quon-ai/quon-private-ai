@@ -10,7 +10,7 @@ function fakePlugin() {
   const listeners: Record<string, Array<(d: Record<string, unknown>) => void>> = {};
   const calls: { start: unknown[]; cancel: unknown[] } = { start: [], cancel: [] };
   const removed: string[] = [];
-  // streamFetch registers its listeners (several awaits) BEFORE it calls
+  // streamFetch registers its listeners (several awaits) before it calls
   // start(), so a test must wait for the call itself, not for a tick.
   let startResolve!: (o: { id: string }) => void;
   const started = new Promise<{ id: string }>((r) => {
@@ -88,7 +88,7 @@ describe("streamFetch (Capacitor shell)", () => {
     const dec = new TextDecoder();
     const out: string[] = [];
 
-    // "ä" is 0xC3 0xA4 — split it across the transport boundary.
+    // "ä" is 0xC3 0xA4 - split it across the transport boundary.
     f.emit("chunk", { id, data: b64([0x64, 0x61, 0x74, 0x61, 0x3a, 0x20, 0xc3]) });
     f.emit("chunk", { id, data: b64([0xa4, 0x0a, 0x0a]) });
     f.emit("end", { id });
@@ -99,7 +99,7 @@ describe("streamFetch (Capacitor shell)", () => {
       out.push(dec.decode(value, { stream: true }));
     }
     expect(out.join("")).toBe("data: ä\n\n");
-    expect(out.length).toBe(2); // two chunks, delivered as two reads — not buffered
+    expect(out.length).toBe(2); // two chunks, delivered as two reads - not buffered
     // Listeners are released once the stream ends.
     expect(f.removed.length).toBeGreaterThanOrEqual(4);
   });

@@ -3,22 +3,22 @@
  *
  * Everything sensitive happens here, in the browser. The server only ever
  * receives a high-entropy `authToken`, the doubly-wrapped Master Key, and public
- * KDF salts/params — never the password, the recovery phrase, or the Master Key.
+ * KDF salts/params - never the password, the recovery phrase, or the Master Key.
  *
  * Key schedule (Bitwarden-style separation of auth ⟂ encryption):
  *
  *   masterPwKey = Argon2id(password, kdfSalt)
- *   authToken   = KDF(masterPwKey, "quonauth")   → sent to the server (verifier)
- *   pwWrapKey   = KDF(masterPwKey, "quonwrap")   → never leaves the browser
- *   MK          = random(32)                      → the Master Key
+ *   authToken   = KDF(masterPwKey, "quonauth")   -> sent to the server (verifier)
+ *   pwWrapKey   = KDF(masterPwKey, "quonwrap")   -> never leaves the browser
+ *   MK          = random(32)                      -> the Master Key
  *   wrap_pw     = secretbox(MK, pwWrapKey)
  *   recKey      = Argon2id(bip39Seed, recSalt)
  *   recWrapKey  = KDF(recKey, "quonwrap")
  *   wrap_rec    = secretbox(MK, recWrapKey)
- *   bioWrapKey  = KDF(prfOutput, "quonbio0")       → prfOutput = WebAuthn PRF, held
+ *   bioWrapKey  = KDF(prfOutput, "quonbio0")       -> prfOutput = WebAuthn PRF, held
  *   wrap_bio    = secretbox(MK, bioWrapKey)          in device secure hardware only
- *   chatKey     = KDF(MK, "quonchat")             → encrypts each chat blob
- *   idWrapKey   = KDF(MK, "quonidk0")              → wraps the X25519 identity
+ *   chatKey     = KDF(MK, "quonchat")             -> encrypts each chat blob
+ *   idWrapKey   = KDF(MK, "quonidk0")              -> wraps the X25519 identity
  *                                                    private key (shared projects)
  */
 
@@ -28,7 +28,7 @@ import {
   validateMnemonic as bip39Validate,
 } from "@scure/bip39";
 import { wordlist } from "@scure/bip39/wordlists/english.js";
-// NOTE: the *sumo* build is required — the standard `libsodium-wrappers` omits
+// NOTE: the *sumo* build is required - the standard `libsodium-wrappers` omits
 // the password-hashing API (crypto_pwhash / Argon2id) we use for key derivation.
 import { deflateSync, inflateSync } from "fflate";
 import _sodium from "libsodium-wrappers-sumo";
@@ -88,7 +88,7 @@ async function ready(): Promise<void> {
   return readyPromise;
 }
 
-// --- base64 (ORIGINAL = standard +/ with padding, matches Python base64) ---
+// --- base64 (original = standard +/ with padding, matches Python base64) ---
 const b64 = (b: Uint8Array) => sodium.to_base64(b, sodium.base64_variants.ORIGINAL);
 const unb64 = (s: string) => sodium.from_base64(s, sodium.base64_variants.ORIGINAL);
 
@@ -159,8 +159,8 @@ export async function buildRegistration(
  * 12-word phrase and the MK re-wrapped under it. The old phrase stops opening
  * anything the moment the server swaps rec_salt/wrap_rec.
  *
- * `params` MUST be the account's STORED kdf_params (from /auth/keymaterial),
- * not DEFAULT_KDF: the server keeps ONE kdf_params column shared by the
+ * `params` must be the account's STORED kdf_params (from /auth/keymaterial),
+ * not DEFAULT_KDF: the server keeps one kdf_params column shared by the
  * password and recovery derivations, so deriving the new recovery key with
  * different params would make a later recovery derive the wrong key.
  */
@@ -233,7 +233,7 @@ export async function rewrapForPassword(
 // --- biometric unlock (WebAuthn PRF) ---------------------------------------
 // A third wrap of the Master Key, parallel to wrap_pw/wrap_rec. The 32-byte
 // PRF output comes from the device's secure hardware (webauthnBio.ts) and is
-// released only after on-device biometric verification — the derived wrap key
+// released only after on-device biometric verification - the derived wrap key
 // therefore never exists anywhere the server (or a DB attacker) can reach.
 
 /** Wrap key from a WebAuthn PRF output (32 bytes of authenticator-held entropy). */
@@ -252,7 +252,7 @@ export async function wrapMasterKeyForBio(
 }
 
 /** Unwrap the Master Key from the biometric wrap. Throws on any mismatch
- *  (wrong PRF output, tampered blob) — fail closed, no partial plaintext. */
+ *  (wrong PRF output, tampered blob) - fail closed, no partial plaintext. */
 export async function unlockMasterKeyBio(
   wrapBio: string,
   bioWrapKey: Uint8Array,
@@ -287,7 +287,7 @@ export function deriveOriginalsKey(masterKey: Uint8Array): Uint8Array {
   return kdf(masterKey, CTX_ORIGINALS);
 }
 
-/** E2E key for the `prefs` collection — cross-device UI preferences (protection
+/** E2E key for the `prefs` collection - cross-device UI preferences (protection
  *  level, active model, reasoning) AND the always/never-redact lists. Those lists
  *  are the user's own PII, so like chats they are synced as ciphertext only; the
  *  server never sees them in the clear. */
@@ -295,8 +295,8 @@ export function derivePrefsKey(masterKey: Uint8Array): Uint8Array {
   return kdf(masterKey, CTX_PREFS);
 }
 
-/** E2E key for the `jobs` collection — client-runmode agents (a prompt over the
- *  user's own docs/memory) and their Runs (status/progress/result). The spec IS
+/** E2E key for the `jobs` collection - client-runmode agents (a prompt over the
+ *  user's own docs/memory) and their Runs (status/progress/result). The spec is
  *  private content, so it is synced as ciphertext only; the server relays opaque
  *  blobs and never runs or reads these (unlike the server-side web-watch, whose
  *  query is public metadata in the `agents` table). */
@@ -313,35 +313,35 @@ export function deriveLocalCacheKey(masterKey: Uint8Array): Uint8Array {
 
 /* --- Compressed payload frame (v2) ------------------------------------------
  *
- * Chat JSON is extremely repetitive — German prose, the same `[PERSON_1]`
+ * Chat JSON is extremely repetitive - German prose, the same `[PERSON_1]`
  * placeholders over and over, RAG context echoing document text. Deflate gets
- * ~9× on it, which is what keeps a long conversation clear of the relay's 4 MiB
+ * ~9x on it, which is what keeps a long conversation clear of the relay's 4 MiB
  * per-blob cap and of WebKit's ~5 MB localStorage quota.
  *
  *   v1 (legacy): secretbox( utf8(JSON) )
  *   v2 (new):    secretbox( 0x00 | ver | len:u32le | deflate(utf8(JSON)) | pad )
  *
- * The marker is IN-BAND and therefore covered by the secretbox MAC — unlike the
+ * The marker is IN-BAND and therefore covered by the secretbox MAC - unlike the
  * `content_ver` column, which is server-mutable metadata. It is unambiguous
  * because `JSON.stringify` can only ever begin with `{ [ " -` , a digit, or
- * t/f/n — every one of them ≥ 0x20, so a leading 0x00 cannot occur in v1.
+ * t/f/n - every one of them >= 0x20, so a leading 0x00 cannot occur in v1.
  * Cost on the legacy path: one byte comparison.
  *
- * Compression happens BEFORE encryption and entirely client-side, so the
- * zero-knowledge invariant is untouched — the server still only ever sees
+ * Compression happens before encryption and entirely client-side, so the
+ * zero-knowledge invariant is untouched - the server still only ever sees
  * opaque ciphertext.
  *
  * On CRIME/BREACH: those need attacker-chosen plaintext sharing a compression
  * context with a secret, an observable length, and thousands of adaptive
  * probes. Here every blob is compressed independently, per user, per item, on
- * the store's own debounce — there is no oracle an attacker can drive. The
+ * the store's own debounce - there is no oracle an attacker can drive. The
  * server already sees blob lengths today; compression would merely refine that
  * existing leak into "length at entropy H", so we pad to PAD_TO buckets and
  * remove the finer-grained leak that was already there.
  *
- * Why fflate and not the native CompressionStream: the READ side has to work
+ * Why fflate and not the native CompressionStream: the read side has to work
  * everywhere. `DecompressionStream` is absent from WKWebView on macOS < 13.3,
- * and tauri.conf.json still targets 10.15 — a phone writing a v2 blob would be
+ * and tauri.conf.json still targets 10.15 - a phone writing a v2 blob would be
  * silently unreadable on that laptop, surfacing as "my chats are missing"
  * because collectionSync's pull skips undecodable items. fflate is synchronous,
  * so encryptJSON/decryptJSON keep their signatures and none of their six
@@ -353,13 +353,13 @@ const FRAME_HEADER = 6; // marker | version | u32 length
  *  (prefs, jobs, projects) readable by clients that predate this format. */
 const COMPRESS_MIN_BYTES = 4096;
 /** Pad the frame to a multiple of this so the ciphertext length reveals only a
- *  bucket. Negligible against blobs already ≥ COMPRESS_MIN_BYTES. */
+ *  bucket. Negligible against blobs already >= COMPRESS_MIN_BYTES. */
 const PAD_TO = 1024;
 
 function frame(json: Uint8Array): Uint8Array {
   const body = deflateSync(json);
   const total = Math.ceil((FRAME_HEADER + body.length) / PAD_TO) * PAD_TO;
-  const out = new Uint8Array(total); // zero-filled → padding is implicit
+  const out = new Uint8Array(total); // zero-filled -> padding is implicit
   out[0] = FRAME_MARKER;
   out[1] = FRAME_V2;
   new DataView(out.buffer).setUint32(2, body.length, true);
@@ -388,7 +388,7 @@ export function decryptJSON<T>(ciphertextB64: string, key: Uint8Array): T {
   return JSON.parse(sodium.to_string(unframe(unwrap(unb64(ciphertextB64), key)))) as T;
 }
 
-/** Encrypt raw bytes → `nonce ‖ secretbox`. Binary sibling of encryptJSON for
+/** Encrypt raw bytes -> `nonce ‖ secretbox`. Binary sibling of encryptJSON for
  *  large payloads (locally cached document originals) where the JSON + base64
  *  round-trip would roughly triple the allocation for megabytes of data. */
 export function encryptBytes(bytes: Uint8Array, key: Uint8Array): Uint8Array {
@@ -399,7 +399,7 @@ export function decryptBytes(sealed: Uint8Array, key: Uint8Array): Uint8Array {
   return unwrap(sealed, key);
 }
 
-/** Standard base64 (`+/` with padding — the sync wire format, matching Python's
+/** Standard base64 (`+/` with padding - the sync wire format, matching Python's
  *  base64). Like the other non-async helpers here, callable only after unlock
  *  (libsodium is initialized by then). */
 export function bytesToBase64(bytes: Uint8Array): string {
@@ -415,7 +415,7 @@ export function base64ToBytes(s: string): Uint8Array {
 // the server (POST /auth/identity), the private key is wrapped under the Master
 // Key (CTX "quonidk0", same nonce‖secretbox construction as the wrapped MK) so
 // the server holds it opaquely and hands it back on login/me. A shared project's
-// content key (PK) is random — derived from NO member's Master Key — and travels
+// content key (PK) is random - derived from no member's Master Key - and travels
 // between members only as a libsodium sealed box to the recipient's identity
 // public key. Like the other non-async helpers here, callable only after unlock.
 
@@ -442,7 +442,7 @@ export function openIdentityPriv(wrapped: string, masterKey: Uint8Array): Uint8A
   return unwrap(unb64(wrapped), kdf(masterKey, CTX_IDENTITY));
 }
 
-/** Fresh random content key for ONE shared project — every blob of that project
+/** Fresh random content key for one shared project - every blob of that project
  *  is encrypted under it, so membership (not any account's MK) controls access. */
 export function generateProjectKey(): Uint8Array {
   return sodium.randombytes_buf(32);
@@ -465,12 +465,12 @@ export function openSealedFromIdentity(
   return sodium.crypto_box_seal_open(cipher, pub, priv);
 }
 
-// RFC 4648 base32 alphabet — 8 chars encode exactly the 40 hash bits below.
+// RFC 4648 base32 alphabet - 8 chars encode exactly the 40 hash bits below.
 const B32_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
 
 /** Short safety fingerprint of an identity public key for member display and
  *  out-of-band comparison: the first 40 bits of BLAKE2b(pub) as 8 base32 chars
- *  (e.g. "K7QMXA3Z"). Deterministic. NOT a substitute for real verification —
+ *  (e.g. "K7QMXA3Z"). Deterministic. Not a substitute for real verification -
  *  Shared Projects v1 is trust-on-first-use (see plan §3, documented limit). */
 export function identityFingerprint(pub: Uint8Array): string {
   const h = sodium.crypto_generichash(32, pub, null);
@@ -478,7 +478,7 @@ export function identityFingerprint(pub: Uint8Array): string {
   let bits = 0;
   let out = "";
   for (let i = 0; i < 5; i++) {
-    // 5 bytes = 40 bits = exactly 8 × 5-bit base32 symbols, no padding.
+    // 5 bytes = 40 bits = exactly 8 x 5-bit base32 symbols, no padding.
     acc = (acc << 8) | h[i];
     bits += 8;
     while (bits >= 5) {
@@ -497,7 +497,7 @@ export async function persistMasterKey(masterKey: Uint8Array): Promise<void> {
   try {
     sessionStorage.setItem(MK_SESSION_KEY, b64(masterKey));
   } catch {
-    /* sessionStorage unavailable (private mode) — MK stays in memory only */
+    /* sessionStorage unavailable (private mode) - MK stays in memory only */
   }
 }
 

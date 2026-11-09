@@ -32,7 +32,7 @@ export interface PushResult {
   collection: string;
   id: string;
   /** `quota` = per-user storage quota exceeded (originals collection only);
-   *  `forbidden` = shared-project write refused (reader role / no grant) —
+   *  `forbidden` = shared-project write refused (reader role / no grant) -
    *  both distinct from transient failures so the client can stop retrying. */
   status: "accepted" | "stale" | "quota" | "forbidden";
   server_seq: number;
@@ -42,7 +42,7 @@ export interface PushResult {
 
 export interface PushResponse {
   results: PushResult[];
-  /** Personal stream cursor only — shared cursors advance via project_latest_seqs. */
+  /** Personal stream cursor only - shared cursors advance via project_latest_seqs. */
   latest_seq: number;
   /** Per-project seq for every shared project written in this batch. */
   project_latest_seqs?: Record<string, number>;
@@ -69,13 +69,13 @@ export const syncApi = {
       { method: "POST", body: JSON.stringify({ changes }) },
       120_000,
     ),
-  /** Lazy single-blob pull (originals chunks — kept out of the delta loop so
+  /** Lazy single-blob pull (originals chunks - kept out of the delta loop so
    *  originals never auto-download onto every device). 404 = absent/deleted. */
   blob: (collection: string, id: string, projectId?: string) =>
     apiFetch<BlobOut>(
       `/sync/blob?collection=${encodeURIComponent(collection)}&id=${encodeURIComponent(id)}${proj(projectId)}`,
     ),
-  /** Live originals-quota usage (byte counts only) — the Documents screen's
+  /** Live originals-quota usage (byte counts only) - the Documents screen's
    *  "X of 200 MB" storage line. */
   originalsUsage: () => apiFetch<OriginalsUsage>("/sync/originals/usage"),
 };

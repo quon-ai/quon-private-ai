@@ -5,12 +5,12 @@ import { login, openChat, sharedCreds } from "./helpers/account";
 /**
  * Strict EU routing: the backend reports region "eu" and no web search. The
  * chat must not offer the Web toggle, settings must say so, and the trust page
- * must name it. Hermetic — the settings read is rewritten (fetches only; the
+ * must name it. Hermetic - the settings read is rewritten (fetches only; the
  * app's own /settings page passes through).
  */
 async function mockEu(page: import("@playwright/test").Page) {
   // The chat and the trust page read the region from the health poll; the
-  // settings card from the settings read. Only API fetches are rewritten —
+  // settings card from the settings read. Only API fetches are rewritten -
   // the app's own /settings PAGE passes through.
   for (const pattern of ["**/health", "**/settings"]) {
     await page.route(pattern, async (route) => {

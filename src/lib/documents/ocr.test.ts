@@ -1,8 +1,7 @@
 /**
  * Pure seams of the photo-OCR module. The engine itself (PaddleOCR + ONNX
- * WASM) is browser-only and empirically validated instead (2026-07-06 probe:
- * CER 0 on a printed German letter, ≤2% on photo-simulated documents, in
- * Chromium AND WebKit — see .claude/plans/research-2026-07-06.md §5).
+ * WASM) is browser-only and validated empirically instead: CER 0 on a printed
+ * German letter, <=2% on photo-simulated documents, in Chromium and WebKit.
  */
 import { describe, expect, it } from "vitest";
 
@@ -19,7 +18,7 @@ describe("fitWithin", () => {
   });
 
   it("scales the longest side to the cap, preserving aspect ratio", () => {
-    // 4032×3024 (typical 12 MP phone photo) → 2000×1500
+    // 4032x3024 (typical 12 MP phone photo) -> 2000x1500
     expect(fitWithin(4032, 3024, 2000)).toEqual({ width: 2000, height: 1500 });
     // portrait
     expect(fitWithin(3024, 4032, 2000)).toEqual({ width: 1500, height: 2000 });
@@ -55,7 +54,7 @@ describe("bytesToB64", () => {
   });
 });
 
-describe("sniffImageFormat (magic bytes — extensions and MIME lie)", () => {
+describe("sniffImageFormat (magic bytes: extensions and MIME lie)", () => {
   const pad = (head: number[], len = 16) => {
     const b = new Uint8Array(len);
     b.set(head);

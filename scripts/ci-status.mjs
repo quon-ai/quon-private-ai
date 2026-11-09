@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// What CI actually did, in one screen — with "cancelled" disambiguated.
+// What CI actually did, in one screen - with "cancelled" disambiguated.
 //
 //   node scripts/ci-status.mjs            # last 8 runs
 //   node scripts/ci-status.mjs 20         # last 20
@@ -7,18 +7,18 @@
 //
 // The reason this file exists, in one sentence: GitHub reports a job killed by
 // `timeout-minutes` as **cancelled**, the same word it uses for a run superseded
-// by a newer push. On 2026-08-15/16 every CI run read "cancelled", which looked
-// exactly like the concurrency rule working as designed. It wasn't — two jobs
-// were timing out on every single run, and the gate had been dead for two days.
-// Nothing in `gh run list` distinguishes the two. This does:
+// by a newer push. A run list where every entry reads "cancelled" looks exactly
+// like the concurrency rule working as designed, and can just as well be two
+// jobs timing out on every single run with a dead gate behind them. Nothing in
+// `gh run list` distinguishes the two. This does:
 //
-//   TIMED OUT   ran, and ran for ~its whole timeout-minutes
-//   superseded  ran, cancelled early — a newer push, or a human
+//   TIMED out   ran, and ran for ~its whole timeout-minutes
+//   superseded  ran, cancelled early - a newer push, or a human
 //   never ran   cancelled while still queued; it never got the runner at all
 //
-// `q+…` is queue wait, shown when it exceeds 90s. On a single-runner setup it is
-// routinely the largest number on the screen — 70 minutes for one job on
-// 2026-08-16 — and `gh run list` cannot show it at all.
+// `q+...` is queue wait, shown when it exceeds 90s. On a single-runner setup it is
+// routinely the largest number on the screen (over an hour for one job is
+// ordinary) and `gh run list` cannot show it at all.
 //
 // Auth: GH_TOKEN, else whatever `gh auth token` hands over.
 import { execFileSync } from "node:child_process";

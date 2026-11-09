@@ -1,6 +1,6 @@
-/** "Auswahl schwärzen" matching — every branch here was a SILENT no-op before
- *  (feedback #58: "der Button scheint nicht zu funktionieren"). The regression
- *  this locks in: failures have names, and cross-line selections match. */
+/** "Auswahl schwärzen" matching. A silent null here reads to the user as "der
+ *  Button scheint nicht zu funktionieren", so this locks in: every failure
+ *  has a name, and cross-line selections match. */
 import { describe, expect, it } from "vitest";
 
 import { findManualSelection, resolveDurableRedaction } from "./manualRedact";
@@ -18,7 +18,7 @@ describe("findManualSelection", () => {
     expect(findManualSelection(undefined, SENT)).toEqual({ error: "empty" });
   });
 
-  it("refuses a selection touching a placeholder — that text is already redacted", () => {
+  it("refuses a selection touching a placeholder: that text is already redacted", () => {
     expect(findManualSelection("[PERSON_1]", SENT)).toEqual({ error: "placeholder" });
     expect(findManualSelection("an [PERSON_1] und", SENT)).toEqual({ error: "placeholder" });
   });
@@ -28,7 +28,7 @@ describe("findManualSelection", () => {
   });
 
   /** The real-world miss: a selection crossing a rendered line break copies
-   *  "\n" (or loses it) — includes() fails, the button silently no-oped. The
+   *  "\n" (or loses it) - includes() fails, the button silently no-oped. The
    *  match must return the TEXT's own substring so split/join replacement works. */
   it("matches across whitespace differences and returns the text's own spelling", () => {
     const crossLine = findManualSelection("Anna Müller, IBAN folgt", SENT);
@@ -43,11 +43,11 @@ describe("findManualSelection", () => {
   });
 });
 
-describe("resolveDurableRedaction — the gate to the enforced always-redact list", () => {
+describe("resolveDurableRedaction: the gate to the enforced always-redact list", () => {
   // Stricter than the per-send path on purpose: a durable term is enforced by
   // the BACKEND's word-boundary matcher against every future send, so the value
   // must be something that matcher will hit, and the user must confirm the real
-  // occurrence count — never a mark that redacts nothing.
+  // occurrence count - never a mark that redacts nothing.
   const doc = "Anna Muster wohnt hier. Anna Muster zahlt. Die Vertragspartnerin auch.";
 
   it("resolves a selection with its occurrence count", () => {
@@ -58,8 +58,8 @@ describe("resolveDurableRedaction — the gate to the enforced always-redact lis
   });
 
   it("refuses a value that only occurs inside longer words", () => {
-    // "partner" is a substring of the doc, so the per-send path would accept it —
-    // but the backend requires word boundaries and would redact NOTHING. A
+    // "partner" is a substring of the doc, so the per-send path would accept it -
+    // but the backend requires word boundaries and would redact nothing. A
     // visible-but-ineffective redaction is the one forbidden outcome.
     expect(resolveDurableRedaction("partner", doc, [])).toEqual({ error: "inside-word" });
   });

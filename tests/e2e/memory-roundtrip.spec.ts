@@ -3,8 +3,8 @@ import { test, expect } from "@playwright/test";
 import { login, purgeAccountBlobs, sharedCreds } from "./helpers/account";
 
 // Memory CRUD via the dialog form (ScreenMemory), all on-device + E2E-encrypted.
-// Add → edit (pencil reopens the form prefilled) → delete, plus the Markdown-aware
-// rendering path (looksLikeMarkdown → <strong>). Content is made unique per run so
+// Add -> edit (pencil reopens the form prefilled) -> delete, plus the Markdown-aware
+// rendering path (looksLikeMarkdown -> <strong>). Content is made unique per run so
 // the serial shared account can't collide with a previous run's items.
 test("add, edit and delete a memory; Markdown text renders bold", async ({ page }) => {
   test.slow(); // first on-device embed (add/edit re-embeds) can download the model
@@ -16,7 +16,7 @@ test("add, edit and delete a memory; Markdown text renders bold", async ({ page 
   const original = `Ich trinke Kaffee schwarz ${tag}`;
   const edited = `Ich trinke Kaffee mit Hafermilch ${tag}`;
 
-  // --- Add: Save must close the dialog (the FIRST save may load the embedder, so
+  // --- Add: Save must close the dialog (the first save may load the embedder, so
   // wait generously; a still-open modal aria-hides the page and breaks later roles).
   await page.getByRole("button", { name: "Add Memory" }).click();
   await page.getByPlaceholder("What should QUON remember?").fill(original);
@@ -51,7 +51,7 @@ test("add, edit and delete a memory; Markdown text renders bold", async ({ page 
   await expect(page.getByText(edited)).toHaveCount(0, { timeout: 30_000 });
 
   // --- Markdown path: "**wichtig** dringend" renders <strong>wichtig</strong>
-  // (looksLikeMarkdown → Markdown component), not raw asterisks.
+  // (looksLikeMarkdown -> Markdown component), not raw asterisks.
   const md = `**wichtig${tag}** dringend`;
   await page.getByRole("button", { name: "Add Memory" }).click();
   await page.getByPlaceholder("What should QUON remember?").fill(md);
@@ -61,11 +61,11 @@ test("add, edit and delete a memory; Markdown text renders bold", async ({ page 
     timeout: 30_000,
   });
 
-  // CLEAN UP — this spec previously left the markdown memory behind FOREVER,
+  // CLEAN UP - this spec previously left the markdown memory behind FOREVER,
   // a standing residue producer on the shared account (any leftover memory
   // pushes every later chat-send spec through embedder init + a context
   // scrub). Delete it, then wait for the tombstones to actually reach the
-  // server — a UI delete alone races the context close (see awaitServerCleanup).
+  // server - a UI delete alone races the context close (see awaitServerCleanup).
   const mdCard = page
     .locator("div")
     .filter({ hasText: `wichtig${tag}` })

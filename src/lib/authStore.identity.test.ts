@@ -1,5 +1,5 @@
 /**
- * Identity lifecycle in the auth store — the seams Shared Projects builds on:
+ * Identity lifecycle in the auth store - the seams Shared Projects builds on:
  * ensureIdentity registers exactly one keypair (wrapped under the MK, set-once),
  * login installs identity material the server already has, the 409 race adopts
  * the other tab's identity via /auth/me, and logout drops the keys. All network
@@ -83,7 +83,7 @@ describe("ensureIdentity", () => {
 
   it("generates, wraps and registers a keypair exactly once; the wrapped priv opens under the MK", async () => {
     await loginAs(user());
-    expect(getIdentityKeys()).toBeNull(); // lazy — login alone mints nothing
+    expect(getIdentityKeys()).toBeNull(); // lazy - login alone mints nothing
 
     mocked.setIdentity.mockResolvedValue({ ok: true });
     const { pub } = await ensureIdentity();
@@ -94,7 +94,7 @@ describe("ensureIdentity", () => {
 
     // The registered material is self-consistent: a project key sealed to the
     // registered pub opens with the held keypair (i.e. priv matches pub and
-    // survived the wrap → the server-side copy is usable on the next device).
+    // survived the wrap -> the server-side copy is usable on the next device).
     const id = getIdentityKeys()!;
     const pk = generateProjectKey();
     expect(eq(openSealedFromIdentity(sealToIdentity(pk, id.pub), id.pub, id.priv), pk)).toBe(true);
@@ -139,7 +139,7 @@ describe("identity install on login / drop on logout", () => {
     expect(eq(getIdentityKeys()!.pub, id.pub)).toBe(true);
     expect(eq(getIdentityKeys()!.priv, id.priv)).toBe(true);
 
-    await ensureIdentity(); // already held → must not re-register
+    await ensureIdentity(); // already held -> must not re-register
     expect(mocked.setIdentity).not.toHaveBeenCalled();
   }, 30000);
 

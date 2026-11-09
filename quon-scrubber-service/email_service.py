@@ -1,6 +1,6 @@
 """Transactional email (account verification, password recovery).
 
-Uses the stdlib ``smtplib`` — no extra dependency, Pi/NAS-friendly. When no SMTP
+Uses the stdlib ``smtplib`` - no extra dependency, Pi/NAS-friendly. When no SMTP
 host is configured the message is *logged* instead of sent (dev mode), so the
 verification flow is usable locally (copy the link from the server log or a local
 catcher such as MailHog) without a real mail provider.
@@ -175,7 +175,7 @@ def send_already_registered(to: str, lang: str | None = None) -> None:
 
 
 def send_email_change(to: str, token: str, lang: str | None = None) -> None:
-    """Confirm a requested email change. Sent to the NEW address; the account's
+    """Confirm a requested email change. Sent to the new address; the account's
     email only changes once this link is followed."""
     link = f"{settings.app_base_url.rstrip('/')}/change-email?token={token}"
     ttl = settings.email_token_ttl_hours

@@ -15,7 +15,7 @@ describe("buildUnfilteredResend", () => {
 
   it("never redacts anything, regardless of how PII-shaped the text looks", () => {
     // The whole point of this escape hatch: even a message that WOULD normally
-    // trip the scrubber (an email-shaped string here) must cross unscrubbed —
+    // trip the scrubber (an email-shaped string here) must cross unscrubbed -
     // the user explicitly chose to bypass detection for this one send.
     const original = "Reach me at anna@example.com about Rehbergplatz";
     const payload = buildUnfilteredResend(original);

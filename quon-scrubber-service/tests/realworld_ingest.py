@@ -1,15 +1,15 @@
 """Ingest Google Takeout "Meine Aktivitäten" HTML into a private real-world eval set.
 
 Parses the user's own exported Gemini-Apps / KI-Modus (AI-Mode search) activity
-HTML and extracts just the typed prompts — the closest thing to QUON's real
+HTML and extracts just the typed prompts - the closest thing to QUON's real
 production register (short, casual, mixed-language chat questions; the exact
 register where all three reported PERSON false positives lived, which the
 formal-register synthetic corpus never covered).
 
-Privacy posture (this is REAL personal data — treat like .env / quon.db):
-- Output goes to ``~/.quon/realworld/`` (0700), OUTSIDE the repo, so the raw
+Privacy posture (this is real personal data - treat like .env / quon.db):
+- Output goes to ``~/.quon/realworld/`` (0700), outside the repo, so the raw
   prompts can never end up in git, on GitHub, or in the mini-PC deploy rsync.
-- This module never prints prompt content to stdout — only aggregate counts.
+- This module never prints prompt content to stdout - only aggregate counts.
 - The companion eval (tests/test_realworld.py) is equally offline: config 1
   (NER + regex, in-process only), zero cloud calls.
 
@@ -18,7 +18,7 @@ Usage:
     # or point it at the Takeout "Meine Aktivitäten" directory to auto-discover
     python tests/realworld_ingest.py "~/Downloads/Takeout 3/Meine Aktivitäten"
 
-Output: ``~/.quon/realworld/prompts.jsonl`` — one ``{"text", "source", "date"}``
+Output: ``~/.quon/realworld/prompts.jsonl`` - one ``{"text", "source", "date"}``
 per line (exact-duplicate texts collapsed, first date kept). Override the
 directory with ``QUON_REALWORLD_DIR``.
 """
@@ -33,7 +33,7 @@ import sys
 from collections import Counter
 from pathlib import Path
 
-# Google Takeout "My Activity" body cell (the one carrying the typed prompt —
+# Google Takeout "My Activity" body cell (the one carrying the typed prompt - 
 # the sibling caption cells hold product/details boilerplate).
 _BODY_CELL_RE = re.compile(
     r'<div class="content-cell mdl-cell mdl-cell--6-col mdl-typography--body-1">(.*?)</div>',
@@ -47,8 +47,8 @@ _PROMPT_PREFIXES = ("Eingegebener Prompt:", "Prompted")
 _SEARCH_PREFIXES = ("Gesucht nach", "Searched for")
 
 # A segment is the activity timestamp, not prompt text, if it carries a clock
-# time plus a year or month token — ORDER-INDEPENDENT: the German export writes
-# "8. Juli 2026, 12:34:56 MESZ" (year BEFORE the time), so a single ordered
+# time plus a year or month token - ORDER-INDEPENDENT: the German export writes
+# "8. Juli 2026, 12:34:56 MESZ" (year before the time), so a single ordered
 # regex silently misses every date and the timestamp + trailing boilerplate get
 # joined into the prompt text (caught on the first real run: median prompt
 # length was implausibly high).
@@ -65,7 +65,7 @@ _MONTH_RE = re.compile(
 # foo.png"). They are not something the user typed, and they polluted the
 # first eval run (the marker itself was the single most-frequent PERSON
 # false positive, and an attached filename's number tripped the PHONE
-# supplement) — strip them from the tail, repeatedly, before storing.
+# supplement) - strip them from the tail, repeatedly, before storing.
 _ATTACH_MARKER_RES = [
     re.compile(r"\s*\d+\s+generierte[sn]?\s+(Bild(er)?|Datei(en)?)\.?\s*$", re.I),
     re.compile(r"\s*\d+\s+(Datei(en)?\s+angehängt|attachments?\s+attached|file[s]?\s+attached)\.?\s*$", re.I),
@@ -97,7 +97,7 @@ def _is_date_seg(text: str) -> bool:
 def parse_activity_html(path: Path) -> tuple[list[dict], Counter]:
     """Extract ``{"text", "source", "date"}`` prompt records from one export file.
 
-    Returns ``(records, skip_stats)``. Never raises on malformed cells — they
+    Returns ``(records, skip_stats)``. Never raises on malformed cells - they
     are counted and skipped (this is best-effort ingestion of a Google export
     format we don't control).
     """
@@ -117,7 +117,7 @@ def parse_activity_html(path: Path) -> tuple[list[dict], Counter]:
         prompt_prefix = next((p for p in _PROMPT_PREFIXES if head.startswith(p)), None)
         search_prefix = next((p for p in _SEARCH_PREFIXES if head.startswith(p)), None)
         if not prompt_prefix and not search_prefix:
-            # Other activity kinds ("opened Gemini", etc.) — not typed text.
+            # Other activity kinds ("opened Gemini", etc.) - not typed text.
             skipped["non-prompt-cell"] += 1
             continue
 

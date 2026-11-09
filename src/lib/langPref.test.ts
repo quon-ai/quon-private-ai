@@ -44,7 +44,7 @@ describe("langPref", () => {
   });
 
   it("falls back to the edition's default with no explicit choice, regardless of the browser locale", () => {
-    // Browser is English, but there's no cookie/localStorage → the registry decides,
+    // Browser is English, but there's no cookie/localStorage -> the registry decides,
     // not the locale ("de" in the hosted product, "en" in the public build).
     vi.stubGlobal("navigator", { language: "en-US" });
     expect(getLangPref()).toBe(DEFAULT_LANG);

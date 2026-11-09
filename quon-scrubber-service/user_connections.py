@@ -1,8 +1,8 @@
 """Per-user BYOK chat provider connections (OpenAI-compatible).
 
-Each user can add their own providers (OpenAI, Anthropic, Groq, local Ollama, …)
+Each user can add their own providers (OpenAI, Anthropic, Groq, local Ollama, ...)
 with their own API key. The key is sealed at rest under ``QUON_SERVER_SECRET``
-(reusing :mod:`crypto_server`) and never returned to the browser — same trust
+(reusing :mod:`crypto_server`) and never returned to the browser - same trust
 model as the per-user OpenRouter sub-key. OpenRouter itself stays a global
 connection (see :mod:`connections`); these are strictly per-user additions.
 """
@@ -17,7 +17,7 @@ import net_guard
 
 
 def _row_public(row) -> dict:
-    """Map a DB row to a connection dict WITHOUT the key (for listing)."""
+    """Map a DB row to a connection dict without the key (for listing)."""
     return {
         "id": row["id"],
         "label": row["label"],

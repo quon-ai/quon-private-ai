@@ -2,7 +2,7 @@
 
 The point of the module: generation must survive a client that goes away
 (mobile backgrounding freezes the page and drops the SSE socket). These tests
-pin exactly that — the pump keeps filling the buffer with no reader attached,
+pin exactly that - the pump keeps filling the buffer with no reader attached,
 a follower replays from an offset, and jobs are user-scoped + TTL-bounded.
 
 No pytest-asyncio in this project's dependencies, so the async parts run via
@@ -91,7 +91,7 @@ def test_unexpected_exception_still_finishes_the_job():
 
 
 def test_resume_replays_only_the_missing_events():
-    """The client applied 2 events before backgrounding → resume from index 2."""
+    """The client applied 2 events before backgrounding -> resume from index 2."""
     job = stream_jobs.create("u1")
 
     async def main():
@@ -100,7 +100,7 @@ def test_resume_replays_only_the_missing_events():
 
     assert asyncio.run(main()) == [{"delta": "C"}, {"done": True}]
     # Concatenating what the client had with the replay reproduces the answer
-    # exactly — the incremental `raw += delta` accumulation stays correct.
+    # exactly - the incremental `raw += delta` accumulation stays correct.
     first_leg = "".join(e["delta"] for e in job.events[:2])
     replay = "".join(e["delta"] for e in job.events[2:] if "delta" in e)
     assert first_leg + replay == "ABC"
@@ -126,7 +126,7 @@ def test_follower_rides_the_live_tail_of_a_running_job():
 
 
 def test_follow_emits_heartbeat_ticks_while_the_provider_is_silent():
-    """None = "emit an SSE comment" — the Cloudflare idle-cut guard."""
+    """None = "emit an SSE comment" - the Cloudflare idle-cut guard."""
 
     async def slow():
         await asyncio.sleep(0.15)

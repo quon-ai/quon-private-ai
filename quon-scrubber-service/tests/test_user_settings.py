@@ -1,7 +1,7 @@
 """Per-user settings overrides: isolation, layering over the global default,
 sealed keys at rest, and the SSRF guard on a per-user endpoint.
 
-The security property: a user's override only ever changes THEIR OWN routing, so
+The security property: a user's override only ever changes their own routing, so
 no account can repoint another user's PII extraction (which was the whole point of
 making these per-user instead of a shared global write).
 """
@@ -32,7 +32,7 @@ def test_openrouter_key_override_is_per_user(quon_client, monkeypatch):
     make_active_user(quon_client, "h@x.de")
     g, h = _uid(quon_client, "g@x.de"), _uid(quon_client, "h@x.de")
     user_settings.set_openrouter_key(g, "sk-mine")
-    # provisioning is disabled in the fixture → self-host: g's override wins,
+    # provisioning is disabled in the fixture -> self-host: g's override wins,
     # h falls back to the global key (None here).
     assert key_resolver.resolve_openrouter_key(g) == "sk-mine"
     assert key_resolver.resolve_openrouter_key(h) != "sk-mine"

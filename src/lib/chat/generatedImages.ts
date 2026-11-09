@@ -1,6 +1,5 @@
 /**
- * Generated images (#79) — where the bytes live, and how they reach other
- * devices.
+ * Generated images - where the bytes live, and how they reach other devices.
  *
  * A chat message never carries the picture itself. The chat is one
  * E2E-encrypted blob per session that is re-pushed whole on every change; a
@@ -9,7 +8,7 @@
  * a small REFERENCE, and the bytes go where document originals already go:
  *
  * - **locally** into the sealed IndexedDB store "images" (same mechanism as
- *   "originals" — encrypted at rest by the local cache layer);
+ *   "originals" - encrypted at rest by the local cache layer);
  * - **cross-device** as encrypted chunks in the `originals` sync collection,
  *   under an `img:` id prefix, sealed with the originals key. Fire-and-forget
  *   after the local store; a device that has the reference but not the bytes
@@ -33,8 +32,8 @@ import { idbDelete, idbGetBytes, idbPutBytes } from "@/lib/idbStore";
 
 import { assembleChunks, chunkBytes, ORIGINALS_COLLECTION } from "../documents/originalChunks";
 
-/** Standard base64 → bytes via the platform decoder. The crypto module's
- *  base64ToBytes is libsodium's (URL-safe variant, needs the WASM ready) —
+/** Standard base64 -> bytes via the platform decoder. The crypto module's
+ *  base64ToBytes is libsodium's (URL-safe variant, needs the WASM ready) -
  *  wrong tool for a provider's plain data URL, and it is what made the first
  *  version return null for every image in the unit environment. */
 function decodeStdBase64(b64: string): Uint8Array {
@@ -48,7 +47,7 @@ const IDB = "images" as const;
 /** Generated images share the originals collection; the prefix keeps the id
  *  space apart from document ids (`<docId>:<n>`). */
 const ID_PREFIX = "img:";
-/** A generated image larger than this is not stored — the provider limits are
+/** A generated image larger than this is not stored - the provider limits are
  *  far below it; the cap only guards against a runaway payload. */
 export const MAX_IMAGE_BYTES = 12 * 1024 * 1024;
 
@@ -62,7 +61,7 @@ export interface GeneratedImageRef {
   chunkCount?: number;
 }
 
-/** `data:image/png;base64,…` → { mime, bytes }. Pure — unit-tested. */
+/** `data:image/png;base64,...` -> { mime, bytes }. Pure - unit-tested. */
 export function parseImageDataUrl(dataUrl: string): { mime: string; bytes: Uint8Array } | null {
   const m = /^data:(image\/[a-z0-9.+-]+);base64,([A-Za-z0-9+/=\s]+)$/i.exec(dataUrl);
   if (!m) return null;
@@ -104,7 +103,7 @@ export async function storeGeneratedImage(
       if (chunkCount) onSynced?.({ ...ref, chunkCount });
     })
     .catch(() => {
-      /* offline / quota — the image stays device-local; the ref says so */
+      /* offline / quota - the image stays device-local; the ref says so */
     });
   return ref;
 }
@@ -160,7 +159,7 @@ export async function loadGeneratedImage(ref: GeneratedImageRef): Promise<Uint8A
   }
 }
 
-/** Drop only the local bytes (this device applied another device's deletion —
+/** Drop only the local bytes (this device applied another device's deletion -
  *  that device tombstones the server chunks). */
 export async function dropLocalGeneratedImage(ref: GeneratedImageRef): Promise<void> {
   await idbDelete(IDB, ref.id).catch(() => undefined);
@@ -183,6 +182,6 @@ export async function deleteGeneratedImage(ref: GeneratedImageRef): Promise<void
       })),
     );
   } catch {
-    /* offline — the chunks linger until the next delete; acceptable */
+    /* offline - the chunks linger until the next delete; acceptable */
   }
 }

@@ -1,14 +1,14 @@
 /**
- * The load-bearing native invariant (issue #36/#37): when the Rust embed
- * capability is present, the webview must NEVER construct the Web Worker — that
- * worker is what loads the ~20MB ONNX/WASM runtime whose WebKit compilation got
- * the WebContent process CPU-killed. Proving "no WASM in the webview" as a
+ * The load-bearing native invariant: when the Rust embed capability is
+ * present, the webview must never construct the Web Worker - that worker is
+ * what loads the ~20MB ONNX/WASM runtime whose WebKit compilation gets the
+ * WebContent process CPU-killed. Proving "no WASM in the webview" as a
  * race-free code invariant beats archaeology on a running process's mmaps.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // resetModules gives each test a FRESH module graph, so platform + embedder
-// must be imported together per test — otherwise provideEmbed lands on a
+// must be imported together per test - otherwise provideEmbed lands on a
 // different platform instance than the embedder sees.
 async function freshModules(embedImpl: unknown) {
   vi.resetModules();
@@ -69,7 +69,7 @@ describe("native embedding routes around the WASM worker", () => {
     expect(workerCtor).not.toHaveBeenCalled();
   });
 
-  it("with no capability (web), it DOES build the worker — the fallback still works", async () => {
+  it("with no capability (web), it does build the worker: the fallback still works", async () => {
     const { embedder: mod } = await freshModules(null);
     mod.warmEmbedder();
     expect(workerCtor).toHaveBeenCalledTimes(1);

@@ -15,7 +15,7 @@ const hex = (c?: ProjectColor) => PROJECT_COLOR_HEX[c ?? "indigo"];
 /**
  * Compact badge showing which project an item belongs to ("Global" when none),
  * doubling as a picker to move it. Renders nothing when there are no projects and
- * the item is global — so the Memory/Documents screens look exactly as before
+ * the item is global - so the Memory/Documents screens look exactly as before
  * until the user actually creates a project.
  */
 export function ProjectPickerBadge({

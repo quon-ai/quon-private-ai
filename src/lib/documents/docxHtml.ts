@@ -1,8 +1,8 @@
 /**
- * Sanitizer for HTML injected into the document viewer: mammoth's DOCX → HTML
+ * Sanitizer for HTML injected into the document viewer: mammoth's DOCX -> HTML
  * output AND the original bytes of uploaded .html documents. mammoth only
  * *generates* markup (it doesn't pass raw XML through), so its output is
- * safe-ish — but uploaded HTML is fully attacker-controlled and the viewer
+ * safe-ish - but uploaded HTML is fully attacker-controlled and the viewer
  * renders with dangerouslySetInnerHTML, so we are deliberate: allowlist known
  * content tags, drop everything else, and keep only the handful of attributes
  * the layout needs. Fail-closed: an unknown element is removed, not unwrapped.
@@ -10,7 +10,7 @@
 
 /** Tags mammoth's default style map emits (headings, paragraphs, inline marks,
  *  lists, tables, images, links), plus the passive structural/inline tags real
- *  HTML documents wrap content in (div/span/section/…) — without those,
+ *  HTML documents wrap content in (div/span/section/...) - without those,
  *  fail-closed removal would empty most uploaded pages. Nothing here can run
  *  script or trigger a request by itself (attributes are stripped separately).
  *  Anything outside this set is dropped. */
@@ -75,8 +75,8 @@ const ALLOWED_TAGS = new Set([
   "time",
 ]);
 
-/** Per-tag attribute allowlist (lowercase). Everything else — style, class,
- *  on* handlers — is stripped. */
+/** Per-tag attribute allowlist (lowercase). Everything else - style, class,
+ *  on* handlers - is stripped. */
 const ALLOWED_ATTRS: Record<string, readonly string[]> = {
   a: ["href", "id"], // id: mammoth emits <a id> anchors for bookmarks
   img: ["src", "alt"],
@@ -89,7 +89,7 @@ const ALLOWED_ATTRS: Record<string, readonly string[]> = {
 /** URL policy for the two attributes that can trigger a request or navigation.
  *  Images must be the data: URIs mammoth inlines (a remote src would both leak
  *  the viewer's IP and violate the CSP); links may only point at the web or a
- *  bookmark — never javascript:/data:/blob: etc. */
+ *  bookmark - never javascript:/data:/blob: etc. */
 export function isSafeDocxUrl(value: string, attr: "href" | "src"): boolean {
   const v = value.trim().toLowerCase();
   if (attr === "src") return v.startsWith("data:image/");

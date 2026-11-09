@@ -1,17 +1,17 @@
 /**
- * "Aufräumen" (tidy) — LLM-assisted memory consolidation (P5, tier 2; see
- * `.claude/plans/memory-lifecycle-p5.md`). An explicit, user-triggered,
- * cluster-gated relay pass that merges overlapping/contradictory memory items
- * into the minimal set of standalone facts — the Anthropic-Dreams-shaped
- * alternative to silent self-rewriting (Zhang 2026: iterated LLM self-rewrite
- * degrades memory quality 100% → 54%). Nothing is ever rewritten in place:
+ * "Aufräumen" (tidy) - LLM-assisted memory consolidation. An explicit,
+ * user-triggered, cluster-gated relay pass that merges overlapping or
+ * contradictory memory items into the minimal set of standalone facts - the
+ * Anthropic-Dreams-shaped alternative to silent self-rewriting (Zhang 2026:
+ * iterated LLM self-rewrite degrades memory quality 100% -> 54%). Nothing is
+ * ever rewritten in place:
  * `runTidy` only ever QUEUES `mode:"merge"` suggestions (same review queue as
  * the chat sweep); `applyMergeSuggestion` is what actually writes, and even
  * then the originals are superseded (reversible), never deleted.
  *
  * Same zero-knowledge pipeline as `memoryExtract.ts`'s sweep: scrub on-device
- * → relay sees placeholders only → local re-hydration. `planTidy` itself is
- * PURE and does no network call — it only decides what a run WOULD cost, for
+ * -> relay sees placeholders only -> local re-hydration. `planTidy` itself is
+ * PURE and does no network call - it only decides what a run WOULD cost, for
  * the consent dialog.
  */
 
@@ -56,7 +56,7 @@ Rules:
 
 /** A cluster of active memory item ids the tidy pass proposes to consolidate. */
 export interface TidyCluster {
-  /** Stable id for this cluster (sorted member ids joined) — usable as a React key. */
+  /** Stable id for this cluster (sorted member ids joined) - usable as a React key. */
   id: string;
   itemIds: string[];
   /** Why this cluster was proposed: embedding similarity, or an unresolved
@@ -66,22 +66,22 @@ export interface TidyCluster {
 
 export interface TidyPlan {
   clusters: TidyCluster[];
-  /** One relay call per cluster — shown in the consent dialog before any
+  /** One relay call per cluster - shown in the consent dialog before any
    *  network call is made. */
   estimatedRelayCalls: number;
 }
 
 /**
- * Plan a tidy run — PURE, no network. Two sources of clusters, both restricted
+ * Plan a tidy run - PURE, no network. Two sources of clusters, both restricted
  * to ACTIVE same-scope items:
  *
- *   - similarity clusters: connected components over pairwise cosine ≥
- *     SIM_UPDATE (0.78 — the same bar the sweep uses for "this is probably an
- *     update of that"), kept only when a component has ≥ 3 members (a pair is
+ *   - similarity clusters: connected components over pairwise cosine >=
+ *     SIM_UPDATE (0.78 - the same bar the sweep uses for "this is probably an
+ *     update of that"), kept only when a component has >= 3 members (a pair is
  *     already handled by the cheaper exact-dup auto-merge / key-conflict
  *     paths; tidy is for genuinely tangled groups).
  *   - key-conflict clusters: any unresolved `findMemoryConflicts` pair not
- *     already fully covered by a similarity cluster — a conflict is always
+ *     already fully covered by a similarity cluster - a conflict is always
  *     worth a tidy pass regardless of size.
  */
 export function planTidy(scope: RagScope): TidyPlan {
@@ -153,7 +153,7 @@ export interface TidyRunOptions {
   connectionId?: string;
   alwaysRedact?: string[];
   neverRedact?: string[];
-  /** The clusters to actually process — normally `planTidy(scope).clusters`,
+  /** The clusters to actually process - normally `planTidy(scope).clusters`,
    *  filtered down to whatever the user consented to in the dialog. */
   clusters: TidyCluster[];
   /** `(done, total)` after each cluster, success or failure. */
@@ -163,7 +163,7 @@ export interface TidyRunOptions {
 export interface TidyRunResult {
   /** "merge" suggestions queued for review. */
   suggested: number;
-  /** Clusters that failed (scrub/relay/parse) — untouched, safe to retry on
+  /** Clusters that failed (scrub/relay/parse) - untouched, safe to retry on
    *  the next tidy run (nothing was written for a failed cluster). */
   failed: number;
 }
@@ -172,7 +172,7 @@ export interface TidyRunResult {
  * Execute a consented tidy plan: per cluster, scrub the concatenated member
  * texts, ask the model to consolidate them (`TIDY_SYSTEM_PROMPT`), re-hydrate
  * locally, and queue the result(s) as `mode:"merge"` suggestions targeting the
- * cluster's member ids. Fail-soft per cluster (like the chat sweep) — one
+ * cluster's member ids. Fail-soft per cluster (like the chat sweep) - one
  * cluster's scrub/relay/parse failure doesn't abort the rest.
  *
  * A cluster whose members got merged also SUPERSEDES any pending queue
@@ -245,9 +245,9 @@ export async function runTidy(opts: TidyRunOptions): Promise<TidyRunResult> {
 }
 
 /**
- * Accept a "merge" suggestion: create ONE new active memory item holding the
+ * Accept a "merge" suggestion: create one new active memory item holding the
  * merged text, then supersede every `targetIds` member against it
- * (reversible — see `supersedeMemoryItem`). Nothing is deleted. Throws if `s`
+ * (reversible - see `supersedeMemoryItem`). Nothing is deleted. Throws if `s`
  * is not a merge suggestion (a caller bug, not a runtime condition to handle
  * softly).
  */

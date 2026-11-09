@@ -34,13 +34,13 @@ test("reasoning effort: default omits the param, composer override sends it", as
   await login(page, sharedCreds());
   await openChat(page);
 
-  // 1) Default effort is "off" → no reasoning_effort on the wire (provider default).
+  // 1) Default effort is "off" -> no reasoning_effort on the wire (provider default).
   await box(page).fill("reasoning default check");
   await send(page);
   await expect(main(page).getByText("ok").last()).toBeVisible({ timeout: 30_000 });
   expect(bodies.at(-1)?.reasoning_effort).toBeUndefined();
 
-  // 2) Pick "High" in the composer, send again → reasoning_effort crosses the wire.
+  // 2) Pick "High" in the composer, send again -> reasoning_effort crosses the wire.
   await page.getByTitle(/Reasoning effort/).click();
   await page.getByRole("menuitem", { name: /High/ }).click();
   await box(page).fill("reasoning high check");

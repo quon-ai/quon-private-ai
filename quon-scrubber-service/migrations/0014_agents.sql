@@ -1,13 +1,13 @@
--- QUON Agents — Phase 1: server-side "web-watch" agents (Option C).
+-- QUON Agents - Phase 1: server-side "web-watch" agents (Option C).
 --
 -- ZERO-KNOWLEDGE: the runner only ever operates on the agent SPEC (a search
--- query — interest metadata, NOT the user's encrypted documents/memory) and
--- PUBLIC web results. Each result is sealed (libsodium sealed box) to the user's
--- OWN X25519 identity pubkey (users.identity_pub) BEFORE it is stored, so the
+-- query - interest metadata, not the user's encrypted documents/memory) and
+-- Public web results. Each result is sealed (libsodium sealed box) to the user's
+-- Own X25519 identity pubkey (users.identity_pub) before it is stored, so the
 -- operator/DB only ever sees ciphertext only the user's client can open.
 --
--- `spec_json` holds the search query + filters. It is NOT private encrypted
--- content, but it IS interest metadata visible to the operator (disclosed in the
+-- `spec_json` holds the search query + filters. It is not private encrypted
+-- content, but it is interest metadata visible to the operator (disclosed in the
 -- UI, same trust class as a web search through QUON). Everything the runner
 -- PRODUCES is sealed.
 CREATE TABLE IF NOT EXISTS agents (
@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS agents (
     user_id      TEXT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     name         TEXT NOT NULL,
     kind         TEXT NOT NULL,              -- 'web-watch' (only kind in phase 1)
-    spec_json    TEXT NOT NULL,              -- {"query": "...", ...} — interest metadata
+    spec_json    TEXT NOT NULL,              -- {"query": "...", ...} - interest metadata
     schedule     TEXT NOT NULL DEFAULT 'daily',
     enabled      INTEGER NOT NULL DEFAULT 1,
     last_run_at  INTEGER,                    -- epoch seconds of the last runner pass

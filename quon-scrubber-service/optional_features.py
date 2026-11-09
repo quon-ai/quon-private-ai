@@ -1,4 +1,4 @@
-"""The optional features — this build: none.
+"""The optional features - this build: none.
 
 main.py reads this registry; the full product keeps the same file with its
 feature modules listed. Nothing else differs between the editions.

@@ -3,12 +3,12 @@
  *
  * Why: every Playwright test gets a fresh, cache-less browser context, so the
  * document-heavy specs each re-download the ~100MB embedding model
- * (Xenova/paraphrase-multilingual-MiniLM-L12-v2) from huggingface.co — that IS
+ * (Xenova/paraphrase-multilingual-MiniLM-L12-v2) from huggingface.co - that is
  * their ~70s runtime. This script mirrors the model files once into the
  * git-ignored tests/e2e/.models/ tree (exact HF path layout); the vite dev
  * middleware (vite.config.ts, QUON_E2E_LOCAL_MODELS=1) then serves them from
  * localhost and the "download" becomes a local file read. Production is
- * untouched — real browsers keep loading from HF and caching normally.
+ * untouched - real browsers keep loading from HF and caching normally.
  *
  * Idempotent: existing files are skipped. Misses at runtime fall back to a
  * redirect to huggingface.co (see the middleware), so a stale mirror degrades
@@ -43,7 +43,7 @@ async function fetchOne(rel) {
   console.log(`  ↓ fetched ${rel} (${(statSync(dest).size / 1e6).toFixed(1)} MB)`);
 }
 
-// The ORT jsep wasm pair transformers.js loads at runtime (jsdelivr in prod) —
+// The ORT jsep wasm pair transformers.js loads at runtime (jsdelivr in prod) -
 // copied from the package's own pinned onnxruntime-web so versions match.
 function copyOrt() {
   const src = "node_modules/@huggingface/transformers/node_modules/onnxruntime-web/dist";
@@ -68,7 +68,7 @@ try {
   for (const f of FILES) await fetchOne(f);
   copyOrt();
 } catch (err) {
-  // Never fail the suite over the mirror — the middleware redirects misses to
+  // Never fail the suite over the mirror - the middleware redirects misses to
   // HF, so the run just stays slow.
   console.warn(`fetch-e2e-models: ${err.message} — suite will fall back to HF downloads`);
 }

@@ -8,7 +8,7 @@ import { clickSend, login, registerAndVerify, type Creds } from "./helpers/accou
 // (non-stream POST /chat), re-hydrates locally, then queues suggestions for approval.
 //
 // We drive it in a project: send one in-project chat holding a durable fact, mock the
-// extraction reply to return that fact (as a JSON array, no placeholders — so
+// extraction reply to return that fact (as a JSON array, no placeholders - so
 // re-hydration is a no-op), run the sweep, and Keep the suggestion into project memory.
 // Fresh account so the scope/dedup is clean and the per-session cursor starts at 0.
 const uniq = () => `${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
@@ -30,8 +30,8 @@ test("Learn from chats mines a project chat into a kept project memory", async (
     });
   });
 
-  // Non-stream extraction call (chatComplete → POST /chat). Only intercept the API
-  // POST — NOT the frontend's GET /chat page navigation (same path, different method
+  // Non-stream extraction call (chatComplete -> POST /chat). Only intercept the API
+  // POST - not the frontend's GET /chat page navigation (same path, different method
   // and origin), which would otherwise render this JSON as the document body.
   // The assistant content is a strict JSON array of one durable fact, no placeholders.
   let extractionCalls = 0;
@@ -63,7 +63,7 @@ test("Learn from chats mines a project chat into a kept project memory", async (
   await expect(page).toHaveURL(/\/projects\?id=/, { timeout: 30_000 });
   const projectId = new URL(page.url()).searchParams.get("id")!;
 
-  // Send one chat IN the project with enough NEW user text to clear the sweep's
+  // Send one chat IN the project with enough new user text to clear the sweep's
   // triviality gate (MIN_NEW_USER_CHARS = 200), carrying the durable fact.
   await page.goto(`/chat?p=${projectId}`);
   const longMsg =
@@ -81,28 +81,28 @@ test("Learn from chats mines a project chat into a kept project memory", async (
   await page.goto(`/projects?id=${projectId}`);
   await page.getByRole("button", { name: "Learn from chats" }).click();
 
-  // --- the result must be REACHABLE from where the sweep was run -------------
-  // Reported 2026-08-04: the sweep said "29 suggestions to review", the only
-  // thing to press was this button again, and pressing it re-ran the sweep —
-  // which found nothing left to analyse and replaced the real result with
-  // "Nothing new to learn". Nothing was lost, but the user could not tell.
-  // Note this spec used to reach the queue by clicking the Content tab from
-  // knowledge the UI never gave the user, which is how the gap survived.
+  // --- the result must be reachable from where the sweep was run -------------
+  // The failure shape: the sweep says "29 suggestions to review", the only
+  // thing to press is this button again, and pressing it re-runs the sweep,
+  // which finds nothing left to analyse and replaces the real result with
+  // "Nothing new to learn". Nothing is lost, but the user cannot tell. The
+  // spec reaches the queue the way the user does, through this chip, not
+  // through the Content tab from knowledge the UI never gave them.
   const reviewChip = page.getByRole("button", { name: /to review/ });
   await expect(reviewChip).toBeVisible({ timeout: 120_000 });
   const afterSweep = extractionCalls;
 
-  // Pressing the sweep button again must NOT burn a relay call on a sweep that
+  // Pressing the sweep button again must not burn a relay call on a sweep that
   // can only report "nothing new" over the top of a real result.
   await page.getByRole("button", { name: "Learn from chats" }).click();
   await page.waitForTimeout(1500);
   expect(extractionCalls).toBe(afterSweep);
 
-  // And it must take the user to the queue instead — which is on another tab.
+  // And it must take the user to the queue instead - which is on another tab.
   await expect(page.getByRole("tab", { name: "Content" })).toHaveAttribute("aria-selected", "true");
 
   // A suggestion card appears in the embedded project memory review queue.
-  // Generous timeout: the sweep triggers the FIRST on-device embedder load in
+  // Generous timeout: the sweep triggers the first on-device embedder load in
   // this context (model download + WASM init), which can run well past 60s cold
   // on a loaded CI box before the candidate is embedded and queued.
   await expect(page.getByText(/Suggested for your memory/)).toBeVisible({ timeout: 120_000 });
@@ -113,7 +113,7 @@ test("Learn from chats mines a project chat into a kept project memory", async (
     .last();
   await expect(card).toBeVisible({ timeout: 30_000 });
 
-  // Keep it → it lands in project memory and the suggestion queue empties.
+  // Keep it -> it lands in project memory and the suggestion queue empties.
   await card.getByRole("button", { name: "Keep" }).click();
   await expect(page.getByText(/Suggested for your memory/)).toHaveCount(0, { timeout: 30_000 });
 

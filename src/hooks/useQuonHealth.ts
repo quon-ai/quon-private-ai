@@ -27,7 +27,7 @@ function getStore() {
     intervalMs: POLL_INTERVAL_MS,
     isHidden: () => typeof document !== "undefined" && document.visibilityState === "hidden",
     onFailure: (consecutive, hidden, resume, e) => {
-      // ⚠️ Do NOT swallow this. "Scrubber offline — Senden pausiert" appeared
+      // Do not swallow this. "Scrubber offline - Senden pausiert" appeared
       // briefly during a real 17-document send and could not be explained
       // afterwards, because an earlier version discarded the only evidence.
       console.warn(
@@ -54,11 +54,11 @@ const noopSubscribe = () => () => {};
 const getServerSnapshot = () => SERVER_SNAPSHOT;
 
 /**
- * The scrubber's traffic-light status — the SAME value in every component.
+ * The scrubber's traffic-light status - the same value in every component.
  *
  * Backed by one shared poll (`healthStore.ts`): however many pills, badges and
  * screens read it, there is one `/health` request per 30 s and one answer, so
- * the sidebar and the header can never disagree (feedback #87). Runs in the
+ * the sidebar and the header can never disagree. Runs in the
  * browser only; with QUON disabled via env it reports "offline" without polling.
  */
 export function useQuonHealth(): QuonHealth {

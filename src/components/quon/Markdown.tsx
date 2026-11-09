@@ -1,15 +1,15 @@
 /**
  * Markdown renderer for assistant chat answers.
  *
- * Models reply in Markdown (`**bold**`, `## headings`, lists, code, tables …);
+ * Models reply in Markdown (`**bold**`, `## headings`, lists, code, tables ...);
  * this renders it with compact, chat-friendly styling instead of showing the
- * raw syntax. Safe by default — react-markdown does not render raw HTML.
+ * raw syntax. Safe by default - react-markdown does not render raw HTML.
  *
- * Code fences get one extra pass: a mermaid diagram (explicitly fenced, OR
- * sniffed from an untagged block — models routinely omit the tag, which is how
- * an `erDiagram` ended up displayed as plain text, reported 2026-08-10) renders
- * as a diagram instead. mermaid itself is imported lazily, only when a diagram
- * is really shown; see lib/mermaid.ts.
+ * Code fences get one extra pass: a mermaid diagram (explicitly fenced, or
+ * sniffed from an untagged block - models routinely omit the tag, and an
+ * untagged `erDiagram` would otherwise display as plain text) renders as a
+ * diagram instead. mermaid itself is imported lazily, only when a diagram is
+ * really shown; see lib/mermaid.ts.
  */
 
 import { Children, cloneElement, isValidElement, lazy, Suspense, type ReactNode } from "react";
@@ -21,14 +21,14 @@ import { extractTable } from "@/lib/markdownTable";
 import { looksLikeMermaid } from "@/lib/mermaid";
 import { MermaidBlock } from "./MermaidBlock";
 
-// KaTeX only ever loads for an answer that actually contains TeX — see
+// KaTeX only ever loads for an answer that actually contains TeX - see
 // MarkdownMath.tsx and `hasMath`.
 const MarkdownMath = lazy(() => import("./MarkdownMath"));
 
 /**
  * Turn literal `<br>` text into real line breaks, recursively.
  *
- * Raw HTML stays unparsed (react-markdown's safe default — model output must
+ * Raw HTML stays unparsed (react-markdown's safe default - model output must
  * never become live markup); this only ever CREATES `<br />` elements from text
  * it split itself, so no other tag can result. Recursion matters because the
  * tag usually sits next to inline formatting, e.g. `**Label**<br>Fließtext`,
@@ -58,11 +58,11 @@ function withLineBreaks(children: ReactNode): ReactNode {
  * of prose in ~390 px means either a sideways scroll (reported) or columns
  * squeezed to two words. So the same content gets two layouts.
  *
- * Wide (≥ sm): the ordinary table.
- * Narrow: one card per ROW — first cell as the card's title, the rest as
+ * Wide (>= sm): the ordinary table.
+ * Narrow: one card per ROW - first cell as the card's title, the rest as
  * labelled values. That matches how models build these tables (first column =
  * the attribute, remaining columns = the things compared), so a card reads
- * "Optischer Eindruck / SNT: … / Labfresh: …".
+ * "Optischer Eindruck / SNT: ... / Labfresh: ...".
  *
  * A CSS breakpoint rather than a matchMedia hook, so it is SSR-safe and cannot
  * flash the wrong layout. Both trees exist in the DOM; the tables are small,
@@ -75,7 +75,7 @@ function ResponsiveTable({ children }: { children?: ReactNode }) {
       <table className="w-full border-collapse text-xs">{children}</table>
     </div>
   );
-  // Unrecognised shape → the plain table is the honest fallback.
+  // Unrecognised shape -> the plain table is the honest fallback.
   if (!extracted) return <div className="mb-2 last:mb-0">{table}</div>;
 
   const { headers, rows } = extracted;
@@ -214,7 +214,7 @@ export function Markdown({
     <div className="[overflow-wrap:anywhere] break-words">
       {hasMath(children) ? (
         // The plain render is the fallback, so while the chunk loads the text is
-        // already on screen (raw `$…$` for a moment), never a blank bubble.
+        // already on screen (raw `$...$` for a moment), never a blank bubble.
         <Suspense fallback={plain}>
           <MarkdownMath components={withMermaid}>{children}</MarkdownMath>
         </Suspense>

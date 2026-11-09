@@ -1,3 +1,5 @@
+<!-- This file is the source of https://app.quon-ai.com/docs/detection-whitepaper — the page renders it verbatim; edits here reach the website with the next deploy. -->
+
 # PII Detection in QUON — Architecture Selection and Quality Evidence
 
 Frederic Koppenberg - QUON / Privacy Gateway
@@ -14,20 +16,18 @@ each candidate produced, and the decisions taken on them between June and
 September 2026.
 
 This document assumes the reader is familiar with the basic vocabulary of
-information extraction (named-entity recognition, precision and recall) and
-with QUON's product claim as stated in the repository's README. It is written
+information extraction (named-entity recognition, precision and recall). It
+is written
 from the perspective of the team operating both the product and its
 evaluation; the observations are a) first-hand, b) reproducible from the
 repository's test suite and tracked ledgers, and c) obviously biased towards
-the architecture we eventually shipped. Where the document is critical, it is
-critical of structures and artefacts — above all of our own measurement
-instruments — not of individuals.
+the architecture we eventually shipped.
 
 The document focuses on the _what_ and _why_ rather than the specific _how_:
-the implementation detail lives in the repository
-([detection-evaluation.md](detection-evaluation.md) for the method,
-[detection-experiments.md](detection-experiments.md) for the full dated
-record), and this paper names those places rather than duplicating them.
+the implementation detail lives in the source repository — the method
+documentation (`detection-evaluation.md`) and the full dated experiment
+record (`detection-experiments.md`) — and this paper names those places
+rather than duplicating them.
 
 **Document Status:** Draft
 **Last Changed:** 2026-11-04
@@ -40,14 +40,12 @@ record.
 
 In Section 2 we provide the terms the paper relies on. In Section 3 we
 describe the current situation: the product claim, the measurement
-instruments and their blind spots, and two methodological failures we walked
-into. In Section 4 we state the problem. In Section 5 we define the
-evaluation criteria, and in Section 6 we span the solution space: four
-architectures, the models evaluated within each, and the measured evidence,
-closing with an evaluation table. Section 7 is the management summary;
-Section 8 gives our opinion and recommendation, including the conditions
-under which the approach fails. Section 9 collects miscellaneous remarks and
-open questions.
+instruments and what each can and cannot see. In Section 4 we state the
+problem. In Section 5 we define the evaluation criteria, and in Section 6 we
+span the solution space: four architectures, the models evaluated within
+each, and the measured evidence, closing with an evaluation table. Section 7
+is the management summary. Section 8 collects miscellaneous remarks and open
+questions.
 
 ## 2. Preliminaries
 
@@ -87,7 +85,7 @@ cannot do without:
 QUON's central claim is that personal data is detected and replaced
 **client-side, before any provider is involved**. Whatever detection misses
 reaches the provider in clear text; the quality of this one step therefore
-carries the product. Since 2026-08-23 detection runs fully in-process:
+carries the product. Detection runs fully in-process:
 spaCy/Presidio NER and a GLiNER span scorer propose, a deterministic regex
 net covers the structured types, a grammar-guard chain and a GLiNER
 cross-check control false positives, and placeholders are applied by
@@ -95,51 +93,31 @@ position. There is no network call anywhere in detection.
 
 ### 3.2 The instruments, and what each cannot see
 
-Quality is measured by seven instruments: a seeded synthetic corpus
-(~1,600–1,800 DE/EN cases) with per-type floors; 58 hand-written hard cases;
-a hand-curated casual-register slice; salted real documents (204 gold spans
-across 17 layouts); the operator's own exported prompts (1,951) and documents
-(50, including OCR) reviewed for false positives against a two-tier ledger;
-and the public TAB benchmark (ECHR judgments; the 60-document test split with
-495 PERSON spans). Each instrument answers exactly one question; the record's
-worst conclusions came from asking an instrument a question it cannot answer.
+Quality is measured by seven instruments:
 
-It is necessary to be self-critical here: **our primary instrument lied to us
-first**. The synthetic corpus is prose — no camelCase, no OCR damage, no form
-labels, no page furniture — and on 2026-08-22 it reported perfect recall and
-zero false positives on a build that was redacting ordinary words
-("Versicherungsnehmer", "person", "end user") in real documents. The
-instrument, not the detector, was the first thing that had to be fixed, and
-the fix was structural: false-positive hunting moved to real data (own
-prompts, own documents, a reviewed ledger), recall measurement to salted
-layouts and a public benchmark, and the corpus was demoted to what it is good
-at — a reproducible recall ratchet.
+- a **seeded synthetic corpus** (~1,600–1,800 German and English cases) with
+  per-type floors;
+- **58 hand-written hard cases**;
+- a hand-curated **casual-register slice** (short questions, imperatives,
+  lowercase text);
+- **salted real documents** — 204 synthetic gold spans across 17 real
+  layouts, inheriting each document's measured OCR-damage profile;
+- the operator's **own exported prompts** (1,951), reviewed for false
+  positives;
+- the operator's **own documents** (50, including OCR output), reviewed
+  against a two-tier false-positive ledger;
+- the **public TAB benchmark** (ECHR judgments; the 60-document test split
+  with 495 PERSON spans).
 
-### 3.3 A run must prove its configuration
-
-Twice, a measurement silently ran a different configuration than intended: a
-device-local settings file overrides environment variables, so a "local" run
-went over a cloud extractor (caught only by counting local-model requests),
-and a later re-run without the guard sent documents through the cloud tier
-and inflated two public-set results (TAB +3, AI4Privacy +8) before being
-caught and re-measured. The consequence is a standing rule, enforced in the
-harnesses themselves: **a run that cannot prove its configuration does not
-count**. Evaluation scripts assert the production configuration in-process
-and refuse to start otherwise.
-
-### 3.4 Private data stays private
-
-The strongest evidence comes from the operator's own prompts and paperwork,
-which must never leave the device. The method is public, the data is not:
-reports with real values are written only to a private directory, stdout
-carries aggregates, and the repository's export gate greps every public tree
-for identifiers. Every value printed in the public record is synthetic, a
-published court record, or a reviewed _non_-person string.
+Each instrument answers exactly one question, and each is used only for the
+question it can answer: the synthetic corpus ratchets recall but is prose and
+cannot see document-shaped false positives; the real-data suites hunt false
+positives but carry no gold labels; salted layouts and the public benchmark
+carry the recall evidence on real-world text.
 
 **Main takeaways.** Detection is in-process and carries the product claim;
-seven instruments each answer one question; the synthetic corpus alone is a
-proven liar about real-world false positives; configuration is asserted, not
-remembered; real personal data never leaves the device.
+seven instruments each answer one question, and no instrument is asked a
+question it cannot answer.
 
 ## 4. Problem Statement
 
@@ -369,38 +347,15 @@ accepting a named two-value recall cost for a 18→1 reduction of reviewed
 false positives; **third**, the LLM extraction tier was removed entirely,
 which the first two decisions made safe. Everything downstream — the check
 digit gate, the language-routing fix, the floor raises — presupposes the
-first decision. One decision remains open and is ours to put to the operator:
-whether this paper and the experiment record join the public repository
-export (the content is already leak-gate clean).
+first decision.
 
-## 8. Opinion and Recommendation
+## 8. Miscellaneous Remarks
 
-In the present section we give our personal opinion and recommendation on the
-topic. We recommend keeping Option C and investing next in the two residuals
-the instruments agree on: the hyphenation repair gap (every salted miss class
-traces to it) and deterministic rules for the two unfloored types (PIN,
-ROUTING). We recommend against re-opening the verifier question without new
-evidence; the record's negative results exist precisely so that the
-local-LLM instinct is answered with Table 1 instead of a new week of runs.
-
-The approach is **not a silver bullet**. It fails where personal data carries
-no structure, no label and no grammatical trace — a bare novel identifier in
-free text, a nickname that is also a common word, a language we do not model;
-it degrades in the floor configuration (GLiNER off), on heavily damaged OCR,
-and on registers neither instrument set covers. Under those conditions it
-will most likely fail – but so will any other approach, since detection
-without structure, context or prior knowledge is not a solvable problem; the
-product's answer is layered for exactly that reason — a reviewable preview,
-per-value release and a send path that fails closed rather than open.
-
-## 9. Miscellaneous Remarks
-
-1. **Adjacent artefacts.** The method documentation
-   ([detection-evaluation.md](detection-evaluation.md)) explains how to run
-   every check; the experiment record
-   ([detection-experiments.md](detection-experiments.md)) carries the full
-   dated numbers including all sixteen trial runs; the enforced floors live
-   in the ratchet (`tests/test_corpus.py`); latency series in
+1. **Adjacent artefacts.** In the source repository, the method
+   documentation (`detection-evaluation.md`) explains how to run every
+   check; the experiment record (`detection-experiments.md`) carries the
+   full dated numbers including all sixteen trial runs; the enforced floors
+   live in the ratchet (`tests/test_corpus.py`); the latency series in
    `tests/reports/SCRUB_LATENCY.md`.
 2. **Benchmark provenance.** TAB is the Text Anonymisation Benchmark (MIT
    licence; ECHR judgments — public court records). AI4Privacy was sampled
@@ -409,13 +364,11 @@ per-value release and a send path that fails closed rather than open.
    GKV-Spitzenverband, verified against both worked examples of the
    specification.
 3. **The public demo.** A scrub-only demo of the shipped pipeline runs at
-   app.quon-ai.com/demo; the end-user explanation of this paper's content is
-   the companion page next to it.
+   app.quon-ai.com/demo; the plain-language explanation of this paper's
+   content is the companion page at app.quon-ai.com/docs/detection.
 
 Open questions:
 
-- Should this paper and the experiment record be added to the public
-  repository export (one manifest line each; both pass the leak gate)?
 - PIN and ROUTING remain unfloored: is a deterministic rule per type worth
   the false-positive risk, or does the labelled-identifier rule already cover
   the realistic shapes?

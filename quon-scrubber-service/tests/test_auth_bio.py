@@ -1,4 +1,4 @@
-"""Biometric-unlock key endpoints (/auth/bio — WebAuthn-PRF wrap of the MK).
+"""Biometric-unlock key endpoints (/auth/bio - WebAuthn-PRF wrap of the MK).
 
 The server never sees the PRF secret; these tests cover the storage contract:
 per-(user, credential) rows, upsert, honest 404 for revoked/unknown credentials,
@@ -56,7 +56,7 @@ def test_cross_user_isolation(quon_client):
     quon_client.put("/auth/bio", json=bio_body(), headers=csrf_a)
 
     # User B (fresh session on the same client) must not see A's row under the
-    # same credential id — the row is keyed (user_id, credential_id).
+    # same credential id - the row is keyed (user_id, credential_id).
     quon_client.cookies.clear()
     make_active_user(quon_client, "b@quon.local", auth_token=b"C" * 32)
     assert quon_client.get("/auth/bio", params={"credential_id": CRED}).status_code == 404
@@ -86,10 +86,10 @@ def test_enrollment_cap(quon_client):
     for i in range(10):
         r = quon_client.put("/auth/bio", json=bio_body(cred=f"cred-{i}"), headers=csrf)
         assert r.status_code == 200
-    # 11th distinct credential is refused…
+    # 11th distinct credential is refused...
     r = quon_client.put("/auth/bio", json=bio_body(cred="cred-10"), headers=csrf)
     assert r.status_code == 409
-    # …but re-enrolling an existing one still works (upsert, not a new row).
+    # ...but re-enrolling an existing one still works (upsert, not a new row).
     r = quon_client.put("/auth/bio", json=bio_body(cred="cred-3"), headers=csrf)
     assert r.status_code == 200
 

@@ -1,7 +1,7 @@
 -- Per-user settings overrides. Each field is nullable: NULL means "use the
 -- global default" (config.py / runtime_settings.json, operator-managed). A user
 -- can override the PII detection engine, their OpenRouter key, and which models
--- they see — for THEMSELVES only, so no user can affect another user's routing.
+-- they see - for THEMSELVES only, so no user can affect another user's routing.
 -- The two key fields are sealed at rest under QUON_SERVER_SECRET (same trust
 -- model as user_connections / the per-user sub-key) and never sent to the browser.
 CREATE TABLE IF NOT EXISTS user_settings (

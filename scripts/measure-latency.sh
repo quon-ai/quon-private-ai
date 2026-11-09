@@ -1,17 +1,15 @@
 #!/usr/bin/env bash
-# Measure time-to-first-token and streaming against the LIVE provider, and
+# Measure time-to-first-token and streaming against the live provider, and
 # append the result to the ledger.
 #
-# This is CLAUDE.md's "measure before you ship anything on the answer path" rule
-# lifted out of prose and made executable. It stayed prose for a reason that no
-# longer holds: no unit test can catch this class (a mocked stream is always
-# instant), so it was written as a rule. But a rule with no artefact is a rule
-# that gets skipped — `openrouter:web_fetch` + `datetime` were added as
-# "one-line adds under the same mechanism", cost ~9 s on EVERY message, killed
-# streaming outright, and stayed live eleven days until a user compared QUON
-# with ChatGPT. The same class recurred later with a blocking /mcp/servers fetch.
+# The "measure before you ship anything on the answer path" rule, made
+# executable. No unit test can catch this class (a mocked stream is always
+# instant), and a rule with no artefact is a rule that gets skipped: a
+# "one-line add under the same mechanism", such as a provider tool or a
+# blocking fetch before the first token, can cost seconds on every message and
+# kill streaming outright, and nothing but a measurement notices.
 #
-# Two things are measured, and BOTH matter: time to FIRST token, and whether the
+# Two things are measured, and both matter: time to first token, and whether the
 # answer still arrives in several chunks. A change can leave the total untouched
 # and still destroy streaming, which is most of what "feels slow" actually is.
 #
@@ -19,7 +17,7 @@
 #   scripts/measure-latency.sh --baseline "feature off"
 #   scripts/measure-latency.sh --after    "web_fetch attached"
 #
-# Costs a few cents per run. Measures TWO models on purpose: they diverge —
+# Costs a few cents per run. Measures two models on purpose: they diverge - 
 # web_fetch stalled Gemini and not Sonnet.
 set -euo pipefail
 
@@ -80,7 +78,7 @@ PY
 [[ -f "$LEDGER" ]] || {
   mkdir -p "$(dirname "$LEDGER")"
   cat > "$LEDGER" <<'HDR'
-# Latency ledger — time to first token, and whether streaming survived
+# Latency ledger - time to first token, and whether streaming survived
 
 Same shape as `HISTORY.md`: a curated series on top for decisions, a machine
 appended auto-log below. Detection has had ratchet floors for months; latency

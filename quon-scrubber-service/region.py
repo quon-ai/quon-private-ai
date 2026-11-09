@@ -1,29 +1,29 @@
-"""OpenRouter in-region routing (EU) — strict mode.
+"""OpenRouter in-region routing (EU) - strict mode.
 
 With ``OPENROUTER_REGION=eu`` every chat request goes to OpenRouter's EU
 domain, where prompts and completions are processed on provider endpoints in
 the EU/EEA, UK and Switzerland and OpenRouter's own logging is skipped. The
-EU domain FAILS CLOSED: a model without an in-region endpoint is refused
+EU domain fails closed: a model without an in-region endpoint is refused
 ("No endpoints found supporting your data region"), never routed elsewhere.
-Measured on 2026-11-03 against the live catalog: Claude Sonnet/Opus latest,
+Measured against the live catalog: Claude Sonnet/Opus latest,
 GPT latest and Mistral Large work; Gemini Flash latest, Fusion, Kimi K3 and
 the image model do not, and the web-search plugin is refused for every model.
 
 So "strict EU" is three things, all here:
 
 * the chat base URL (key management and the key check stay on the global
-  domain — those are account operations, not inference);
+  domain - those are account operations, not inference);
 * the catalog is filtered to what the EU domain actually serves. Concrete
   ids come from the EU ``/models`` list (free, cached, refreshed hourly).
-  The floating ``~vendor/…-latest`` aliases are not in that list and the
+  The floating ``~vendor/...-latest`` aliases are not in that list and the
   endpoints API does not resolve them, so each alias in the catalog is
   PROBED once a day with a one-token request. Unknown (list unreachable,
-  probe failed) keeps the model visible — the request itself still fails
+  probe failed) keeps the model visible - the request itself still fails
   closed on OpenRouter's side, with a worded error;
 * web search is reported unavailable, so the client hides the toggle and the
   relay never attaches the plugin.
 
-Zero-knowledge is untouched: this only changes WHERE the already-scrubbed
+Zero-knowledge is untouched: this only changes where the already-scrubbed
 request is processed.
 """
 
@@ -111,7 +111,7 @@ async def refresh(catalog: list[str], *, now: float | None = None) -> None:
                 if hit and t - hit[1] < PROBE_TTL_S:
                     continue
                 if not key:
-                    continue  # nothing to probe with — stays unknown (visible)
+                    continue  # nothing to probe with - stays unknown (visible)
                 verdict = await _probe_alias(client, base, key, slug)
                 if verdict is not None:
                     _alias_ok[slug] = (verdict, t)
@@ -121,7 +121,7 @@ async def refresh(catalog: list[str], *, now: float | None = None) -> None:
 
 
 async def _probe_alias(client: httpx.AsyncClient, base: str, key: str, slug: str) -> bool | None:
-    """A one-token request: 200 → served in-region; 404/403 → not; else unknown."""
+    """A one-token request: 200 -> served in-region; 404/403 -> not; else unknown."""
     try:
         r = await client.post(
             f"{base}/chat/completions",
@@ -143,6 +143,6 @@ async def refresh_loop(catalog_fn) -> None:
     while True:
         try:
             await refresh(list(catalog_fn()))
-        except Exception:  # noqa: BLE001 — a background refresh must never die
+        except Exception:  # noqa: BLE001 - a background refresh must never die
             logger.exception("eu routing: refresh crashed; retrying next cycle")
         await asyncio.sleep(LIST_TTL_S)

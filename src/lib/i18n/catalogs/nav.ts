@@ -1,13 +1,12 @@
 /**
  * "nav" namespace UI strings. Keys are prefixed `nav.*`. Keep `en` and `de`
- * in sync — a missing German key is a compile error via catalog.ts's typing.
+ * in sync - a missing German key is a compile error via catalog.ts's typing.
  *
  * Covers: AppSidebar, AppShell (chrome around the routed screens), the
  * BottomTabBar, StatusIndicator (the "QUON Active/Offline" pill) and the
  * ReleaseNotesModal chrome (the release CONTENT itself lives in
- * src/lib/releases.ts, owned outside this namespace — see HANDOFF/task notes,
- * left English by design for this pass). Also the Dashboard screen's own
- * copy (CTA, protection row, private-data cluster, recent chats).
+ * src/lib/releases.ts, outside this namespace). Also the Dashboard screen's
+ * own copy (CTA, protection row, private-data cluster, recent chats).
  */
 export const nav = {
   en: {
@@ -26,13 +25,13 @@ export const nav = {
     "nav.soon": "Soon",
     "nav.protected": "Protected",
 
-    // AppSidebar — search
+    // AppSidebar - search
     "nav.searchChats": "Search chats",
     "nav.clearSearch": "Clear search",
     "nav.results": "Results",
     "nav.noMatches": "No matches.",
 
-    // AppSidebar — chat rows / menu
+    // AppSidebar - chat rows / menu
     "nav.chatOptions": "Chat options",
     "nav.rename": "Rename",
     "nav.pin": "Pin",
@@ -72,11 +71,11 @@ export const nav = {
     "nav.statusLoadingDetail": "Checking protection status…",
     "nav.statusVersion": "v{version}",
 
-    // ReleaseNotesModal (chrome only — release content stays in releases.ts)
+    // ReleaseNotesModal (chrome only - release content stays in releases.ts)
     "nav.releaseAriaLabel": "What's new — {title}",
     "nav.releaseWhatsNew": "What's new · {date}",
 
-    // ScreenDashboard — primary CTA
+    // ScreenDashboard - primary CTA
     "nav.startChat": "Start Chat",
     "nav.askPlaceholder": "Ask something — it stays private",
     "nav.askSend": "Send and open the chat",
@@ -84,7 +83,7 @@ export const nav = {
     "nav.firstChatHint":
       "Your first private chat — personal data is filtered on your device before anything is sent.",
 
-    // ScreenDashboard — biometric offer card
+    // ScreenDashboard - biometric offer card
     "nav.bioOfferTitle": "Unlock faster next time",
     "nav.bioOfferBody":
       "Turn on Face ID, Touch ID, or your fingerprint to unlock QUON on this device instead of typing your password. The key stays in your device's secure hardware — it never reaches our servers.",
@@ -102,10 +101,10 @@ export const nav = {
     "nav.bioRepairedNotice": "Done — the new passkey unlocks QUON on this device.",
     "nav.offlineBanner":
       "Offline — your saved data is readable. Sending and sync resume automatically.",
-    // Sync status. Only shown for a push big enough to be felt — a routine
+    // Sync status. Only shown for a push big enough to be felt - a routine
     // one-item push finishes before a banner could inform anyone.
     // No fraction: a single-batch push can't advance one, and "(0/29)" told the
-    // user nothing about WHAT was syncing. Name the thing and the amount.
+    // user nothing about what was syncing. Name the thing and the amount.
     "nav.syncBusy": "Backing up {count} entries — encrypted, in the background",
     "nav.syncBusyProgress": "Backing up your encrypted data… ({done}/{total} entries)",
     "nav.syncBlockedOne":
@@ -115,7 +114,7 @@ export const nav = {
     "nav.notNow": "Not now",
     "nav.dismiss": "Dismiss",
 
-    // ScreenDashboard — protection row
+    // ScreenDashboard - protection row
     "nav.protectionLevelLabel": "Protection Level",
     "nav.change": "Change",
     "nav.protectionOff": "Protection is off — messages are sent exactly as written.",
@@ -123,7 +122,7 @@ export const nav = {
     "nav.itemsKeptPrivateOne": "1 personal item kept private so far.",
     "nav.itemsKeptPrivateOther": "{count} personal items kept private so far.",
 
-    // ScreenDashboard — private data cluster
+    // ScreenDashboard - private data cluster
     "nav.yourPrivateData": "Your private data",
     "nav.endToEndEncrypted": "End-to-end encrypted",
     "nav.memoryCountLabelOne": "Memory",
@@ -135,10 +134,10 @@ export const nav = {
     "nav.privateDataEmpty":
       "Nothing saved yet — add memories or upload documents and QUON can use them as private context in chats.",
 
-    // ScreenDashboard — recent chats
+    // ScreenDashboard - recent chats
     "nav.recentChats": "Recent chats",
 
-    // ScreenDashboard — daily briefing card ("on-open" agentic v1)
+    // ScreenDashboard - daily briefing card ("on-open" agentic v1)
     "briefing.title": "Welcome back",
     "briefing.since": "New since your last visit: {parts}",
     "briefing.dismiss": "Dismiss briefing",
@@ -148,9 +147,9 @@ export const nav = {
     "briefing.docOther": "{count} documents",
     "briefing.upcoming": "Upcoming",
 
-    // Agents — two kinds, one screen: a server-run web watch (Option C) and a
+    // Agents - two kinds, one screen: a server-run web watch (Option C) and a
     // client-run "device agent" over the user's own Memory/Documents (Phase 2).
-    // Long explanations live behind InfoHint (tap/hover), not always-on text —
+    // Long explanations live behind InfoHint (tap/hover), not always-on text -
     // see agents.*.infoAria and the *Hint/*Subtitle/*Note keys below.
     "agents.title": "Agents",
     "agents.subtitle":
@@ -181,7 +180,7 @@ export const nav = {
       "The prompt, your documents and the result never leave your device in the clear — only the same scrubbed text a chat would send reaches the model.",
     "agents.costNote": "Runs use your own API budget, like a chat message.",
 
-    // Agent list (one card per agent, collapsed by default — like Connectors)
+    // Agent list (one card per agent, collapsed by default - like Connectors)
     "agents.emptyAll": "No agents yet. Create one above.",
     "agents.badgeServer": "Server",
     "agents.badgeDevice": "Device",
@@ -204,14 +203,14 @@ export const nav = {
     "agents.device.waitingNoRunner": "Waiting for a ready device…",
     "agents.device.queued": "Queued…",
 
-    // "Device for your agents" — the reworked runner card (was a bare checkbox)
+    // "Device for your agents" - the reworked runner card (was a bare checkbox)
     "agents.runner.title": "Device for your agents",
     "agents.runner.toggle": "Use this device",
     "agents.runner.statusThis": "✓ This device is ready",
     "agents.runner.statusOtherOne": "1 other device is ready",
     "agents.runner.statusOtherOther": "{count} other devices are ready",
     "agents.runner.statusNone": "No device ready — device agents are waiting",
-    // Behind the InfoHint on the runner card title — the deep "why":
+    // Behind the InfoHint on the runner card title - the deep "why":
     "agents.runnerHint":
       "Device agents can't run on QUON's server — they read your own notes and documents, so nothing about them may leave your device unfiltered. Turning this on lets THIS device run them in the background, but only while QUON is open and unlocked here. Turn it on on any device you want your agents to run on — your phone, your laptop, or both.",
 

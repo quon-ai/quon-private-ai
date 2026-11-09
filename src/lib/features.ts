@@ -1,7 +1,7 @@
 import type { Lang } from "./langPref";
 
 /**
- * Feature registry — this build: every optional feature is off, and the
+ * Feature registry - this build: every optional feature is off, and the
  * modules behind these flags are not in this tree yet. The full
  * product keeps the same file with the flags on; nothing else differs.
  */

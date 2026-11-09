@@ -1,7 +1,7 @@
--- 0007_shared_projects.sql — Shared Projects v1 (read-only, zero-knowledge).
+-- 0007_shared_projects.sql - Shared Projects v1 (read-only, zero-knowledge).
 --
--- A shares a project (Memory, Documents incl. originals, instruction — chats
--- explicitly NOT) with B on the same instance; the server stores only
+-- A shares a project (Memory, Documents incl. originals, instruction - chats
+-- explicitly not) with B on the same instance; the server stores only
 -- ciphertext. Every shared project has a client-generated random Project Key
 -- (PK); the server never sees it. Each member's grant stores the PK as a
 -- libsodium sealed box to that member's X25519 identity pubkey (opaque BLOB
@@ -10,9 +10,9 @@
 -- fragment, which never reaches the server.
 
 -- Client-generated X25519 identity keypair (set-once via POST /auth/identity;
--- nullable — existing accounts backfill lazily on first use of sharing).
+-- nullable - existing accounts backfill lazily on first use of sharing).
 -- identity_priv_wrapped is wrapped client-side under the user's Master Key
--- (CTX "quonidk0") — the server stores it only so the user's OTHER devices can
+-- (CTX "quonidk0") - the server stores it only so the user's other devices can
 -- unwrap it; it cannot use it. Applied exactly once by the migration runner
 -- (schema_migrations), so bare ADD COLUMNs are safe (same as 0005/0006).
 ALTER TABLE users ADD COLUMN identity_pub BLOB;
@@ -27,8 +27,8 @@ CREATE TABLE IF NOT EXISTS project_shares (
 );
 CREATE INDEX IF NOT EXISTS ix_project_shares_owner ON project_shares(owner_user_id);
 
--- Membership ACL. sealed_pk = sealed box of the PK to THIS member's own
--- identity pubkey (each member submits their own copy — at share time for the
+-- Membership ACL. sealed_pk = sealed box of the PK to this member's own
+-- identity pubkey (each member submits their own copy - at share time for the
 -- owner, at accept time for a reader). v1 roles: 'owner' (pushes) | 'reader'
 -- (pull-only).
 CREATE TABLE IF NOT EXISTS project_grants (
@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS share_invites (
 CREATE INDEX IF NOT EXISTS ix_share_invites_project ON share_invites(project_id);
 
 -- Project-partitioned twin of `blobs`: same LWW columns, but keyed by project
--- (not user) and sequenced PER PROJECT so all members share one delta stream.
+-- (not user) and sequenced per PROJECT so all members share one delta stream.
 -- ON DELETE CASCADE means unsharing a project drops its ciphertext with it.
 CREATE TABLE IF NOT EXISTS shared_blobs (
     project_id  TEXT NOT NULL REFERENCES project_shares(project_id) ON DELETE CASCADE,

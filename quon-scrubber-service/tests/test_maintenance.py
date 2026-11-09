@@ -20,7 +20,7 @@ def _counts(c) -> tuple[int, int]:
 
 def test_sweep_removes_expired_and_keeps_valid(quon_client):
     c = quon_client
-    make_active_user(c, "sweep@x.de")  # leaves one LIVE session + one USED verify token
+    make_active_user(c, "sweep@x.de")  # leaves one live session + one USED verify token
 
     now = db.now_ms()
     with db.get_conn() as conn:
@@ -41,8 +41,8 @@ def test_sweep_removes_expired_and_keeps_valid(quon_client):
 
     sessions_deleted, tokens_deleted = auth.sweep_expired()
 
-    # The expired session and BOTH dead tokens go (the make_active_user verify
-    # token is used → also swept); the live session stays.
+    # The expired session and both dead tokens go (the make_active_user verify
+    # token is used -> also swept); the live session stays.
     assert sessions_deleted == 1
     assert tokens_deleted == 2
     with db.get_conn() as conn:

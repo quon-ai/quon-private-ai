@@ -1,15 +1,15 @@
 /**
- * Detection preview for the document viewer (feedback #55).
+ * Detection preview for the document viewer.
  *
  * "Ich habe nicht das ganze Dok im Kopf und kann [nicht] sagen, ob er alles
- * erwischt hat" — a LIST of detections cannot prove completeness; only the
+ * erwischt hat" - a LIST of detections cannot prove completeness; only the
  * document itself can, with every hit marked IN PLACE. This module runs the
- * exact same filter the send path uses (scrubLarge → the user's policy:
+ * exact same filter the send path uses (scrubLarge -> the user's policy:
  * always/never lists, disabled types) and hands back the detected VALUES, plus
  * the DOM/text machinery to paint them into any rendered view.
  *
  * Honesty note: the preview sends the document text through the same scrub
- * request a send would — nothing new leaves the device that sending would not
+ * request a send would - nothing new leaves the device that sending would not
  * also send, and nothing is stored. The point is to SEE the result before
  * trusting it.
  */
@@ -44,7 +44,7 @@ export type DetectState =
   | { status: "failed" };
 
 /** Run the user's current filter policy over the full text. Returns unique
- *  (value, type) hits, longest value first — the order matters for
+ *  (value, type) hits, longest value first - the order matters for
  *  highlighting, so "Anna Müller-Lüdenscheidt" wins over a contained "Anna". */
 export async function runDetectionPreview(
   text: string,
@@ -73,13 +73,13 @@ export async function runDetectionPreview(
 
 /**
  * Fold a hand-redacted term (from the Text view's "Immer schwärzen" action)
- * into the detection-preview state, so it paints in place immediately — a list
- * cannot prove it, only the document itself can (feedback #55's whole point,
- * now true for manual redactions too).
+ * into the detection-preview state, so it paints in place immediately - a list
+ * cannot prove it, only the document itself can, for manual redactions as much
+ * as for detected ones.
  *
  * `null`/`failed` (detection off or errored) and `running` (a scan mid-flight;
  * folding into a stale hit list would be overwritten when it lands, so start
- * fresh instead) both become a fresh `done` state carrying just this hit —
+ * fresh instead) both become a fresh `done` state carrying just this hit -
  * "turn the marks on with just that hit". An existing `done` state appends,
  * de-duplicated by (type, case-insensitive value) since the same term selected
  * twice must not double up, and keeps the longest-value-first order
@@ -100,7 +100,7 @@ function escapeRegExp(s: string): string {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-/** A "word" character for boundary purposes — UNICODE, not ASCII.
+/** A "word" character for boundary purposes - UNICODE, not ASCII.
  *
  *  JavaScript's `\b` and `\w` are ASCII-only, so `\bMüller\b` still matches
  *  inside "Grüße-Müller" and every German name with an umlaut is mishandled.
@@ -114,8 +114,8 @@ const WORD_CHAR = "[\\p{L}\\p{N}_]";
  *  character, so "+49 30 123" and "a@b.de" still match at their punctuation
  *  edges while a short value cannot match inside a longer word. Without this a
  *  single two-letter detection repaints half the document: measured on a real
- *  financial report, the value "Re" produced NINE highlights — Rechnungs-
- *  methodik, Erreichen, Altersgrenze, Jahren, Reale, bereinigt … — where the
+ *  financial report, the value "Re" produced NINE highlights - Rechnungs-
+ *  methodik, Erreichen, Altersgrenze, Jahren, Reale, bereinigt ... - where the
  *  backend produced zero. The redaction was right; only the PREVIEW was wrong,
  *  which is worse than it sounds, because the preview is the entire reason the
  *  user trusts the redaction. */
@@ -130,7 +130,7 @@ function boundedAlternative(value: string): string {
 }
 
 /** One regex over all hit values (alternation, longest-first so contained
- *  values never shadow their container), case-insensitive — matching the
+ *  values never shadow their container), case-insensitive - matching the
  *  backend's own case-insensitive always-redact semantics. */
 /** Drop a dismissed value from whatever the preview is currently showing.
  *
@@ -164,7 +164,7 @@ export function buildHighlightRegex(hits: DetectionHit[]): RegExp | null {
     return new RegExp(`(${parts.join("|")})`, "giu");
   } catch {
     // A value that will not compile under `u` must not blank the whole preview
-    // — fall back to the unguarded form, which over-highlights but still shows
+    // - fall back to the unguarded form, which over-highlights but still shows
     // the user every real hit. Same fail-open shape as the backend's find_spans.
     try {
       return new RegExp(`(${hits.map((h) => escapeRegExp(h.value)).join("|")})`, "gi");
@@ -181,7 +181,7 @@ export function typeOfMatch(hits: DetectionHit[], matched: string): string {
 }
 
 /**
- * Split plain text into alternating keep/highlight segments — the pure core
+ * Split plain text into alternating keep/highlight segments - the pure core
  * the React text view renders from, and the unit under test.
  */
 export function segmentText(
@@ -205,7 +205,7 @@ export function segmentText(
 /**
  * Wrap every hit inside an already-rendered DOM subtree in a highlight <mark>.
  * Used for the DOCX/HTML/Markdown original views: they render sanitized HTML,
- * so highlighting must happen on TEXT NODES after render — string-level
+ * so highlighting must happen on TEXT NODES after render - string-level
  * replacement on the HTML would risk matching inside attributes or tags.
  * Idempotent per call site (callers re-render from source before re-applying).
  */
@@ -214,7 +214,7 @@ export function highlightDomText(root: HTMLElement, hits: DetectionHit[]): numbe
   if (!re) return 0;
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
     acceptNode: (node) =>
-      // Never descend into our own marks (idempotence) — or scripts/styles,
+      // Never descend into our own marks (idempotence) - or scripts/styles,
       // which the sanitizer forbids anyway (belt and braces).
       node.parentElement?.closest("mark[data-quon-hit], script, style")
         ? NodeFilter.FILTER_REJECT
@@ -249,14 +249,14 @@ export function highlightDomText(root: HTMLElement, hits: DetectionHit[]): numbe
 /**
  * Can detection marks be placed on this page at all?
  *
- * A PDF page whose text layer is too thin is a SCAN: its text exists only
+ * A PDF page whose text layer is too thin is a scan: its text exists only
  * because OCR produced it, and OCR positions are discarded during extraction, so
  * there is nowhere to put a rect. Distinguishing this from "the filter found
- * nothing here" is the whole point — conflating them made a scanned document
+ * nothing here" is the whole point - conflating them made a scanned document
  * render a clean, unmarked page in Original view while Text view showed every
  * hit, with nothing telling the user why.
  *
- * ⚠️ Uses the SAME threshold that decided the text came from OCR in the first
+ * Uses the same threshold that decided the text came from OCR in the first
  * place (`pageNeedsOcr`). A naive "does any text item exist?" test is wrong: a
  * scan carrying a header stamp or a page number would pass it, and the page would
  * again render clean with no explanation.

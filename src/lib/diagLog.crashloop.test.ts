@@ -3,9 +3,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 /**
  * The crash-loop counter behind safe mode (deviceClass.ts).
  *
- * The iPhone reports (#68, #76) were exactly this shape: a boot, the page
- * killed within seconds, a boot, killed again — for days. Each boot must know
- * that it is the Nth in a row, and a session that lives must reset the count.
+ * An iPhone crash loop has exactly this shape: a boot, the page killed within
+ * seconds, a boot, killed again - for days. Each boot must know that it is the
+ * Nth in a row, and a session that lives must reset the count.
  * installDiagCapture() is once-per-module, so every case imports a fresh module.
  */
 
@@ -62,20 +62,20 @@ async function boot() {
 }
 
 describe("crash-loop counter", () => {
-  it("a clean previous session → 0", async () => {
+  it("a clean previous session -> 0", async () => {
     const mod = await boot();
     expect(mod.crashLoopCount()).toBe(0);
     expect(storage.getItem(LOOP_KEY)).toBeNull();
   });
 
-  it("one short unclean session → 1 (not yet a loop — could be a force-close)", async () => {
+  it("one short unclean session -> 1 (not yet a loop: could be a force-close)", async () => {
     previousSession(1_000_000, 1_000_000 + 12_000);
     const mod = await boot();
     expect(mod.crashLoopCount()).toBe(1);
     expect(storage.getItem(LOG_KEY)).not.toContain("crash loop");
   });
 
-  it("the second short unclean boot in a row → 2, and the log says safe mode", async () => {
+  it("the second short unclean boot in a row -> 2, and the log says safe mode", async () => {
     storage.setItem(LOOP_KEY, "1");
     previousSession(2_000_000, 2_000_000 + 15_000);
     const mod = await boot();
@@ -84,7 +84,7 @@ describe("crash-loop counter", () => {
     expect(storage.getItem(LOG_KEY)).toContain("Schonmodus");
   });
 
-  it("an unclean session that LIVED (past 90 s) breaks the loop → 0", async () => {
+  it("an unclean session that LIVED (past 90 s) breaks the loop -> 0", async () => {
     storage.setItem(LOOP_KEY, "3");
     previousSession(3_000_000, 3_000_000 + 10 * 60_000);
     const mod = await boot();
@@ -97,10 +97,10 @@ describe("crash-loop counter", () => {
     previousSession(4_000_000, 4_000_000 + 5_000);
     const mod = await boot();
     expect(mod.crashLoopCount()).toBe(2);
-    // Heartbeats tick; before 90 s the count stands…
+    // Heartbeats tick; before 90 s the count stands...
     vi.advanceTimersByTime(60_000);
     expect(storage.getItem(LOOP_KEY)).toBe("2");
-    // …after it, this boot proved stable and the next boot starts clean.
+    // ...after it, this boot proved stable and the next boot starts clean.
     vi.advanceTimersByTime(40_000);
     expect(storage.getItem(LOOP_KEY)).toBeNull();
   });

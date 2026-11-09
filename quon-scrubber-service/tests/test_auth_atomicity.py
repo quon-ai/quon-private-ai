@@ -1,9 +1,9 @@
 """Multi-statement auth writes are atomic (db.transaction).
 
 register() inserts a ``users`` row and its ``user_keys`` row. If a failure lands
-between them, a ``users`` row with no key material would be orphaned — and
+between them, a ``users`` row with no key material would be orphaned - and
 /auth/login treats a user with no ``user_keys`` as nonexistent, so the account is
-wedged forever. Wrapping the pair in db.transaction() must roll BOTH back.
+wedged forever. Wrapping the pair in db.transaction() must roll both back.
 """
 
 from __future__ import annotations
@@ -16,7 +16,7 @@ from conftest import register_body
 
 
 class _FailOnUserKeys:
-    """Connection proxy that raises on the user_keys INSERT — a crash landing
+    """Connection proxy that raises on the user_keys INSERT - a crash landing
     exactly between register()'s two writes."""
 
     def __init__(self, conn):
@@ -48,7 +48,7 @@ def test_register_rolls_back_users_when_user_keys_write_fails(quon_client, monke
     resp = observer.post("/auth/register", json=register_body("atomic@x.de"))
     assert resp.status_code >= 500  # the user_keys write failed
 
-    # The users row must have rolled back WITH the failed user_keys row — no orphan
+    # The users row must have rolled back with the failed user_keys row - no orphan
     # (else the account would exist but be un-loginable forever).
     monkeypatch.setattr(db_mod, "transaction", orig_transaction)
     with db_mod.get_conn() as c:

@@ -8,13 +8,13 @@ import tseslint from "typescript-eslint";
 export default tseslint.config(
   // `.venv/**` keeps `eslint .` from linting bundled JS inside the Python
   // scrubber's virtualenv (e.g. coverage's HTML assets when pytest-cov is
-  // installed) — third-party files that would otherwise flood lint with errors.
+  // installed) - third-party files that would otherwise flood lint with errors.
   // `public/ort/**` is the vendored ONNX Runtime WASM (copied from node_modules
-  // by scripts/copy-ort.mjs) — minified third-party glue, not our source.
+  // by scripts/copy-ort.mjs) - minified third-party glue, not our source.
   {
     // src-tauri/target is Rust's build dir: it contains GENERATED JS (Tauri's
     // api-iife bundles) and binary-ish codegen assets that eslint tries to
-    // parse. Same class as the .venv exclusion — never our source.
+    // parse. Same class as the .venv exclusion - never our source.
     ignores: [
       "dist",
       ".output",
@@ -24,10 +24,6 @@ export default tseslint.config(
       "tests/e2e/.models/**",
       "src-tauri/target/**",
       "src-tauri/gen/**",
-      // Agent worktrees under .claude/ carry their own checkout INCLUDING a
-      // built dist/ — "dist" above is root-relative and doesn't reach them, so
-      // the gate was failing on bundled build output that is nobody's source.
-      ".claude/**",
     ],
   },
   {

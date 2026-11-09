@@ -2,8 +2,8 @@
  * Observable status for the zero-knowledge collection sync.
  *
  * Why this exists: sync used to be completely invisible. `createCollectionSync`
- * returned `{start, stop}` and nothing else — no busy flag, no counters, no
- * error state — so a push that failed was indistinguishable from a push that
+ * returned `{start, stop}` and nothing else - no busy flag, no counters, no
+ * error state - so a push that failed was indistinguishable from a push that
  * never needed to happen. The failure mode that motivated this: the relay
  * rejects a blob over 4 MiB with a *whole-batch* 413, and the client caught it
  * with a bare `catch` that re-queued everything. One oversized chat therefore
@@ -11,12 +11,12 @@
  * no console line and no UI. Users experienced that as "sync is slow".
  *
  * Two things are reported here, and they are deliberately different in kind:
- *  - **progress** (`busy` / `done` / `total`) — transient, answers "is it still
+ *  - **progress** (`busy` / `done` / `total`) - transient, answers "is it still
  *    running?" during the long initial reconcile push.
- *  - **blocked** — durable, answers "this will never sync until you act". A
- *    blocked blob is NOT retried (that was the wedge); it is surfaced instead.
+ *  - **blocked** - durable, answers "this will never sync until you act". A
+ *    blocked blob is not retried (that was the wedge); it is surfaced instead.
  *
- * Module-level snapshot + subscribe, matching `originalSync.ts` — the snapshot
+ * Module-level snapshot + subscribe, matching `originalSync.ts` - the snapshot
  * reference is stable between changes so `useSyncExternalStore` doesn't loop.
  */
 
@@ -83,7 +83,7 @@ function recompute(): void {
         )
       : EMPTY_BLOCKED,
   };
-  // Skip the notify when nothing observable moved — a pull loop that applies
+  // Skip the notify when nothing observable moved - a pull loop that applies
   // hundreds of blobs would otherwise re-render the shell once per blob.
   if (
     next.busy === status.busy &&
@@ -127,7 +127,7 @@ export function reportSyncBlocked(b: SyncBlocked): void {
   recompute();
 }
 
-/** Clear a quarantine — the item shrank back under the cap, or was deleted. */
+/** Clear a quarantine - the item shrank back under the cap, or was deleted. */
 export function clearSyncBlocked(collection: string, id: string): void {
   if (blocked.delete(`${collection}/${id}`)) recompute();
 }
@@ -141,7 +141,7 @@ export function resetSyncStatus(): void {
   for (const l of listeners) l();
 }
 
-/** Stable snapshot — useSyncExternalStore-compatible. */
+/** Stable snapshot - useSyncExternalStore-compatible. */
 export function getSyncStatus(): SyncStatus {
   return status;
 }

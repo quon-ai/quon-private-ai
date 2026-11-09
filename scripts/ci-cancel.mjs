@@ -1,24 +1,23 @@
 #!/usr/bin/env node
 /**
- * Cancel CI runs — and actually cancel them.
+ * Cancel CI runs - and actually cancel them.
  *
- * ⚠️ `gh run cancel <id>` is a SILENT NO-OP on a QUEUED run. It returns
+ * `gh run cancel <id>` is a silent no-op on a queued run. It returns
  * "Request to cancel workflow submitted", exits 0, and the run keeps sitting in
  * the queue holding the single self-hosted runner. Only
- * `POST /actions/runs/{id}/force-cancel` moves a run that has not started. That
- * cost a round on 2026-09-04, and the failure mode is the worst kind: the tool
- * reports success and nothing happens.
+ * `POST /actions/runs/{id}/force-cancel` moves a run that has not started. The
+ * failure mode is the worst kind: the tool reports success and nothing happens.
  *
- * So: this picks the endpoint from the run's ACTUAL status, and re-reads the
+ * So: this picks the endpoint from the run's actual status, and re-reads the
  * status afterwards instead of trusting the API's acknowledgement. It reports
  * what it observed, not what it asked for.
  *
  * Usage:
- *   npm run ci:cancel -- 32470031780 [more ids…]
+ *   npm run ci:cancel -- 32470031780 [more ids...]
  *   npm run ci:cancel -- --queued            # every queued run (the pile-up)
  *   npm run ci:cancel -- --queued --keep main
  *
- * Auth: GH_TOKEN, else `gh auth token` — same as ci-status.mjs.
+ * Auth: GH_TOKEN, else `gh auth token` - same as ci-status.mjs.
  */
 import { execFileSync } from "node:child_process";
 
@@ -49,7 +48,7 @@ const api = async (path, method = "GET") => {
     method,
     headers: { authorization: `Bearer ${token}`, accept: "application/vnd.github+json" },
   });
-  // 409 from force-cancel means "not in a cancellable state" — usually already
+  // 409 from force-cancel means "not in a cancellable state" - usually already
   // finished. That is information, not a crash.
   if (!r.ok && r.status !== 409) throw new Error(`GitHub API ${r.status} ${method} ${path}`);
   return { status: r.status, body: r.status === 204 || method !== "GET" ? null : await r.json() };
@@ -80,17 +79,17 @@ for (const t of targets) {
     continue;
   }
 
-  // SAY WHAT IS ABOUT TO DIE, BEFORE IT DIES. On 2026-09-04 this script was
-  // pointed at an id taken from `gh run list --limit 1` on the assumption it
-  // was finished; it was in_progress, and 45 minutes of E2E went with it. The
-  // label printed after the fact is no use to whoever is reading the scroll.
+  // Say what is about to die, before it dies. An id taken from `gh run list`
+  // on the assumption that it is finished may be in_progress, and 45 minutes
+  // of E2E go with it; a label printed after the fact is no use to whoever is
+  // reading the scroll.
   console.log(`  ${label} — ${before.status}; cancelling …`);
 
   // A queued run has no job to interrupt, so the polite endpoint does nothing.
   const endpoint = before.status === "queued" ? "force-cancel" : "cancel";
   await api(`actions/runs/${t.id}/${endpoint}`, "POST");
 
-  // TRUST THE STATUS, NOT THE ACKNOWLEDGEMENT. This whole script exists because
+  // Trust the status, not the acknowledgement. This whole script exists because
   // an accepted request and a cancelled run are different things.
   let after = before;
   for (let i = 0; i < 6; i++) {

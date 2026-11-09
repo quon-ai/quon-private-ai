@@ -32,7 +32,7 @@ def _row(user_id: str) -> dict | None:
             row = c.execute("SELECT * FROM user_settings WHERE user_id=?", (user_id,)).fetchone()
     except sqlite3.OperationalError:
         # The overlay table isn't there yet (fresh DB before migration 0009, or a
-        # stateless detection-only test). The overlay is optional → treat as "no
+        # stateless detection-only test). The overlay is optional -> treat as "no
         # override" and fall back to the operator's global default (a safe value,
         # never an attacker's). Real requests run against a migrated DB.
         return None
@@ -74,7 +74,7 @@ def get_openrouter_key(user_id: str | None) -> str | None:
 
 
 def has_openrouter_key(user_id: str | None) -> bool:
-    """Whether this user has an own-key override stored (presence only — the
+    """Whether this user has an own-key override stored (presence only - the
     settings screen shows a "remove" control for it; the key never leaves)."""
     row = _row(user_id) if user_id else None
     return bool(row and row["openrouter_key_cipher"])

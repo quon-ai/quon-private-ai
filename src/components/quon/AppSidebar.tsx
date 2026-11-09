@@ -91,7 +91,7 @@ const items = [
 /** Core entries, then the optional features' entries (features.ts). */
 const navItems = [...items, ...OPTIONAL_NAV] as const;
 
-/** Operator-only entry — appended after the main items when me.role==='admin'
+/** Operator-only entry - appended after the main items when me.role==='admin'
  *  (the server enforces the role on every /admin call; this is visibility). */
 const adminItem = {
   titleKey: "nav.admin",
@@ -102,7 +102,7 @@ const adminItem = {
 
 const colorHex = (c?: ProjectColor) => PROJECT_COLOR_HEX[c ?? "indigo"];
 
-/** Text with search matches marked — same yellow marker as the chat's PII highlight. */
+/** Text with search matches marked - same yellow marker as the chat's PII highlight. */
 function MarkedText({ text, highlights }: { text: string; highlights: HighlightRange[] }) {
   return (
     <>
@@ -182,7 +182,7 @@ export function AppSidebar() {
   const deletingSession = history.find((s) => s.id === deleteId);
 
   // Full-text chat search. Runs entirely over the decrypted in-memory history
-  // (zero-knowledge — nothing leaves the device). The raw input is debounced
+  // (zero-knowledge - nothing leaves the device). The raw input is debounced
   // into `searchQuery` so we don't re-scan every session on each keystroke.
   const [searchInput, setSearchInput] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -208,7 +208,7 @@ export function AppSidebar() {
 
   function newChat() {
     closeSidebar();
-    markExplicitNewChat(); // real "+" — must beat a pending self-nav (see chatNav.ts)
+    markExplicitNewChat(); // real "+" - must beat a pending self-nav (see chatNav.ts)
     navigate({ to: "/chat", search: {} });
   }
 
@@ -420,7 +420,7 @@ export function AppSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
 
-          {/* Chat search — filters titles + message contents, all client-side */}
+          {/* Chat search - filters titles + message contents, all client-side */}
           <SidebarGroup className="py-0 group-data-[collapsible=icon]:hidden">
             <SidebarGroupContent className="relative">
               <Search className="pointer-events-none absolute top-1/2 left-2 h-3.5 w-3.5 -translate-y-1/2 text-quon-muted" />
@@ -446,7 +446,7 @@ export function AppSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
 
-          {/* Search results — replace the project groups + Recents while active */}
+          {/* Search results - replace the project groups + Recents while active */}
           {searching && (
             <SidebarGroup className="group-data-[collapsible=icon]:hidden">
               <SidebarGroupLabel>{t("nav.results")}</SidebarGroupLabel>
@@ -462,7 +462,7 @@ export function AppSidebar() {
             </SidebarGroup>
           )}
 
-          {/* Project groups — collapsed by default, expandable; each
+          {/* Project groups - collapsed by default, expandable; each
               collapsible-icon-hidden, like Recents */}
           {!searching &&
             groups.map(({ project, chats }) => {
@@ -508,8 +508,8 @@ export function AppSidebar() {
                     </div>
                     {/* Quick "new chat in this project". Always visible (but subtle,
                         opacity-60) so it isn't a hover-only affordance a user could
-                        miss — full opacity on hover/focus. Mobile gets the same
-                        ≥32px tap target around the tiny icon. */}
+                        miss - full opacity on hover/focus. Mobile gets the same
+                        >=32px tap target around the tiny icon. */}
                     <button
                       onClick={() => newChatInProject(project.id)}
                       aria-label={t("nav.newChatInProject", { name: project.name })}

@@ -3,7 +3,7 @@
 
 -- 'user' | 'admin'. The first account registered on a fresh instance becomes
 -- admin (auth.register); existing instances promote via the ADMIN_TOKEN
--- break-glass endpoint. Admin grants METADATA-level management only — the
+-- break-glass endpoint. Admin grants METADATA-level management only - the
 -- zero-knowledge model is unchanged (no role can read user content).
 ALTER TABLE users ADD COLUMN role TEXT NOT NULL DEFAULT 'user';
 
@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS invites (
 
 -- Per-user entitlement OVERRIDES. NULL field = use the instance default
 -- (config: openrouter_user_limit_usd / originals_quota_bytes). Resolution
--- lives in entitlements.py — the single seam a future subscription plan
+-- lives in entitlements.py - the single seam a future subscription plan
 -- feeds into.
 CREATE TABLE IF NOT EXISTS user_entitlements (
     user_id       TEXT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,

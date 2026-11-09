@@ -26,29 +26,29 @@ test("sidebar search finds a chat by message content, highlights + navigates, cl
   await login(page, sharedCreds());
   await openChat(page);
 
-  // A word unique to THIS run so the serial shared account can't match older chats.
+  // A word unique to this run so the serial shared account can't match older chats.
   const needle = `zappelphilipp${Date.now()}`;
   await box(page).fill(`Notiz mit ${needle} drin`);
   await clickSend(page);
   await expect(page.locator("main").getByText("ok").last()).toBeVisible({ timeout: 30_000 });
 
-  // Type the word into the sidebar search box → a result row appears with the
+  // Type the word into the sidebar search box -> a result row appears with the
   // matching snippet, and the match itself is wrapped in a highlight span.
   const search = page.getByPlaceholder("Search chats");
   await search.fill(needle);
   await expect(page.getByText("Results")).toBeVisible({ timeout: 10_000 });
   const hitLink = page.getByRole("link").filter({ hasText: needle });
   await expect(hitLink).toBeVisible({ timeout: 10_000 });
-  // The match is rendered inside a marked (highlighted) segment, not plain text —
+  // The match is rendered inside a marked (highlighted) segment, not plain text -
   // the ring class is the tell (MarkedText wraps hits in a ring-quon-yellow span).
   await expect(hitLink.locator("span[class*='ring-quon-yellow']").first()).toBeVisible();
 
-  // Clicking the result navigates to that chat (…?c=<id>) and the message is shown.
+  // Clicking the result navigates to that chat (...?c=<id>) and the message is shown.
   await hitLink.click();
   await expect(page).toHaveURL(/\/chat\?c=/, { timeout: 10_000 });
   await expect(page.locator("main").getByText(needle, { exact: false })).toBeVisible();
 
-  // Escape in the search box clears it — the Results group disappears.
+  // Escape in the search box clears it - the Results group disappears.
   await search.fill(needle);
   await expect(page.getByText("Results")).toBeVisible();
   await search.press("Escape");

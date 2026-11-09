@@ -53,7 +53,7 @@ const PRESENTATION: Record<
 export function StatusIndicator({ compact = false }: { compact?: boolean }) {
   const { t } = useT();
   const { status, health } = useQuonHealth();
-  // Show the badge ONLY when there is something to act on — the scrubber is
+  // Show the badge only when there is something to act on - the scrubber is
   // unreachable ("offline") or degraded ("fallback"). The healthy "QUON aktiv"
   // (and the brief "loading") states are visual noise, so they render nothing.
   if (status === "active" || status === "loading") return null;

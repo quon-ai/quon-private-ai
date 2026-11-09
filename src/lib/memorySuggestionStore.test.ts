@@ -76,7 +76,7 @@ describe("sweep cursors", () => {
   });
 });
 
-describe("queue cap (P5 — MAX_SUGGESTIONS_PER_SCOPE)", () => {
+describe("queue cap (P5: MAX_SUGGESTIONS_PER_SCOPE)", () => {
   it("drops the OLDEST plain 'create' suggestions first when a scope goes over the cap", () => {
     const list = Array.from({ length: MAX_SUGGESTIONS_PER_SCOPE + 5 }, (_, i) =>
       sug(`c${i}`, { createdAt: i, mode: "create" }),
@@ -91,7 +91,7 @@ describe("queue cap (P5 — MAX_SUGGESTIONS_PER_SCOPE)", () => {
   });
 
   it("drops 'create' suggestions before ever touching 'update'/'merge' ones", () => {
-    // One very old "update" suggestion plus enough "create"s to blow the cap —
+    // One very old "update" suggestion plus enough "create"s to blow the cap -
     // the update must survive even though it's the single oldest item overall.
     const updateSug = sug("keep-me", { createdAt: -1, mode: "update", targetId: "t1" });
     const creates = Array.from({ length: MAX_SUGGESTIONS_PER_SCOPE + 3 }, (_, i) =>

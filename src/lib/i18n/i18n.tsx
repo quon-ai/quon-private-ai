@@ -1,10 +1,10 @@
 /**
  * Tiny, dependency-free i18n for QUON (DE/EN). A typed catalog lookup with
- * `{param}` interpolation and a one/other plural helper — no ICU, no library,
+ * `{param}` interpolation and a one/other plural helper - no ICU, no library,
  * consistent with the codebase's hand-rolled utilities. Two languages only.
  *
  * The active language is provided by LangProvider, seeded server-side from the
- * `quon_lang` cookie (src/server.ts → router → __root) so SSR and the first
+ * `quon_lang` cookie (src/server.ts -> router -> __root) so SSR and the first
  * client paint agree. `setLang` switches at runtime (Settings / registration)
  * and persists via langPref.
  */
@@ -55,7 +55,7 @@ const I18nContext = createContext<I18n | null>(null);
 // Client-only bridge so non-React code (authStore, when it adopts the account's
 // stored language on login/me) can switch the live UI language. Registered by
 // the mounted provider; never invoked during SSR (no login happens there), so
-// module-level state here is safe — it's only ever touched in the browser.
+// module-level state here is safe - it's only ever touched in the browser.
 let liveSetLang: ((lang: Lang) => void) | null = null;
 
 /** Adopt a language from outside React (e.g. authStore after login/me). Persists
@@ -127,7 +127,7 @@ export function tr(key: MessageKey, params?: Params): string {
 /** Isomorphic initial language for the root render: on the SERVER, the
  *  cookie-derived value handed over by src/server.ts (globalThis handshake,
  *  same pattern as the CSP nonce); on the CLIENT, the device pref (which reads
- *  the same cookie), so SSR and hydration agree — no flash, no mismatch. */
+ *  the same cookie), so SSR and hydration agree - no flash, no mismatch. */
 export function resolveInitialLang(): Lang {
   const ssr = (globalThis as { __quonLang?: () => Lang | undefined }).__quonLang?.();
   return ssr ?? clientInitialLang();

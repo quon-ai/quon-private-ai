@@ -11,10 +11,10 @@ import re
 from typing import Literal, TypedDict
 
 Policy = Literal["strict_private", "public_ok", "amount_debate", "unmarked_secret"]
-#: "unmarked_secret" — a secret that carries NO marker of being one: no vendor
-#: prefix ("sk-…", "ghp_…", "AKIA…"), no NAME=VALUE assignment, nothing but a
-#: high-entropy string sitting in a sentence. Declared OUT OF SCOPE on 2026-08-20
-#: by the operator, and the reasoning is about the DATA, not about our detector:
+#: "unmarked_secret" - a secret that carries no marker of being one: no vendor
+#: prefix ("sk-...", "ghp_...", "AKIA..."), no NAME=value assignment, nothing but a
+#: high-entropy string sitting in a sentence. Declared out of scope, and the
+#: reasoning is about the data, not about our detector:
 #: "P@ss5248word" is not distinguishable from a product code, an order reference
 #: or a model name without a marker, so any rule that caught it would be guessing,
 #: and would fire on ordinary text. A MARKED secret stays fully in scope and is

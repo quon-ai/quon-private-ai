@@ -9,10 +9,10 @@ import {
 } from "./memorySuggestionStore";
 
 /**
- * Reported 2026-08-04: a sweep reported "29 suggestions to review", the user
- * pressed the only button in reach, and the message became "Nothing new to
- * learn". The suggestions were never lost — the count that tells the UI they
- * are still waiting simply did not exist. This pins that count.
+ * The failure this pins: a sweep announces "29 suggestions to review", the user
+ * presses the only button in reach, and the message becomes "Nothing new to
+ * learn". The suggestions are not lost; without a count of what is still
+ * waiting the UI simply cannot say so.
  */
 
 const sug = (over: Partial<MemorySuggestion> = {}): MemorySuggestion =>
@@ -37,7 +37,7 @@ describe("countSuggestionsInScope", () => {
     ]);
     expect(countSuggestionsInScope("finanzen")).toBe(2);
     expect(countSuggestionsInScope("gesundheit")).toBe(1);
-    // Strict, like the sweep: the global pool is NOT "everything".
+    // Strict, like the sweep: the global pool is not "everything".
     expect(countSuggestionsInScope(undefined)).toBe(1);
   });
 
@@ -46,7 +46,7 @@ describe("countSuggestionsInScope", () => {
   });
 
   it("attributes a suggestion to the sweep that produced it", () => {
-    // Otherwise both "Learn from…" buttons advertise the same queue and the
+    // Otherwise both "Learn from..." buttons advertise the same queue and the
     // documents button takes credit for facts mined from chats.
     addMemorySuggestions([
       sug({ projectId: "p", sourceSessionId: "s1" }),
@@ -56,7 +56,7 @@ describe("countSuggestionsInScope", () => {
     ]);
     expect(countSuggestionsInScope("p", "chats")).toBe(1);
     expect(countSuggestionsInScope("p", "documents")).toBe(2);
-    // Without a kind, everything in scope — including the manual one.
+    // Without a kind, everything in scope - including the manual one.
     expect(countSuggestionsInScope("p")).toBe(4);
   });
 

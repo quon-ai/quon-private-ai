@@ -17,8 +17,8 @@ os.environ["COOKIE_SECURE"] = "false"               # http localhost
 os.environ["APP_BASE_URL"] = "http://localhost:8080"  # verify links -> local frontend
 os.environ["CORS_ALLOW_ORIGINS"] = "*"
 os.environ["DATABASE_PATH"] = "quon.db"
-os.environ["OPENROUTER_PROVISIONING_KEY"] = ""       # provisioning OFF -> BYOK/global key
-os.environ["SMTP_HOST"] = ""                          # email OFF -> verify links logged
+os.environ["OPENROUTER_PROVISIONING_KEY"] = ""       # provisioning off -> BYOK/global key
+os.environ["SMTP_HOST"] = ""                          # email off -> verify links logged
 
 import uvicorn
 

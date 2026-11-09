@@ -1,7 +1,7 @@
 /**
  * One-shot handoff for a message typed on the dashboard and sent in the chat.
  *
- * Deliberately module state, NOT a URL search param: a `?q=…` that auto-sends
+ * Deliberately module state, not a URL search param: a `?q=...` that auto-sends
  * would let a crafted link put words in the user's chat, spend their AI budget
  * and leave the answer in their history. A memory handoff can only be set by
  * code the user is already running, so the dashboard composer works and a link
@@ -18,7 +18,7 @@ export function setPendingChatMessage(text: string): void {
   pending = trimmed ? trimmed : null;
 }
 
-/** Read AND clear — the message may only ever be sent once. */
+/** Read AND clear - the message may only ever be sent once. */
 export function takePendingChatMessage(): string | null {
   const out = pending;
   pending = null;

@@ -1,6 +1,6 @@
 """/chat/stream SSE heartbeats: while the provider is silent (router/meta models
 like openrouter/fusion "think" for minutes between tokens), the endpoint must
-keep the CLIENT leg alive with SSE comments — idle streamed responses are cut
+keep the CLIENT leg alive with SSE comments - idle streamed responses are cut
 by proxies (Cloudflare after ~100 s of no bytes), which surfaced as
 "Verbindung verloren" mid-answer on fusion."""
 
@@ -16,8 +16,8 @@ from conftest import make_active_user
 
 
 def _events(raw: str) -> list[dict]:
-    """Content events only. The stream now opens with a {"job": …} announcement
-    (resumable streams, stream_jobs.py) — that line is the resume handle, not
+    """Content events only. The stream now opens with a {"job": ...} announcement
+    (resumable streams, stream_jobs.py) - that line is the resume handle, not
     part of the answer, so it is filtered out here."""
     out = []
     for line in raw.split("\n"):
@@ -54,19 +54,19 @@ def test_heartbeat_comments_flow_while_the_provider_is_silent(quon_client, monke
 
     def slow_then_delta(*a, **k):
         async def gen():
-            await asyncio.sleep(0.3)  # ≫ heartbeat interval — the "thinking" phase
+            await asyncio.sleep(0.3)  # heartbeat interval - the "thinking" phase
             yield "Hallo"
 
         return gen()
 
     raw = _stream(quon_client, h, monkeypatch, slow_then_delta)
-    # At least one keep-alive comment was emitted BEFORE the first CONTENT event
+    # At least one keep-alive comment was emitted before the first CONTENT event
     # (the job announcement goes out immediately, ahead of any heartbeat).
     first_ping = raw.find(": ping")
     first_content = raw.find('data: {"delta"')
     assert first_ping != -1, raw
     assert first_ping < first_content
-    # …and the payload still parses to the delta + done, unchanged.
+    # ...and the payload still parses to the delta + done, unchanged.
     assert _events(raw) == [{"delta": "Hallo"}, {"done": True}]
     assert _job_id(raw), "every stream must name its resume job"
 

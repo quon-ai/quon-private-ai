@@ -1,11 +1,11 @@
 """Authentication: accounts, email verification, sessions, CSRF.
 
-Zero-knowledge by construction — the server only ever receives:
-  * ``authToken``        — a high-entropy value the client derives from the
+Zero-knowledge by construction - the server only ever receives:
+  * ``authToken``        - a high-entropy value the client derives from the
                            password; stored only as a salted Argon2id verifier.
-  * ``wrap_pw``/``wrap_rec`` — the Master Key doubly wrapped (password + recovery
+  * ``wrap_pw``/``wrap_rec`` - the Master Key doubly wrapped (password + recovery
                            phrase). The server cannot unwrap either.
-  * ``kdf_salt``/``kdf_params``/``rec_salt`` — public KDF parameters.
+  * ``kdf_salt``/``kdf_params``/``rec_salt`` - public KDF parameters.
 
 It never sees the password, the recovery phrase, or the Master Key. Login returns
 the password-wrapped Master Key so the client can unlock it locally.
@@ -71,7 +71,7 @@ def _identity_fields(row) -> dict:
 
 # --- request / response models -------------------------------------------
 def _norm_lang(value: str | None) -> str | None:
-    """'de'/'en' or None — the only accepted UI-language values."""
+    """'de'/'en' or None - the only accepted UI-language values."""
     return value if value in ("de", "en") else None
 
 
@@ -82,7 +82,7 @@ class RegisterRequest(BaseModel):
     language: str = ""  # chosen UI language 'de'|'en' (stored + used for the verify email)
     auth_token: str  # base64, high-entropy, derived client-side from password
     kdf_salt: str  # base64
-    kdf_params: dict  # {alg, ops, mem, v} — the client's DEFAULT_KDF shape
+    kdf_params: dict  # {alg, ops, mem, v} - the client's DEFAULT_KDF shape
     wrap_pw: str  # base64, nonce||secretbox(MK) under password-derived key
     rec_salt: str  # base64
     wrap_rec: str  # base64, nonce||secretbox(MK) under recovery-derived key
@@ -112,19 +112,19 @@ class MeResponse(BaseModel):
     id: str
     email: str
     status: str
-    # 'user' | 'admin' — gates the /admin UI client-side (server re-checks on
+    # 'user' | 'admin' - gates the /admin UI client-side (server re-checks on
     # every admin endpoint). Defaults 'user' so fake-success/anti-enumeration
     # responses never leak anything.
     role: str = "user"
     # True exactly once: the account was verified but has never yet driven the
     # client onboarding flow to completion/skip. Flipped False the moment
-    # /auth/verify activates the account (see verify() below) — that is the one
+    # /auth/verify activates the account (see verify() below) - that is the one
     # unambiguous server-observable "brand new" event; defaults False so every
     # other response site (register/login/me/reset/change-*) is unaffected.
     onboarding_pending: bool = False
     # Shared-projects identity keypair (X25519, client-generated; see
     # POST /auth/identity). b64, or None until the client sets it. Populated on
-    # login and /auth/me — the two session (re)establishment points — and by
+    # login and /auth/me - the two session (re)establishment points - and by
     # /auth/identity itself; every other response site defaults to None.
     identity_pub: str | None = None
     identity_priv_wrapped: str | None = None
@@ -149,9 +149,9 @@ class User:
     role: str = "user"
 
 
-# Anti-enumeration dummy KDF params for unknown emails. MUST mirror the client's
+# Anti-enumeration dummy KDF params for unknown emails. Must mirror the client's
 # DEFAULT_KDF shape in src/lib/crypto/quonCrypto.ts exactly (same keys, same
-# values) — a differing key set would let /auth/kdf reveal whether an account
+# values) - a differing key set would let /auth/kdf reveal whether an account
 # exists.
 _DEFAULT_KDF_PARAMS = {"alg": "argon2id", "ops": 3, "mem": 67108864, "v": 1}
 
@@ -176,7 +176,7 @@ def _dummy_verify(auth_token: bytes) -> None:
 def sweep_expired() -> tuple[int, int]:
     """Delete expired sessions and spent/expired email tokens.
 
-    Nothing functional depends on this — expiry is always re-checked at use —
+    Nothing functional depends on this - expiry is always re-checked at use - 
     but without it both tables grow forever (every login is a session row,
     every signup/reset an email token). Called periodically from the app
     lifespan. Returns ``(sessions_deleted, tokens_deleted)`` for logging.
@@ -188,7 +188,7 @@ def sweep_expired() -> tuple[int, int]:
             "DELETE FROM email_tokens WHERE expires_at < ? OR used_at IS NOT NULL", (now,)
         ).rowcount
         # Shared-project invites follow the same single-use/expiry lifecycle as
-        # email tokens — sweep them together (counted with `tokens`).
+        # email tokens - sweep them together (counted with `tokens`).
         tokens += c.execute(
             "DELETE FROM share_invites WHERE expires_at < ? OR used_at IS NOT NULL", (now,)
         ).rowcount
@@ -346,7 +346,7 @@ def _consume_single_use_invite(code: str) -> bool:
 async def register(body: RegisterRequest) -> MeResponse:
     """Create a pending account + store wrapped key material; send verify email."""
     # Closed-beta gate: when a static invite code is configured, registration
-    # requires it — OR a valid single-use invite (admin-issued, invites table).
+    # requires it - OR a valid single-use invite (admin-issued, invites table).
     # The single-use invite is validated + consumed up front, before any email
     # branching, so a consumed invite can't be probed to learn whether an email
     # was already registered (anti-enumeration parity across all branches).
@@ -373,12 +373,12 @@ async def register(body: RegisterRequest) -> MeResponse:
     now = db.now_ms()
     # Record which Nutzungsvereinbarung the user accepted (proof of consent =
     # version + timestamp). The checkbox in the client gates the request; here we
-    # just persist what was accepted. Empty version → no acceptance recorded.
+    # just persist what was accepted. Empty version -> no acceptance recorded.
     terms_version = body.terms_version.strip() or None
     terms_at = now if terms_version else None
     lang = _norm_lang(body.language)  # chosen UI language, stored + used for the verify email
 
-    # transaction(): the users + user_keys writes must land together — a crash or
+    # transaction(): the users + user_keys writes must land together - a crash or
     # race between them would orphan a users row with no key material, wedging the
     # account (login treats it as nonexistent). BEGIN is deferred, so the early
     # anti-enumeration return below holds no write lock.
@@ -388,15 +388,15 @@ async def register(body: RegisterRequest) -> MeResponse:
             # Anti-enumeration: an already-ACTIVE account must be indistinguishable
             # from a fresh signup. Touch nothing (no user/key rows, no verify
             # token); notify the real owner instead, and return a fake pending
-            # response — like a fresh signup, exactly one email goes out.
+            # response - like a fresh signup, exactly one email goes out.
             if existing["status"] == "active":
                 if not settings.email_verification_required:
-                    # No verification ⇒ no inbox to notify and no fake-pending
+                    # No verification => no inbox to notify and no fake-pending
                     # dance; the honest answer is the useful one here.
                     raise HTTPException(status_code=409, detail="An account with this email already exists.")
                 email_service.send_already_registered(email)
                 return MeResponse(id=str(uuid.uuid4()), email=email, status="pending")
-            # Allow re-sending verification for a still-pending signup — in the
+            # Allow re-sending verification for a still-pending signup - in the
             # MAIL flow only. Without verification, replacing the credentials
             # would hand the pending account (and its role) to whoever asks.
             if not settings.email_verification_required:
@@ -415,7 +415,7 @@ async def register(body: RegisterRequest) -> MeResponse:
             )
         else:
             # Self-hoster bootstrap: the very first account on a fresh instance
-            # is the operator — it gets the admin role. Everyone after is 'user'
+            # is the operator - it gets the admin role. Everyone after is 'user'
             # (promotion via the ADMIN_TOKEN break-glass or an existing admin).
             any_user = c.execute("SELECT 1 FROM users LIMIT 1").fetchone()
             role = "user" if any_user else "admin"
@@ -441,7 +441,7 @@ async def register(body: RegisterRequest) -> MeResponse:
 
 async def _activate_without_verification(user_id: str, email: str) -> MeResponse:
     """EMAIL_VERIFICATION=auto without SMTP, or "off": do what /auth/verify
-    would have done, minus the token — provision first (fails closed, exactly
+    would have done, minus the token - provision first (fails closed, exactly
     like verify), then activate. No session is started: the client holds the
     password and signs in, which is also what derives its keys."""
     if openrouter_provisioning.is_enabled():
@@ -449,7 +449,7 @@ async def _activate_without_verification(user_id: str, email: str) -> MeResponse
             await openrouter_provisioning.ensure_user_key(user_id)
         except openrouter_provisioning.ProvisioningError as exc:
             logger.error("provisioning failed for user %s: %s", user_id, exc)
-            # The row was created a moment ago by THIS request; without a
+            # The row was created a moment ago by this request; without a
             # verify step there is no way to finish it later, and a retry
             # would hit "already exists". Remove it so the retry can succeed.
             with db.transaction() as c:
@@ -509,7 +509,7 @@ async def verify(body: VerifyRequest, request: Request, response: Response) -> M
     sub-key (must succeed), then activate the account and start a session.
 
     Fails closed: if provisioning is enabled and the API call fails, the token is
-    NOT consumed and the account stays ``pending`` — so an account never goes
+    not consumed and the account stays ``pending`` - so an account never goes
     active without a usable key. Self-hosted QUON Home (no provisioning key)
     skips provisioning and uses BYOK instead.
     """
@@ -531,7 +531,7 @@ async def verify(body: VerifyRequest, request: Request, response: Response) -> M
             raise HTTPException(status_code=400, detail="invalid or expired token")
         user_id = row["user_id"]
 
-    # Synchronous provisioning BEFORE activation (network call, outside the DB
+    # Synchronous provisioning before activation (network call, outside the DB
     # connection). On failure the token stays unused so the user can retry.
     try:
         await openrouter_provisioning.ensure_user_key(user_id)
@@ -542,7 +542,7 @@ async def verify(body: VerifyRequest, request: Request, response: Response) -> M
         ) from exc
 
     # transaction(): consuming the token and activating the account must be
-    # atomic — a crash between them would burn the token while leaving the account
+    # atomic - a crash between them would burn the token while leaving the account
     # pending, so the user could never verify (token used, account not active).
     with db.transaction() as c:
         consumed = c.execute(
@@ -551,7 +551,7 @@ async def verify(body: VerifyRequest, request: Request, response: Response) -> M
         ).rowcount
         if not consumed:
             raise HTTPException(status_code=400, detail="invalid or expired token")
-        # Read onboarding eligibility BEFORE clearing it: this response is the one
+        # Read onboarding eligibility before clearing it: this response is the one
         # unambiguous, server-observable "brand new account" signal the client
         # gets (register() itself returns before the account can ever reach
         # `ready`). Cleared in the same statement so it is reported at most once,
@@ -658,8 +658,8 @@ async def set_identity(
     Used by Shared Projects (shares.py): a member seals Project Keys to their
     own ``identity_pub``; ``identity_priv_wrapped`` is opaque to the server
     (wrapped under the Master Key client-side, CTX "quonidk0") and is stored
-    only so the user's other devices can unwrap it. Set-once — 409 when already
-    set — so a stolen session cannot swap in an attacker pubkey to intercept
+    only so the user's other devices can unwrap it. Set-once - 409 when already
+    set - so a stolen session cannot swap in an attacker pubkey to intercept
     future grants (rotation would need re-sealing every grant; v2). Existing
     accounts backfill lazily on first use of sharing; new registrations may call
     this right after verify.
@@ -723,11 +723,11 @@ async def set_ui_language(
 # A third wrap of the Master Key, parallel to wrap_pw/wrap_rec: the client
 # derives the wrap key from a WebAuthn PRF output that never leaves the
 # device's secure hardware, so wrap_bio is opaque here (zero-knowledge holds).
-# Deliberately NO server-side WebAuthn assertion verification in v1: the valid
+# Deliberately no server-side WebAuthn assertion verification in v1: the valid
 # session cookie is the authentication factor (same trust as /auth/keymaterial,
 # which hands out the password wrap on the same condition); the PRF ceremony is
 # purely a key-RELEASE mechanism on the device. credential_id is the base64url
-# string WebAuthn natively produces — stored as opaque TEXT, never decoded.
+# string WebAuthn natively produces - stored as opaque TEXT, never decoded.
 _BIO_MAX_CREDENTIALS = 10  # row-spam guard; ~one per device is the real-world shape
 
 
@@ -775,7 +775,7 @@ async def bio_get(credential_id: str, user: User = Depends(current_user)) -> Bio
     """The biometric-wrapped Master Key for one enrolled credential.
 
     ``current_user`` (not active) on purpose: this serves the *locked* state,
-    exactly like /auth/keymaterial above. 404 = revoked/never enrolled — the
+    exactly like /auth/keymaterial above. 404 = revoked/never enrolled - the
     client clears its local marker and falls back to the password.
     """
     with db.get_conn() as c:
@@ -887,7 +887,7 @@ async def reset_password(body: ResetPasswordRequest) -> MeResponse:
     auth_salt = crypto.new_salt()
     verifier = crypto.argon2_verifier(auth_token, auth_salt)
     now = db.now_ms()
-    # transaction(): the verifier and the password-wrap must update together — a
+    # transaction(): the verifier and the password-wrap must update together - a
     # partial write (new verifier, old wrap) would leave the account's synced data
     # undecryptable.
     with db.transaction() as c:
@@ -906,7 +906,7 @@ async def reset_password(body: ResetPasswordRequest) -> MeResponse:
 
 # --- account self-service: change email / password, delete ----------------
 # All three require the CURRENT password (an authToken derived from it), never a
-# session cookie alone — a stolen session must not be able to take over or destroy
+# session cookie alone - a stolen session must not be able to take over or destroy
 # the account. Zero-knowledge holds: change-password re-wraps the Master Key
 # client-side (server sees only the new wrap), so synced data stays decryptable
 # and the recovery phrase keeps working.
@@ -923,15 +923,15 @@ class ChangePasswordRequest(BaseModel):
 
 
 class RotateRecoveryRequest(BaseModel):
-    # The OLD phrase is deliberately unrecoverable (never stored — the ZK point),
+    # The OLD phrase is deliberately unrecoverable (never stored - the ZK point),
     # so "I lost my recovery phrase" is served by ROTATION: the unlocked client
     # generates a fresh mnemonic and re-wraps the (unchanged) Master Key under it.
-    current_auth_token: str  # proves the current password (not just a cookie —
+    current_auth_token: str  # proves the current password (not just a cookie - 
     # a hijacked session without the password must not be able to brick or
     # take over the recovery path; same posture as change-password)
     rec_salt: str  # base64, fresh salt for the new phrase's Argon2id derivation
-    wrap_rec: str  # base64, MK wrapped under the NEW phrase-derived key. The
-    # client MUST derive with the account's STORED kdf_params (single column
+    wrap_rec: str  # base64, MK wrapped under the new phrase-derived key. The
+    # client must derive with the account's STORED kdf_params (single column
     # shared with the password wrap) or a later recovery would derive wrongly.
 
 
@@ -953,7 +953,7 @@ def _verify_current_password(user_id: str, auth_token_b64: str) -> bool:
 
 
 def _issue_change_email_token(user_id: str, new_email: str) -> None:
-    """Single-use token for confirming an email change; the link goes to the NEW
+    """Single-use token for confirming an email change; the link goes to the new
     address (proves the user controls it before we switch)."""
     token = secrets.token_urlsafe(32)
     token_id = uuid.uuid4().hex
@@ -974,14 +974,14 @@ def _issue_change_email_token(user_id: str, new_email: str) -> None:
 async def change_email_request(
     body: ChangeEmailRequest, user: User = Depends(current_active_user)
 ) -> dict:
-    """Start an email change. Always returns ``{ok:true}`` — it never reveals
+    """Start an email change. Always returns ``{ok:true}`` - it never reveals
     whether the target address is already taken. A confirmation link is sent to
     the new address; the account email changes only once that link is confirmed."""
     new_email = body.new_email.strip().lower()
     if not _EMAIL_RE.match(new_email):
         raise HTTPException(status_code=422, detail="invalid email address")
     # No-op when it's already the current address. Skip the send if the address is
-    # held by an ACTIVE account — but don't reveal that (still return ok).
+    # held by an ACTIVE account - but don't reveal that (still return ok).
     if new_email != user.email:
         with db.get_conn() as c:
             taken = c.execute(
@@ -1001,7 +1001,7 @@ async def change_email_confirm(body: VerifyRequest) -> MeResponse:
     if not token_id or not secret:
         raise HTTPException(status_code=400, detail="malformed token")
     now = db.now_ms()
-    # transaction(): change the email and consume its token together — else a
+    # transaction(): change the email and consume its token together - else a
     # crash between them leaves a spent-looking address change with a still-live
     # token (or vice versa).
     with db.transaction() as c:
@@ -1042,7 +1042,7 @@ async def change_password(
     """Change the password: verify the CURRENT password, then store new material
     (fresh verifier + password-wrap). The Master Key is unchanged (re-wrapped
     client-side) so synced data stays decryptable and the recovery phrase keeps
-    working. Every OTHER session is invalidated; the caller stays logged in."""
+    working. Every other session is invalidated; the caller stays logged in."""
     if not _verify_current_password(user.id, body.current_auth_token):
         raise HTTPException(status_code=403, detail="current password is incorrect")
     auth_token = _b64d(body.auth_token, "auth_token")
@@ -1052,7 +1052,7 @@ async def change_password(
     verifier = crypto.argon2_verifier(auth_token, auth_salt)
     now = db.now_ms()
     # transaction(): verifier + password-wrap must land together (a partial write
-    # would leave synced data undecryptable — same reason as reset_password).
+    # would leave synced data undecryptable - same reason as reset_password).
     with db.transaction() as c:
         c.execute(
             "UPDATE users SET auth_verifier=?, auth_salt=? WHERE id=?",
@@ -1071,9 +1071,9 @@ async def change_password(
 async def rotate_recovery(
     body: RotateRecoveryRequest, user: User = Depends(current_active_user)
 ) -> dict:
-    """Replace the recovery wrap with one for a NEW phrase (the old phrase stops
+    """Replace the recovery wrap with one for a new phrase (the old phrase stops
     working immediately). The Master Key, password wrap and sessions are all
-    untouched — this only swaps rec_salt + wrap_rec, atomically."""
+    untouched - this only swaps rec_salt + wrap_rec, atomically."""
     if not _verify_current_password(user.id, body.current_auth_token):
         raise HTTPException(status_code=403, detail="current password is incorrect")
     rec_salt = _b64d(body.rec_salt, "rec_salt")
@@ -1085,7 +1085,7 @@ async def rotate_recovery(
             (rec_salt, wrap_rec, now, user.id),
         ).rowcount
         if updated != 1:
-            # No key row (should be impossible for an active account) — refuse
+            # No key row (should be impossible for an active account) - refuse
             # rather than silently succeeding with nothing rotated.
             raise HTTPException(status_code=409, detail="no key material for this account")
     return {"ok": True}
@@ -1102,7 +1102,7 @@ async def delete_account(
     (keys, sessions, tokens, blobs, sub-key, sync meta) and clears cookies."""
     if not _verify_current_password(user.id, body.auth_token):
         raise HTTPException(status_code=403, detail="password is incorrect")
-    # Revoke the per-user sub-key first — best-effort; never block deletion on the
+    # Revoke the per-user sub-key first - best-effort; never block deletion on the
     # provider being reachable.
     if openrouter_provisioning.is_enabled():
         with db.get_conn() as c:

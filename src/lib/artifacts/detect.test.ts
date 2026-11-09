@@ -74,8 +74,8 @@ describe("unwrapMarkdownArtifacts", () => {
   const doc = `# Mietvertrag\n\n${"Ein Absatz mit Inhalt. ".repeat(15)}`;
 
   it("renders a whole-document markdown fence as the document, not as code", () => {
-    // The reported bug: the reply IS a document, so a code block is what the
-    // user sees — and dismissing the save card leaves them with raw markup.
+    // The reported bug: the reply is a document, so a code block is what the
+    // user sees - and dismissing the save card leaves them with raw markup.
     const out = unwrapMarkdownArtifacts("Hier ist der Entwurf:\n\n```markdown\n" + doc + "\n```");
     expect(out).not.toContain("```");
     expect(out).toContain("# Mietvertrag");
@@ -129,10 +129,10 @@ describe("unwrapMarkdownArtifacts", () => {
   });
 });
 
-describe("a document that itself contains fenced blocks (reported 2026-08-04)", () => {
+describe("a document that itself contains fenced blocks", () => {
   // The report: a long generated document was "cut off from 4.1", and the rest
-  // rendered as mangled prose instead of a diagram. One cause for both — the
-  // fence regex was non-greedy, so a ```markdown document closed at the FIRST
+  // rendered as mangled prose instead of a diagram. One cause for both - the
+  // fence regex was non-greedy, so a ```markdown document closed at the first
   // inner fence, i.e. exactly where the diagram began.
   const doc = [
     "````markdown",
@@ -173,7 +173,7 @@ describe("a document that itself contains fenced blocks (reported 2026-08-04)", 
   it("unwraps the outer fence without swallowing the inner one", () => {
     const out = unwrapMarkdownArtifacts(doc);
     expect(out.startsWith("````")).toBe(false); // outer fence gone
-    expect(out).toContain("```\n┌"); // inner fence intact → stays a code block
+    expect(out).toContain("```\n┌"); // inner fence intact -> stays a code block
     expect(out).toContain("4.2 Everything after the diagram must survive");
   });
 

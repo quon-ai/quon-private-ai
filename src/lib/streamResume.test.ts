@@ -4,7 +4,7 @@ import { QuonError, StreamIdleError, StreamPayloadError } from "./quonApi";
 import { isTransportFailure, whenVisible } from "./streamResume";
 
 /**
- * The classification is load-bearing: resuming a REAL error (provider refused,
+ * The classification is load-bearing: resuming a real error (provider refused,
  * budget gone) would silently retry something the user must see, while not
  * resuming a dropped socket is exactly the bug this feature fixes.
  */
@@ -13,8 +13,8 @@ describe("isTransportFailure", () => {
     expect(isTransportFailure(new QuonError("stream request failed"))).toBe(true);
   });
 
-  it("does NOT treat a stream payload error as transport — the provider answered (#84)", () => {
-    // Same shape as a dropped socket (QuonError, no status), but it IS the answer:
+  it("does not treat a stream payload error as transport: the provider answered", () => {
+    // Same shape as a dropped socket (QuonError, no status), but it is the answer:
     // resuming it replays nothing and ends in "Verbindung verloren".
     const err = new StreamPayloadError("The AI provider rejected this account's API key.");
     expect(err.status).toBeUndefined();
@@ -22,28 +22,28 @@ describe("isTransportFailure", () => {
     expect(isTransportFailure(err, false)).toBe(false);
   });
 
-  it("treats the idle watchdog's cut as transport — the job lives on, re-attach (#85)", () => {
+  it("treats the idle watchdog's cut as transport: the job lives on, re-attach (#85)", () => {
     expect(isTransportFailure(new StreamIdleError(), false)).toBe(true);
   });
 
-  it("does NOT treat an HTTP-status error as transport — that is a real answer", () => {
+  it("does not treat an HTTP-status error as transport: that is a real answer", () => {
     expect(isTransportFailure(new QuonError("/chat/stream responded 402", 402))).toBe(false);
     expect(isTransportFailure(new QuonError("/chat/stream responded 500", 500))).toBe(false);
   });
 
-  it("resumes a browser-initiated abort — that is exactly what the buffer is for", () => {
+  it("resumes a browser-initiated abort: that is exactly what the buffer is for", () => {
     // A mobile OS tearing down a backgrounded tab's request surfaces as an
     // AbortError. Treating every abort as final threw away answers the server
     // had already finished writing.
     expect(isTransportFailure(new DOMException("Aborted", "AbortError"), false)).toBe(true);
   });
 
-  it("does NOT resume a provider error delivered as a payload", () => {
-    // These arrive as QuonError WITHOUT a status too — but they are thrown from
-    // the parsed `{error: …}` event, so the caller must not reconnect. Guarded
+  it("does not resume a provider error delivered as a payload", () => {
+    // These arrive as QuonError without a status too - but they are thrown from
+    // the parsed `{error: ...}` event, so the caller must not reconnect. Guarded
     // at the call site by only retrying when the pipe broke; here we pin the
     // one shape we can distinguish: an abort is never a transport failure.
-    // Our OWN abort (the user pressed stop) stays final — the default.
+    // Our own abort (the user pressed stop) stays final - the default.
     expect(isTransportFailure(new DOMException("Aborted", "AbortError"))).toBe(false);
   });
 
@@ -84,7 +84,7 @@ describe("whenVisible", () => {
     await expect(whenVisible()).resolves.toBeUndefined();
   });
 
-  it("waits while hidden and resolves on return — no retry burned on a frozen tab", async () => {
+  it("waits while hidden and resolves on return: no retry burned on a frozen tab", async () => {
     const d = stubDocument("hidden");
     let settled = false;
     const p = whenVisible().then(() => {

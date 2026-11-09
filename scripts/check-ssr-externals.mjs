@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 // The production frontend image contains dist/ and nothing else, so every
-// package the SSR bundle needs must be INSIDE it. A bare import that survives
-// bundling is a crash on the first request of a fresh install — exactly what
-// happened with the "h3-v2" alias on 2026-11-02, invisible to `vite dev`, the
-// unit tests and the E2E (all of which run with node_modules present).
+// package the SSR bundle needs must be inside it. A bare import that survives
+// bundling is a crash on the first request of a fresh install, and nothing
+// else catches it: `vite dev`, the unit tests and the E2E all run with
+// node_modules present.
 import { readdirSync, readFileSync } from "node:fs";
 import { builtinModules } from "node:module";
 import { join } from "node:path";
@@ -15,7 +15,7 @@ for (const d of [dir, join(dir, "assets")]) {
     for (const f of readdirSync(d))
       if (f.endsWith(".js") || f.endsWith(".mjs")) files.push(join(d, f));
   } catch {
-    /* missing dir → no files → fails below */
+    /* missing dir -> no files -> fails below */
   }
 }
 if (!files.length) {
@@ -24,7 +24,7 @@ if (!files.length) {
 }
 const builtin = new Set(builtinModules);
 const bare = new Map();
-// Statement forms only: `import x from "pkg"`, `import "pkg"`, `export … from "pkg"`,
+// Statement forms only: `import x from "pkg"`, `import "pkg"`, `export ... from "pkg"`,
 // and dynamic `import("pkg")`. Anchored to a statement start so object keys and
 // string literals inside code never match.
 const re =

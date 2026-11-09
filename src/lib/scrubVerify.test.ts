@@ -4,7 +4,7 @@
  * A hand-redaction is only meaningful if it constrains what actually leaves the
  * device. The backend does the redacting, so the client verifies the result:
  * every scrub funnels through `scrubText`, so one check there means every send
- * path fails closed through its existing catch — and a NEW send path cannot
+ * path fails closed through its existing catch - and a new send path cannot
  * forget it (which is exactly how `agents/runner.ts` had drifted).
  */
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -66,7 +66,7 @@ describe("scrubText verifies the user's always-redact list", () => {
 
   it("does not false-positive on a term that only occurs inside a longer word", async () => {
     // The backend would not have redacted "partner" inside "Vertragspartnerin"
-    // either — blocking here would break a perfectly good send.
+    // either - blocking here would break a perfectly good send.
     respond("Vertragspartnerin bleibt");
     await expect(scrubText("x", { always_redact: ["partner"] })).resolves.toBeTruthy();
   });

@@ -1,10 +1,11 @@
 /**
  * Settings row for the chat composer's Kontext/Context pill (`useMemoryContext`
- * in quonStore). The pill toggles the same value directly — this card exists
- * so the setting (and its explainer) is discoverable outside the composer too,
- * per feedback #62 item 3 ("im chat gibts ne option 'kontext'. Was heißt das?").
- * A global SYNCED preference (see SYNCED_KEYS in quonStore.ts), applied
- * immediately — not a per-chat default.
+ * in quonStore). The pill toggles the same value directly - this card exists
+ * so the setting (and its explainer) is discoverable outside the composer too
+ * ("im chat gibts ne option 'kontext'. Was heißt das?" is the question it
+ * answers).
+ * A global synced preference (see SYNCED_KEYS in quonStore.ts), applied
+ * immediately - not a per-chat default.
  */
 import { Sparkles } from "lucide-react";
 

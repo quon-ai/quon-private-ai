@@ -3,14 +3,14 @@ import { test, expect, type Page } from "@playwright/test";
 import { login, sharedCreds } from "./helpers/account";
 
 /**
- * Not a regression test — an ASSET EXPORT. The trust page's data-flow diagram is
+ * Not a regression test - an ASSET EXPORT. The trust page's data-flow diagram is
  * animated DOM + CSS (`qt-*`), so the only faithful way to reuse it outside the
  * app (beta invite, docs, slides) is to render the real thing and capture it:
  *
  *   QUON_EXPORT_ASSETS=1 npx playwright test --project=chromium \
  *     tests/e2e/trust-graphic.spec.ts
  *
- * Skipped otherwise — it writes into the repo, and the gate fails when a run
+ * Skipped otherwise - it writes into the repo, and the gate fails when a run
  * dirties the working tree.
  *
  * Two things a naive screenshot gets wrong, both fixed below:
@@ -37,11 +37,11 @@ const FREEZE = `
 test.skip(!process.env.QUON_EXPORT_ASSETS, "asset export — set QUON_EXPORT_ASSETS=1");
 
 async function shoot(page: Page, lang: "de" | "en") {
-  // Switch with the app's OWN control, after login. Setting the cookie is not
+  // Switch with the app's own control, after login. Setting the cookie is not
   // enough and it is not a bug: authStore adopts the ACCOUNT's stored
   // `ui_language` on /me (authStore.ts), and the shared E2E account is English,
   // so it overrides anything set beforehand. LanguageSelect switches live, no
-  // reload — and `syncAccount` in Settings persists it for the session.
+  // reload - and `syncAccount` in Settings persists it for the session.
   await page.goto("/settings");
   // Settings opens on the detection tab; the selector lives under Account.
   await page.getByRole("tab", { name: /Account|Konto/ }).click();
@@ -59,7 +59,7 @@ async function shoot(page: Page, lang: "de" | "en") {
   const suffix = lang === "de" ? "" : "-en";
   await flow.screenshot({ path: `docs/assets/trust-dataflow${suffix}.png` });
 
-  // A wider crop keeping the page background — an element screenshot's hard
+  // A wider crop keeping the page background - an element screenshot's hard
   // edge looks pasted on in an e-mail header.
   const box = (await flow.boundingBox())!;
   await page.screenshot({

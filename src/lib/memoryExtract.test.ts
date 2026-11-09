@@ -7,7 +7,7 @@ vi.mock("./quonApi", async (importOriginal) => {
   return { ...actual, scrubText: vi.fn(), chatComplete: vi.fn() };
 });
 
-// The embedder is a browser Web Worker — replace it with a deterministic stub.
+// The embedder is a browser Web Worker - replace it with a deterministic stub.
 // Tests that need specific vectors override embedBatch per call.
 vi.mock("./embedding/embedder", () => ({
   EMBED_MODEL: "test-embed",
@@ -98,8 +98,8 @@ function memItem(id: string, embedding: number[], projectId?: string): MemoryIte
   };
 }
 
-/** Like `memItem`, but with a `key` + explicit `text` and `updatedAt` — for the
- *  P5 key-awareness/lifecycle tests below. `updatedAt` defaults to 1 (not 0 —
+/** Like `memItem`, but with a `key` + explicit `text` and `updatedAt` - for the
+ *  P5 key-awareness/lifecycle tests below. `updatedAt` defaults to 1 (not 0 -
  *  `upsertMemoryItem` treats a falsy `updatedAt` as "unset" and substitutes
  *  `Date.now()`, which would defeat deterministic ordering assertions). */
 function memItemWithKey(
@@ -147,7 +147,7 @@ describe("parseExtractionReply (fail-safe JSON parsing)", () => {
   });
 
   it("tolerates code fences and surrounding prose", () => {
-    // No key on either → downgraded to "note" (see the key-required-for-fact test below).
+    // No key on either -> downgraded to "note" (see the key-required-for-fact test below).
     expect(parseExtractionReply('```json\n[{"text":"a"}]\n```')).toEqual([
       { kind: "note", key: undefined, text: "a", tags: [] },
     ]);
@@ -177,7 +177,7 @@ describe("parseExtractionReply (fail-safe JSON parsing)", () => {
   });
 
   it("downgrades a keyless kind:fact to kind:note instead of dropping it", () => {
-    // A sloppy model reply omits the required key for a fact — still usable, just
+    // A sloppy model reply omits the required key for a fact - still usable, just
     // relabeled, so the sweep doesn't lose a real memory over a formatting slip.
     const out = parseExtractionReply('[{"kind":"fact","text":"Prefers dark mode."}]');
     expect(out).toEqual([{ kind: "note", key: undefined, text: "Prefers dark mode.", tags: [] }]);
@@ -204,14 +204,14 @@ describe("classifyCandidate (dedup thresholds)", () => {
     });
   });
 
-  it("skips a near-identical fact (≥ SIM_SKIP) when there's no key to merge against", () => {
+  it("skips a near-identical fact (>= SIM_SKIP) when there's no key to merge against", () => {
     expect(classifyCandidate([1, 0, 0], undefined, [{ id: "a", embedding: [1, 0, 0] }])).toEqual({
       mode: "skip",
     });
   });
 
   it("suggests an update in the middle band, referencing the best match", () => {
-    // cos([1,0,0], [0.85, √(1−0.85²), 0]) = 0.85 → between SIM_UPDATE and SIM_SKIP
+    // cos([1,0,0], [0.85, (10.85²), 0]) = 0.85 -> between SIM_UPDATE and SIM_SKIP
     const near = [0.85, Math.sqrt(1 - 0.85 * 0.85), 0];
     const far = [0.5, Math.sqrt(1 - 0.25), 0];
     expect(
@@ -229,12 +229,12 @@ describe("classifyCandidate (dedup thresholds)", () => {
     });
   });
 
-  describe("key-aware forcing (P5 — the contradiction fix)", () => {
+  describe("key-aware forcing (P5: the contradiction fix)", () => {
     it("forces 'update' against a key-matching ACTIVE item regardless of cosine", () => {
       // Far below SIM_UPDATE on cosine alone (would otherwise be "create"), but
-      // the candidate's key normalizes to the same slot as the existing item —
+      // the candidate's key normalizes to the same slot as the existing item -
       // e.g. "Adresse: Hamburg" (existing) vs. a freshly extracted
-      // "Adresse: Berlin" (candidate): different content, LOW cosine, same slot.
+      // "Adresse: Berlin" (candidate): different content, low cosine, same slot.
       const far = [0.1, Math.sqrt(1 - 0.01), 0];
       expect(
         classifyCandidate([1, 0, 0], "Adresse", [{ id: "addr", key: "Adresse", embedding: far }]),
@@ -254,20 +254,20 @@ describe("classifyCandidate (dedup thresholds)", () => {
       ).toEqual({ mode: "update", targetId: "addr" });
     });
 
-    it("auto-merges ('merge' mode) an exact-dup that is ALSO key-compatible", () => {
+    it("auto-merges ('merge' mode) an exact-dup that is also key-compatible", () => {
       expect(
         classifyCandidate([1, 0, 0], "Adresse", [
-          { id: "addr", key: "Adresse", embedding: [1, 0, 0] }, // cosine 1.0 ≥ SIM_SKIP
+          { id: "addr", key: "Adresse", embedding: [1, 0, 0] }, // cosine 1.0 >= SIM_SKIP
         ]),
       ).toEqual({ mode: "merge", targetId: "addr" });
     });
 
-    it("a candidate with NO key falls back to plain cosine classification", () => {
+    it("a candidate with no key falls back to plain cosine classification", () => {
       expect(
         classifyCandidate([1, 0, 0], undefined, [
           { id: "addr", key: "Adresse", embedding: [1, 0, 0] },
         ]),
-      ).toEqual({ mode: "skip" }); // no key → cosine-only path → ≥ SIM_SKIP → skip, not merge
+      ).toEqual({ mode: "skip" }); // no key -> cosine-only path -> >= SIM_SKIP -> skip, not merge
     });
 
     it("an unrelated key never forces a match, however high the cosine", () => {
@@ -342,7 +342,7 @@ describe("extractFromText (large-paste triage distillation)", () => {
     );
     const sug = getAllMemorySuggestions()[0];
     expect(sug.text).toBe("Timo takes Ibuprofen every morning.");
-    expect(sug.sourceSessionId).toBeUndefined(); // no source chat — pasted text
+    expect(sug.sourceSessionId).toBeUndefined(); // no source chat - pasted text
     expect(sug.mode).toBe("create");
   });
 
@@ -358,16 +358,16 @@ describe("extractFromText (large-paste triage distillation)", () => {
   });
 });
 
-describe("pendingSweepCount (ambient discovery badge — no relay)", () => {
-  it("counts only in-scope sessions with enough NEW user text past their cursor", () => {
+describe("pendingSweepCount (ambient discovery badge: no relay)", () => {
+  it("counts only in-scope sessions with enough new user text past their cursor", () => {
     expect(pendingSweepCount(undefined)).toBe(0);
 
     saveChatSession("s1", [msg(1, "user", LONG), msg(2, "assistant", "noted")]);
-    saveChatSession("s2", [msg(1, "user", "hi")]); // below MIN_NEW_USER_CHARS → not worth a run
+    saveChatSession("s2", [msg(1, "user", "hi")]); // below MIN_NEW_USER_CHARS -> not worth a run
     saveChatSession("p1s", [msg(1, "user", LONG)], { projectId: "p1" });
 
     // Strict scope (inScope is exact projectId equality): global counts only the
-    // non-project session s1, NOT the trivial one and NOT the project session.
+    // non-project session s1, not the trivial one and not the project session.
     expect(pendingSweepCount(undefined)).toBe(1);
     // Project scope sees only that project's session.
     expect(pendingSweepCount("p1")).toBe(1);
@@ -380,7 +380,7 @@ describe("pendingSweepCount (ambient discovery badge — no relay)", () => {
   });
 
   it("counts a short but fact-dense single message (regression: 200-char gate dropped it)", () => {
-    // The reported case: one health fact, ~100 chars — well under the old 200
+    // The reported case: one health fact, ~100 chars - well under the old 200
     // threshold but a genuine fact worth learning.
     const fact =
       "Ich überlege die 5mg thc/CBD Pillen nur noch jede 2. Nacht zu nehmen, " +
@@ -409,7 +409,7 @@ describe("runMemorySweep", () => {
     const res = await runMemorySweep(sweepOpts);
     expect(res).toEqual({ analyzed: 1, failed: 0, suggestions: 1, autoMerged: 0 });
 
-    // The relay only ever saw the SCRUBBED transcript…
+    // The relay only ever saw the SCRUBBED transcript...
     expect(chatMock).toHaveBeenCalledWith(
       [
         expect.objectContaining({ role: "system" }),
@@ -419,7 +419,7 @@ describe("runMemorySweep", () => {
       true,
       undefined,
     );
-    // …while the queued suggestion is re-hydrated on-device.
+    // ...while the queued suggestion is re-hydrated on-device.
     const sug = getAllMemorySuggestions()[0];
     expect(sug.text).toBe("Anna Müller works at Contoso in Berlin.");
     expect(sug.key).toBe("Employer of Anna Müller");
@@ -428,7 +428,7 @@ describe("runMemorySweep", () => {
     expect(sug.projectId).toBeUndefined();
     expect(getSweepCursor("s1")).toBe(2);
 
-    // Re-run: nothing new since the cursor → no relay call at all.
+    // Re-run: nothing new since the cursor -> no relay call at all.
     chatMock.mockClear();
     scrubMock.mockClear();
     const res2 = await runMemorySweep(sweepOpts);
@@ -446,7 +446,7 @@ describe("runMemorySweep", () => {
     expect(res).toEqual({ analyzed: 0, failed: 1, suggestions: 0, autoMerged: 0 });
     expect(getSweepCursor("s1")).toBeUndefined();
 
-    // The model behaves on the retry → the same messages are processed now.
+    // The model behaves on the retry -> the same messages are processed now.
     chatMock.mockResolvedValue({ answer: '[{"text":"a durable fact"}]', model: "m" });
     const res2 = await runMemorySweep(sweepOpts);
     expect(res2).toEqual({ analyzed: 1, failed: 0, suggestions: 1, autoMerged: 0 });
@@ -474,7 +474,7 @@ describe("runMemorySweep", () => {
     expect(getSweepCursor("s1")).toBeUndefined(); // still counts on the next run
   });
 
-  it("drops candidates already known in the SAME scope (≥ SIM_SKIP)", async () => {
+  it("drops candidates already known in the same scope (>= SIM_SKIP)", async () => {
     upsertMemoryItem(memItem("g1", [1, 0, 0])); // global memory, identical vector
     saveChatSession("s1", [msg(1, "user", LONG)]);
     scrubMock.mockResolvedValue(scrubResult("t"));
@@ -487,13 +487,13 @@ describe("runMemorySweep", () => {
   });
 
   it("scope isolation: a project candidate never matches global memory", async () => {
-    upsertMemoryItem(memItem("g1", [1, 0, 0])); // GLOBAL item, identical vector
+    upsertMemoryItem(memItem("g1", [1, 0, 0])); // Global item, identical vector
     saveChatSession("p1s", [msg(1, "user", LONG)], { projectId: "p1" });
     scrubMock.mockResolvedValue(scrubResult("t"));
     chatMock.mockResolvedValue({ answer: '[{"text":"identical fact"}]', model: "m" });
 
     const res = await runMemorySweep({ ...sweepOpts, scope: "p1" });
-    // Would be a skip if scopes mixed — must stay a "create" in the project.
+    // Would be a skip if scopes mixed - must stay a "create" in the project.
     expect(res.suggestions).toBe(1);
     const sug = getAllMemorySuggestions()[0];
     expect(sug.mode).toBe("create");
@@ -523,21 +523,21 @@ describe("runMemorySweep", () => {
     await runMemorySweep(sweepOpts);
     expect(getAllMemorySuggestions()).toHaveLength(1);
 
-    // A different session yields the same fact → not queued again.
+    // A different session yields the same fact -> not queued again.
     saveChatSession("s2", [msg(1, "user", LONG)]);
     const res2 = await runMemorySweep(sweepOpts);
     expect(res2.suggestions).toBe(0);
     expect(getAllMemorySuggestions()).toHaveLength(1);
   });
 
-  it("P5: a key-matching candidate forces an 'update' suggestion even at LOW cosine (the contradiction case)", async () => {
+  it("P5: a key-matching candidate forces an 'update' suggestion even at low cosine (the contradiction case)", async () => {
     // "Adresse: Hamburg" (existing) vs. a freshly extracted "Adresse: Berlin"
-    // (candidate) — different content, so cosine would normally be "create",
-    // but same key ⇒ forced "update" (never both injected as memory).
+    // (candidate) - different content, so cosine would normally be "create",
+    // but same key => forced "update" (never both injected as memory).
     upsertMemoryItem(memItemWithKey("addr", "Adresse", "Hamburg", [0, 1, 0]));
     saveChatSession("s1", [msg(1, "user", LONG)]);
     scrubMock.mockResolvedValue(scrubResult("t"));
-    // The default embedBatch mock always returns [1,0,0] — cosine 0 vs [0,1,0].
+    // The default embedBatch mock always returns [1,0,0] - cosine 0 vs [0,1,0].
     chatMock.mockResolvedValue({
       answer: '[{"kind":"fact","key":"Adresse","text":"Berlin"}]',
       model: "m",
@@ -551,7 +551,7 @@ describe("runMemorySweep", () => {
     expect(sug.previousText).toBe("Hamburg");
   });
 
-  it("P5: an exact-dup + key-compatible candidate auto-merges WITHOUT the review queue", async () => {
+  it("P5: an exact-dup + key-compatible candidate auto-merges without the review queue", async () => {
     upsertMemoryItem(memItemWithKey("addr", "Adresse", "Berlin", [1, 0, 0])); // cosine 1.0 with the mocked candidate vector
     saveChatSession("s1", [msg(1, "user", LONG)]);
     scrubMock.mockResolvedValue(scrubResult("t"));
@@ -564,7 +564,7 @@ describe("runMemorySweep", () => {
     expect(res).toEqual({ analyzed: 1, failed: 0, suggestions: 0, autoMerged: 1 });
     expect(getAllMemorySuggestions()).toHaveLength(0); // never touched the review queue
 
-    // The old item is superseded — REVERSIBLE, never deleted.
+    // The old item is superseded - REVERSIBLE, never deleted.
     const old = getMemoryItem("addr");
     expect(old?.status).toBe("superseded");
     expect(old && old.text).toBe("Berlin");
@@ -588,7 +588,7 @@ describe("runMemorySweep", () => {
     });
 
     const res = await runMemorySweep(sweepOpts);
-    // No active item to match against at all → falls through to a plain "create".
+    // No active item to match against at all -> falls through to a plain "create".
     expect(res).toEqual({ analyzed: 1, failed: 0, suggestions: 1, autoMerged: 0 });
     expect(getAllMemorySuggestions()[0].mode).toBe("create");
   });
@@ -604,7 +604,7 @@ describe("findMemoryConflicts (P5)", () => {
     expect(new Set([keyConflicts[0].a.id, keyConflicts[0].b.id])).toEqual(new Set(["a", "b"]));
   });
 
-  it("does NOT flag a same-key pair with IDENTICAL text", () => {
+  it("does not flag a same-key pair with identical text", () => {
     resetMemory();
     upsertMemoryItem(memItemWithKey("a", "Adresse", "Berlin", [1, 0, 0]));
     upsertMemoryItem(memItemWithKey("b", "Adresse", "Berlin", [0, 1, 0]));
@@ -628,7 +628,7 @@ describe("findMemoryConflicts (P5)", () => {
     expect(findMemoryConflicts(undefined).keyConflicts).toEqual([]); // only one item global
   });
 
-  it("flags near-identical ACTIVE items as near-duplicates (cosine ≥ SIM_SKIP)", () => {
+  it("flags near-identical ACTIVE items as near-duplicates (cosine >= SIM_SKIP)", () => {
     resetMemory();
     upsertMemoryItem(memItemWithKey("a", "Notiz", "text a", [1, 0, 0]));
     upsertMemoryItem(memItemWithKey("b", "Anderes", "text b", [1, 0, 0])); // identical vector
@@ -646,23 +646,23 @@ describe("findMemoryConflicts (P5)", () => {
 });
 
 describe("nearDuplicatesForReview", () => {
-  /** Regression: two addresses under one key are BOTH a key conflict and a near
+  /** Regression: two addresses under one key are both a key conflict and a near
    *  duplicate (measured 0.87 on real text). The maintenance screen listed the
-   *  pair twice, with the same "keep this version" buttons in both sections —
+   *  pair twice, with the same "keep this version" buttons in both sections -
    *  the same question asked in two places. */
   it("drops a pair that is already a key conflict", () => {
     resetMemory();
     upsertMemoryItem(memItemWithKey("a", "Wohnort", "Hamburg, Elbchaussee 1", [1, 0, 0]));
     upsertMemoryItem(memItemWithKey("b", "Wohnort", "Berlin, Kastanienallee 5", [1, 0, 0]));
     const found = findMemoryConflicts(undefined);
-    // The raw analysis still reports both — autoMergeExactDuplicates needs it.
+    // The raw analysis still reports both - autoMergeExactDuplicates needs it.
     expect(found.keyConflicts).toHaveLength(1);
     expect(found.nearDuplicates).toHaveLength(1);
     // What a human is shown: only the conflict.
     expect(nearDuplicatesForReview(found)).toEqual([]);
   });
 
-  it("keeps a near-duplicate that is NOT a key conflict", () => {
+  it("keeps a near-duplicate that is not a key conflict", () => {
     resetMemory();
     upsertMemoryItem(memItemWithKey("a", "Notiz", "Ich jogge morgens", [1, 0, 0]));
     upsertMemoryItem(memItemWithKey("b", "Sport", "Ich laufe jeden Morgen", [1, 0, 0]));
@@ -695,7 +695,7 @@ describe("autoMergeExactDuplicates (P5 maintenance-scan auto-merge)", () => {
     expect(getMemoryItem("newer")?.status).toBeUndefined(); // survives, active
   });
 
-  it("does NOT merge a near-dup pair without a compatible key (no confirmed 'same slot')", () => {
+  it("does not merge a near-dup pair without a compatible key (no confirmed 'same slot')", () => {
     resetMemory();
     upsertMemoryItem(memItemWithKey("a", "Notiz", "text", [1, 0, 0], { updatedAt: 1 }));
     upsertMemoryItem(memItemWithKey("b", "Anderes", "text", [1, 0, 0], { updatedAt: 2 }));
@@ -704,7 +704,7 @@ describe("autoMergeExactDuplicates (P5 maintenance-scan auto-merge)", () => {
     expect(getMemoryItem("b")?.status).toBeUndefined();
   });
 
-  it("is reversible — reviveMemoryItem un-does the auto-merge", async () => {
+  it("is reversible: reviveMemoryItem un-does the auto-merge", async () => {
     const { reviveMemoryItem } = await import("./memoryStore");
     resetMemory();
     upsertMemoryItem(memItemWithKey("older", "Adresse", "Berlin", [1, 0, 0], { updatedAt: 1 }));
@@ -769,7 +769,7 @@ describe("findAtticItems (P5)", () => {
     expect(findAtticItems(undefined, now)).toEqual([]);
   });
 
-  it("NEVER mutates — it's a pure read (calling it twice doesn't archive anything)", () => {
+  it("never mutates: it's a pure read (calling it twice doesn't archive anything)", () => {
     resetMemory();
     upsertMemoryItem(memItemWithKey("stale", "Notiz", "old fact", [1, 0, 0], { updatedAt: old }));
     findAtticItems(undefined, now);
@@ -778,12 +778,12 @@ describe("findAtticItems (P5)", () => {
   });
 });
 
-// --- the redundancy band (measured 2026-08-10, see SIM_REDUNDANT's doc) ------
-// Reported: "beim Hinzufügen ins Memory wird nicht gegen Duplikate geprüft,
-// und die Generierung liefert teilredundante Fakten". The measurement found
-// why: genuine restatements sit at ~0.86, BELOW the old 0.92 gate.
+// --- the redundancy band (measured, see SIM_REDUNDANT's doc) -----------------
+// The complaint it answers: "beim Hinzufügen ins Memory wird nicht gegen
+// Duplikate geprüft, und die Generierung liefert teilredundante Fakten".
+// Genuine restatements sit at ~0.86, below the 0.92 skip gate.
 
-/** Unit vectors whose pairwise cosine is exactly `c` — lets a threshold be
+/** Unit vectors whose pairwise cosine is exactly `c` - lets a threshold be
  *  tested at a named similarity instead of with magic arrays. */
 function vecPair(c: number): [number[], number[]] {
   return [
@@ -801,8 +801,8 @@ describe("SIM_REDUNDANT band", () => {
     expect(SIM_REDUNDANT).toBeLessThan(SIM_SKIP);
   });
 
-  it("does NOT change what classifyCandidate auto-merges — that stays strict", () => {
-    // A 0.86 pair (a real restatement) must still NOT be silently merged into
+  it("does not change what classifyCandidate auto-merges: that stays strict", () => {
+    // A 0.86 pair (a real restatement) must still not be silently merged into
     // an existing item; it becomes an "update" the user reviews.
     const [a, b] = vecPair(0.86);
     expect(classifyCandidate(a, undefined, [{ id: "x", embedding: b }])).toEqual({

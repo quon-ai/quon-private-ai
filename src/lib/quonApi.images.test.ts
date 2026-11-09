@@ -5,9 +5,9 @@ import { provideHttp } from "@/lib/platform";
 import { chatStream } from "./quonApi";
 
 /**
- * Image generation over the chat stream (#79): the request carries
+ * Image generation over the chat stream: the request carries
  * `image_output` only when asked, and an `{image}` SSE event reaches the
- * caller's `onImage` as the data URL — separate from text deltas.
+ * caller's `onImage` as the data URL - separate from text deltas.
  */
 function sse(events: object[]): Response {
   const body = events.map((e) => `data: ${JSON.stringify(e)}\n\n`).join("");
@@ -18,7 +18,7 @@ afterEach(() => {
   provideHttp({ unrestricted: false, fetch: (...a) => globalThis.fetch(...a) });
 });
 
-describe("chatStream — generated images", () => {
+describe("chatStream: generated images", () => {
   it("asks for an image only when told, and hands the data URL to onImage", async () => {
     const png = "data:image/png;base64,iVBORw0KGgo=";
     const bodies: string[] = [];

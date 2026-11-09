@@ -5,25 +5,25 @@ Trust model (the server stays dumb ciphertext storage, exactly like sync.py):
 
 * Every shared project has a client-generated random **Project Key (PK)**; all
   of its blobs (``shared_blobs``) are encrypted under it in the browser.
-* The server NEVER sees the PK. Each member's grant row carries ``sealed_pk`` —
-  the PK sealed (libsodium sealed box) to that member's OWN X25519 identity
+* The server never sees the PK. Each member's grant row carries ``sealed_pk`` - 
+  the PK sealed (libsodium sealed box) to that member's own X25519 identity
   pubkey (``users.identity_pub``, set via ``POST /auth/identity``). The owner
   submits their copy at share time, a reader theirs at accept time; both are
   opaque bytes here.
 * Invites are out-of-band capability links: the server stores only
   ``sha256(secret)`` of a one-time token (wire format ``<id>.<secret>``, same
   pattern as email_tokens); the PK itself travels in the invite link's URL
-  FRAGMENT, which never reaches the server. There is deliberately NO email
-  lookup anywhere in this module — the server learns who the invitee is only
+  FRAGMENT, which never reaches the server. There is deliberately no email
+  lookup anywhere in this module - the server learns who the invitee is only
   at accept time (keeps the closed account-enumeration oracles closed).
 * v1 is read-only for members (role ``reader``; only the ``owner`` pushes) and
   **revoke does not rotate the PK**: a removed member keeps whatever ciphertext
   and PK it already pulled. Revoking (or unsharing) stops access going
-  *forward*; it is not retroactive. PK rotation + re-encrypt is v2 — the UI
+  *forward*; it is not retroactive. PK rotation + re-encrypt is v2 - the UI
   must say this clearly.
 
 Non-oracle convention: anything a NON-member asks about a project answers
-404 "project not found" — never 403 — so outsiders cannot probe whether a
+404 "project not found" - never 403 - so outsiders cannot probe whether a
 project id exists or is shared. 403 is reserved for members whose ROLE is
 insufficient (e.g. a reader minting invites); members already know the project
 exists. /sync/push mirrors this with a per-blob "forbidden" status (sync.py).
@@ -74,7 +74,7 @@ class ShareInfo(BaseModel):
     owner: bool
     member_count: int
     created_at: int
-    # The caller's OWN grant ciphertext (base64) — the PK sealed to their
+    # The caller's own grant ciphertext (base64) - the PK sealed to their
     # identity_pub. This is what lets a fresh device restore the project key
     # without any out-of-band material: unseal with the identity private key.
     sealed_pk: str
@@ -85,7 +85,7 @@ class SharesResponse(BaseModel):
 
 
 class InviteResponse(BaseModel):
-    token: str  # "<id>.<secret>" — hand to the invitee OUT OF BAND (with the
+    token: str  # "<id>.<secret>" - hand to the invitee out OF BAND (with the
     # PK in the link fragment); shown exactly once, the server keeps only a hash
     expires_at: int
 
@@ -93,7 +93,7 @@ class InviteResponse(BaseModel):
 class AcceptRequest(BaseModel):
     token: str
     sealed_pk: str  # base64; the PK (from the link fragment) re-sealed by the
-    # invitee's client to its OWN identity_pub
+    # invitee's client to its own identity_pub
 
 
 class AcceptResponse(BaseModel):
@@ -103,7 +103,7 @@ class AcceptResponse(BaseModel):
 
 class MemberInfo(BaseModel):
     user_id: str
-    email: str  # members already collaborate on the project — exposing member
+    email: str  # members already collaborate on the project - exposing member
     # emails TO members is accepted v1 scope (never anything about non-members)
     role: str
     granted_at: int
@@ -115,7 +115,7 @@ class MembersResponse(BaseModel):
 
 # --- grant helpers (also used by sync.py) -----------------------------------
 def grant_role(conn, project_id: str, user_id: str) -> str | None:
-    """The user's role in a shared project, or None — deliberately the same
+    """The user's role in a shared project, or None - deliberately the same
     None for "not shared" and "not a member" (non-oracle)."""
     row = conn.execute(
         "SELECT role FROM project_grants WHERE project_id=? AND user_id=?",
@@ -125,7 +125,7 @@ def grant_role(conn, project_id: str, user_id: str) -> str | None:
 
 
 def require_member(conn, project_id: str, user_id: str) -> str:
-    """The caller's role, or 404 — non-members must not learn the project exists."""
+    """The caller's role, or 404 - non-members must not learn the project exists."""
     role = grant_role(conn, project_id, user_id)
     if role is None:
         raise HTTPException(status_code=404, detail="project not found")
@@ -211,7 +211,7 @@ async def create_invite(
     project_id: str, user: User = Depends(current_active_user)
 ) -> InviteResponse:
     """Mint a one-time invite token (owner only). The response is the only time
-    the secret exists server-side in the clear — only its hash is stored."""
+    the secret exists server-side in the clear - only its hash is stored."""
     now = db.now_ms()
     exp = now + INVITE_TTL_MS
     secret = secrets.token_urlsafe(32)
@@ -239,13 +239,13 @@ async def create_invite(
 async def accept_invite(
     body: AcceptRequest, user: User = Depends(current_active_user)
 ) -> AcceptResponse:
-    """Redeem a one-time invite token → reader grant for the caller.
+    """Redeem a one-time invite token -> reader grant for the caller.
 
-    The caller submits the PK re-sealed to their OWN pubkey (their client got
-    the PK from the invite link's fragment — it never touches the server).
+    The caller submits the PK re-sealed to their own pubkey (their client got
+    the PK from the invite link's fragment - it never touches the server).
     Every failure mode is the same 400 (no oracle about which part failed or
     whether the project exists). Idempotent-ish: when the caller already has a
-    grant the existing role is returned — but the token is still consumed."""
+    grant the existing role is returned - but the token is still consumed."""
     token_id, _, secret = body.token.partition(".")
     if not token_id or not secret:
         raise HTTPException(status_code=400, detail="invalid or expired invite")
@@ -320,7 +320,7 @@ async def remove_member(
 
 @router.post("/{project_id}/leave")
 async def leave_share(project_id: str, user: User = Depends(current_active_user)) -> dict:
-    """A reader drops their own grant. The owner cannot leave — they delete the
+    """A reader drops their own grant. The owner cannot leave - they delete the
     whole share instead (there is no ownership transfer in v1)."""
     with db.transaction() as c:
         role = require_member(c, project_id, user.id)
@@ -340,7 +340,7 @@ async def delete_share(project_id: str, user: User = Depends(current_active_user
     """Unshare entirely (owner only): drops the share row, and FK cascades take
     the grants, open invites, shared blobs and the seq counter with it. The
     owner's own copy lives in their personal collections and is untouched;
-    former members keep whatever they already pulled (documented v1 limit —
+    former members keep whatever they already pulled (documented v1 limit - 
     revocation is not retroactive without PK rotation)."""
     with db.transaction() as c:
         _require_owner(c, project_id, user.id)
