@@ -208,7 +208,7 @@ jobs:
       - name: Cache scrubber venv
         id: venv-cache
         if: ${{ !vars.CI_RUNNER }}
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: quon-scrubber-service/.venv
           # The exact interpreter version, not "3.11": the venv's bin/python is a
@@ -237,7 +237,7 @@ jobs:
       # survives checkout's `git clean -ffdx` and the install below is a no-op.
       - name: Cache Playwright browsers
         if: ${{ !vars.CI_RUNNER }}
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('package-lock.json') }}
@@ -263,7 +263,7 @@ jobs:
       # and it is 79 MB (~18 s), not gigabytes. Keeping it also takes a
       # third-party host off the critical path of every gate run.
       - name: Cache e2e model mirror
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: tests/e2e/.models
           key: e2e-models-${{ hashFiles('scripts/fetch-e2e-models.mjs') }}
@@ -372,7 +372,7 @@ jobs:
           fi
       - name: Cache cargo
         if: ${{ !vars.CI_RUNNER }}
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             ~/.cargo/registry
