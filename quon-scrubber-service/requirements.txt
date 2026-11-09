@@ -63,7 +63,7 @@ trafilatura==2.1.0
 # is deliberate: the detector fails soft, so a box with the flag on and the
 # package missing silently degrades to net-only detection while /health reports
 # gliner_enabled: true. Package first, flag second.
-gliner>=0.2.28,<0.3
+gliner>=0.2.30,<0.3
 # GLiNER's encoder (mdeberta-v3) ships a SentencePiece tokenizer; on a FRESH
 # install transformers converts it to a fast tokenizer at load time, and that
 # conversion needs protobuf. Without it the load fails soft ("gliner
