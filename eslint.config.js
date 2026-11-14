@@ -55,5 +55,11 @@ export default tseslint.config(
       "@typescript-eslint/no-unused-vars": "off",
     },
   },
+  {
+    // A file route exports `Route` and keeps its page component local; the router
+    // plugin owns hot reload there, so the fast-refresh rule has nothing to say.
+    files: ["src/routes/**/*.tsx"],
+    rules: { "react-refresh/only-export-components": "off" },
+  },
   eslintPluginPrettier,
 );

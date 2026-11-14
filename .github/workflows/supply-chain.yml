@@ -106,7 +106,7 @@ jobs:
       # binary exit 127 ("flag provided but not defined") before it scans
       # anything, a red run that looks like a finding. Skipping the root git
       # repo is the v2 default (`--include-git-root` opts back in).
-      - uses: google/osv-scanner-action/osv-scanner-action@v2.7.0
+      - uses: google/osv-scanner-action/osv-scanner-action@v2.7.1
         with:
           scan-args: |-
             --recursive

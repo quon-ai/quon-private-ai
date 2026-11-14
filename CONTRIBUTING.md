@@ -1,5 +1,3 @@
-> **Note.** This document also covers features that are not part of this repository yet: connectors, chat tools and MCP, agents, shared projects, the desktop and Android apps. They follow once they are ready.
-
 # Contributing to QUON
 
 Thanks for your interest in improving QUON. This document covers the local dev
@@ -93,16 +91,12 @@ Never commit or paste into PRs/issues:
 - API keys, session tokens, or real personal data (use synthetic PII in tests
   and reproductions).
 
-## Extending QUON (connectors & detection)
+## Extending detection
 
-To improve PII detection or add a data source, read
-**[docs/extending.md](docs/extending.md)** first. It lists the invariants every
-extension must preserve (zero-knowledge, fail-closed, no runtime plugin
-loading) and the detection tiers: vocabulary, then a recognizer, then a new
-entity type via `entities.py`. Data-source connectors have their own guide,
-`docs/extending-connectors.md`, which ships together with the connectors: the
-Connector interface and registry, the idempotent-ingest contract and the i18n
-requirements.
+To improve PII detection, read **[docs/extending.md](docs/extending.md)**
+first. It lists the invariants every extension must preserve (zero-knowledge,
+fail-closed, no runtime plugin loading) and the detection tiers: vocabulary,
+then a recognizer, then a new entity type via `entities.py`.
 
 ## Pull requests
 

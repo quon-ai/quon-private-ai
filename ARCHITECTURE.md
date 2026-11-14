@@ -1,4 +1,4 @@
-> **Note.** This document also covers features that are not part of this repository yet: connectors, chat tools and MCP, agents, shared projects, the desktop and Android apps. They follow once they are ready.
+> **Note.** This document describes the whole QUON product. Not part of this repository: connectors, chat tools and MCP, agents, shared projects, the desktop and Android apps.
 
 # QUON Architecture
 

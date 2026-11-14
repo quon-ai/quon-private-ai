@@ -1,4 +1,4 @@
-> **Note.** This document also covers features that are not part of this repository yet: connectors, chat tools and MCP, agents, shared projects, the desktop and Android apps. They follow once they are ready.
+> **Note.** This document describes the whole QUON product. Not part of this repository: connectors, chat tools and MCP, agents, shared projects, the desktop and Android apps.
 
 # Changelog
 
@@ -10,12 +10,9 @@ since 1.0.
 
 ## [Unreleased]
 
-### Added
-
-- A read-only mirror of this repository on Codeberg; the README names it next to the GitHub repository where development, issues and releases live.
-
 ### Changed
 
+- The contributor guides describe this edition: detection is its extension point, and the features of the hosted product are no longer presented as part of this repository.
 - Dependency refresh across frontend and backend: every minor and patch update within the declared ranges, trafilatura 2.3.1 for URL extraction, and the GitHub Actions cache and OSV scanner on their current majors. The backend requirement floors now name the versions the test suite runs against.
 
 ### Security

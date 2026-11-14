@@ -312,21 +312,6 @@ class Settings(BaseSettings):
     admin_token: str = ""
 
     # Gate self-service signup: when set, POST /auth/register requires a matching
-    # OAuth client id ("App key") of the OPERATOR's Dropbox app - instance-level,
-    # set once so end users get a one-click "Connect Dropbox" (no per-user app
-    # registration). A client id is public by design (PKCE, no secret involved);
-    # served to the frontend via GET /connectors/config. Empty = the Dropbox
-    # connector shows an honest "operator has not enabled this" note.
-    dropbox_app_key: str = ""
-    # Azure app registration (Microsoft identity platform) for the OneDrive
-    # connector - same model as dropbox_app_key: the OPERATOR registers one app
-    # for the instance and every user authorizes their own account against it.
-    # A SPA client id is public by design (PKCE, no secret). Register it with
-    # redirect URI <origin>/connectors as platform "Single-page application"
-    # and the `common` tenant (personal + work/school accounts). Empty = the
-    # OneDrive connector shows an honest "operator has not enabled this" note.
-    ms_client_id: str = ""
-
     # invite_code. Empty = open registration (default). Used for the closed beta - 
     # hand the code to invited testers; it replaces the Caddy basic-auth gate.
     signup_invite_code: str = ""

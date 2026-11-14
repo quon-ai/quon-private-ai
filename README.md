@@ -2,9 +2,6 @@
 
 [![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue)](./LICENSE)
 
-Development, issues and releases are on [GitHub](https://github.com/quon-ai/quon-private-ai).
-A read-only mirror is kept at [codeberg.org/quon-ai/quon-private-ai](https://codeberg.org/quon-ai/quon-private-ai).
-
 > A privacy gateway for chatting with LLMs. Personal data is detected and
 > replaced with typed placeholders **on your side** before anything reaches a
 > model provider. In the answer they are restored locally, so the conversation
@@ -53,10 +50,6 @@ receive. Nothing is stored and no model is called.
   account on a fresh instance becomes its admin. German and English.
 - **Self-hosted in one command.** `docker compose up` with Caddy for TLS, on a
   public domain, a home server or a Tailscale network.
-
-Still being prepared for release: connectors (Dropbox, OneDrive, Paperless,
-IMAP), tools the model can call, scheduled agents, shared projects, and the
-desktop and Android apps.
 
 > Read the [threat model](./docs/threat-model.md) before trusting it with
 > sensitive data. It says what QUON protects against and what it cannot.

@@ -43,7 +43,7 @@ services:
       HOST: 0.0.0.0
       PORT: 8080
       # Extra origins appended to the page CSP's connect-src - e.g. a
-      # self-hosted Paperless the browser must reach directly
+      # service in your own network the browser must reach directly
       # (docs/self-hosting.md). Same rule as the scrubber block below: this
       # compose enumerates every variable, so a key in .env alone never reaches
       # the container - without this line the setting is a silent no-op.
@@ -62,11 +62,6 @@ services:
       # volume - an in-image path would be reset on every rebuild.
       RUNTIME_SETTINGS_PATH: /app/data/runtime_settings.json
       APP_BASE_URL: https://${QUON_DOMAIN}
-      # One-click Dropbox connect for all users of this instance: register a
-      # Dropbox app once (see docs/self-hosting.md) and put its public App key
-      # here. Empty = the connector shows "not enabled by the operator".
-      DROPBOX_APP_KEY: ${DROPBOX_APP_KEY:-}
-      MS_CLIENT_ID: ${MS_CLIENT_ID:-}
       # Beta feedback -> GitHub issues (optional; both unset = mirroring off).
       # NOTE: this compose enumerates every variable - there is no env_file, so
       # a key in .env alone never reaches the container. Adding one here is not

@@ -38,8 +38,6 @@ services:
       # every `up --build`, silently reverting all Settings-UI edits.
       RUNTIME_SETTINGS_PATH: /app/data/runtime_settings.json
       # Public OAuth client id of the operator's Dropbox app (one-click connect).
-      DROPBOX_APP_KEY: ${DROPBOX_APP_KEY:-}
-      MS_CLIENT_ID: ${MS_CLIENT_ID:-}
       # Beta feedback -> GitHub issues (optional; both unset = mirroring off).
       # NOTE: this compose enumerates every variable - there is no env_file, so
       # a key in .env alone never reaches the container. Adding one here is not
